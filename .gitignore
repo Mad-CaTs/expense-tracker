@@ -1,0 +1,18 @@
+# Entorno local con credenciales reales
+.env
+
+# Backend build
+backend/target/
+
+# Frontend build
+frontend/dist/
+frontend/node_modules/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
