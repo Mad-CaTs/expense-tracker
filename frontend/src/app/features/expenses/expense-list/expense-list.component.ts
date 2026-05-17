@@ -17,7 +17,7 @@ import { AttachmentsModalComponent } from '../attachments-modal/attachments-moda
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <h1 class="page-title">Registro de Gastos</h1>
         <div class="flex gap-2">
-          <button (click)="exportExcel()" class="btn-secondary flex-1 sm:flex-none">
+          <button (click)="exportExcel()" class="btn-secondary flex-none">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
@@ -85,7 +85,11 @@ import { AttachmentsModalComponent } from '../attachments-modal/attachments-moda
 
       <!-- Tabla / Cards -->
       <div class="card overflow-hidden">
-        <div *ngIf="loading" class="p-10 text-center text-gray-500 text-sm">Cargando...</div>
+        <div *ngIf="loading" class="space-y-2 p-4">
+          <div class="skeleton h-12 w-full"></div>
+          <div class="skeleton h-12 w-full"></div>
+          <div class="skeleton h-12 w-3/4"></div>
+        </div>
         <div *ngIf="!loading && expenses.length === 0" class="p-12 text-center">
           <svg class="w-10 h-10 text-gray-700 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
@@ -100,9 +104,9 @@ import { AttachmentsModalComponent } from '../attachments-modal/attachments-moda
           <li *ngFor="let e of expenses" class="px-4 py-3.5 flex items-start justify-between gap-3 active:bg-gray-800/60">
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-2 mb-1">
-                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold text-white shrink-0"
-                      [style.background-color]="e.categoryColor">
-                  {{ e.categoryName }}
+                <span class="category-badge shrink-0" [style.backgroundColor]="(e.categoryColor || '#4d6080') + '22'">
+                  <span class="category-badge-dot" [style.backgroundColor]="e.categoryColor || '#4d6080'"></span>
+                  <span [style.color]="e.categoryColor || '#4d6080'">{{ e.categoryName || 'Sin categoría' }}</span>
                 </span>
                 <span class="text-xs text-gray-500 shrink-0">{{ e.date | date:'dd MMM' }}</span>
               </div>
@@ -145,9 +149,9 @@ import { AttachmentsModalComponent } from '../attachments-modal/attachments-moda
               <tr *ngFor="let e of expenses" class="hover:bg-gray-800/60 transition-colors duration-150">
                 <td class="px-5 py-3.5 text-gray-400 whitespace-nowrap">{{ e.date | date:'dd MMM yyyy' }}</td>
                 <td class="px-5 py-3.5">
-                  <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold text-white"
-                        [style.background-color]="e.categoryColor">
-                    {{ e.categoryName }}
+                  <span class="category-badge" [style.backgroundColor]="(e.categoryColor || '#4d6080') + '22'">
+                    <span class="category-badge-dot" [style.backgroundColor]="e.categoryColor || '#4d6080'"></span>
+                    <span [style.color]="e.categoryColor || '#4d6080'">{{ e.categoryName || 'Sin categoría' }}</span>
                   </span>
                 </td>
                 <td class="px-5 py-3.5 text-gray-400 max-w-xs truncate">{{ e.description || '—' }}</td>
@@ -191,6 +195,15 @@ import { AttachmentsModalComponent } from '../attachments-modal/attachments-moda
         </div>
       </div>
     </div>
+
+    <!-- FAB mobile -->
+    <a routerLink="/expenses/new"
+       class="sm:hidden fixed bottom-20 right-4 z-30 w-14 h-14 flex items-center justify-center rounded-2xl text-white"
+       style="background-color:#005bd3;box-shadow:0 4px 20px #005bd360">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+      </svg>
+    </a>
 
     <app-attachments-modal
       *ngIf="selectedExpenseId !== null"
