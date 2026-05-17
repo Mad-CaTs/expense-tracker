@@ -9,8 +9,8 @@
   }
 
   body {
-    background-color: #0b1120;
-    color: #e2eeff;
+    background-color: #0e0e10;
+    color: #f0f0f0;
     font-family: 'Manrope', system-ui, sans-serif;
     font-size: 16px;
     -webkit-font-smoothing: antialiased;
@@ -36,12 +36,12 @@
   .btn-secondary {
     @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] text-sm font-medium rounded-lg transition-colors duration-150 cursor-pointer select-none;
     background-color: transparent;
-    color: #6aa0f8;
-    border: 1px solid #1a2744;
+    color: #888888;
+    border: 1px solid #1e1e20;
   }
   .btn-secondary:hover {
-    background-color: #132044;
-    color: #e2eeff;
+    background-color: #1a1a1c;
+    color: #f0f0f0;
   }
 
   .btn-danger {
@@ -54,22 +54,22 @@
   /* Cards */
   .card {
     @apply rounded-xl shadow-xl;
-    background-color: #0d1526;
-    border: 1px solid #1a2744;
+    background-color: #151517;
+    border: 1px solid #1e1e20;
   }
 
   /* Form inputs */
   .input-field {
     @apply block w-full rounded-lg px-3 py-2.5 min-h-[44px] text-base focus:outline-none focus:ring-2 transition-colors duration-150;
-    background-color: #0d1526;
-    border: 1px solid #1a2744;
-    color: #e2eeff;
+    background-color: #151517;
+    border: 1px solid #1e1e20;
+    color: #f0f0f0;
     font-size: 16px;
     -webkit-appearance: none;
     appearance: none;
     max-width: 100%;
   }
-  .input-field::placeholder { color: #4d6080; }
+  .input-field::placeholder { color: #555555; }
   .input-field:focus { --tw-ring-color: #005bd3; border-color: transparent; }
 
   .input-error { border-color: #ef4444; }
@@ -82,18 +82,18 @@
 
   .label {
     @apply block text-sm font-medium mb-1;
-    color: #6aa0f8;
+    color: #888888;
   }
 
   /* Typography */
   .page-title {
     @apply text-2xl font-extrabold tracking-tight;
-    color: #e2eeff;
+    color: #f0f0f0;
   }
 
   .section-label {
     @apply text-xs font-bold uppercase tracking-wider mb-3;
-    color: #4d6080;
+    color: #555555;
   }
 
   /* Toast */
@@ -102,9 +102,9 @@
   }
   .toast {
     @apply flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold shadow-xl pointer-events-auto cursor-pointer;
-    background-color: #132044;
-    border: 1px solid #005bd3;
-    color: #e2eeff;
+    background-color: #1a1a1c;
+    border: 1px solid #1e1e20;
+    color: #f0f0f0;
     animation: toast-in 0.2s ease-out;
   }
   .toast.toast-success::before {
@@ -132,7 +132,7 @@
   /* Skeleton */
   .skeleton {
     @apply rounded-lg animate-pulse;
-    background-color: #1a2744;
+    background-color: #1e1e20;
   }
 
   /* Category badge with dot */
@@ -146,18 +146,18 @@
   /* KPI card */
   .kpi-card {
     @apply rounded-lg p-4;
-    background-color: #0d1526;
-    border: 1px solid #1a2744;
+    background-color: #151517;
+    border: 1px solid #1e1e20;
   }
   .kpi-label {
     @apply text-xs font-bold uppercase tracking-wider mb-1;
-    color: #4d6080;
+    color: #555555;
   }
   .kpi-value {
     @apply text-2xl font-extrabold tracking-tight;
-    color: #e2eeff;
+    color: #f0f0f0;
   }
   .kpi-delta-positive { @apply text-xs font-semibold mt-1; color: #22c55e; }
   .kpi-delta-negative { @apply text-xs font-semibold mt-1; color: #f87171; }
-  .kpi-meta          { @apply text-xs mt-1; color: #4d6080; }
+  .kpi-meta          { @apply text-xs mt-1; color: #555555; }
 }

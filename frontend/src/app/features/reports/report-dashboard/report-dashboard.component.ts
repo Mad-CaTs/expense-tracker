@@ -29,23 +29,23 @@ import { Budget } from '../../../core/models/budget.model';
       <!-- KPIs -->
       <div *ngIf="summary" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div class="card p-4">
-          <p class="text-sm" style="color:#4d6080">Total período actual</p>
-          <p class="text-2xl font-bold" style="color:#e2eeff">S/ {{ summary.currentTotal | number:'1.2-2' }}</p>
-          <p class="text-xs mt-1" style="color:#4d6080">{{ summary.currentFrom }} → {{ summary.currentTo }}</p>
+          <p class="text-sm" style="color:#666666">Total período actual</p>
+          <p class="text-2xl font-bold" style="color:#f0f0f0">S/ {{ summary.currentTotal | number:'1.2-2' }}</p>
+          <p class="text-xs mt-1" style="color:#666666">{{ summary.currentFrom }} → {{ summary.currentTo }}</p>
         </div>
         <div class="card p-4">
-          <p class="text-sm" style="color:#4d6080">Total período anterior</p>
-          <p class="text-2xl font-bold" style="color:#e2eeff">S/ {{ summary.previousTotal | number:'1.2-2' }}</p>
-          <p class="text-xs mt-1" style="color:#4d6080">{{ summary.previousFrom }} → {{ summary.previousTo }}</p>
+          <p class="text-sm" style="color:#666666">Total período anterior</p>
+          <p class="text-2xl font-bold" style="color:#f0f0f0">S/ {{ summary.previousTotal | number:'1.2-2' }}</p>
+          <p class="text-xs mt-1" style="color:#666666">{{ summary.previousFrom }} → {{ summary.previousTo }}</p>
         </div>
         <div class="card p-4">
-          <p class="text-sm" style="color:#4d6080">Variación</p>
+          <p class="text-sm" style="color:#666666">Variación</p>
           <p class="text-2xl font-bold"
              [class.text-green-400]="summary.changePercentage <= 0"
              [class.text-red-400]="summary.changePercentage > 0">
             {{ summary.changePercentage > 0 ? '+' : '' }}{{ summary.changePercentage | number:'1.1-1' }}%
           </p>
-          <p class="text-xs mt-1" style="color:#4d6080">Promedio diario: S/ {{ summary.dailyAverage | number:'1.2-2' }}</p>
+          <p class="text-xs mt-1" style="color:#666666">Promedio diario: S/ {{ summary.dailyAverage | number:'1.2-2' }}</p>
         </div>
       </div>
 
@@ -56,27 +56,27 @@ import { Budget } from '../../../core/models/budget.model';
           <div class="h-56 sm:h-64 flex items-center justify-center" *ngIf="pieData">
             <canvas baseChart [data]="pieData" type="pie" [options]="pieOptions"></canvas>
           </div>
-          <div *ngIf="!pieData" class="h-56 sm:h-64 flex items-center justify-center text-sm" style="color:#4d6080">
+          <div *ngIf="!pieData" class="h-56 sm:h-64 flex items-center justify-center text-sm" style="color:#666666">
             Sin datos
           </div>
         </div>
         <div class="card p-4">
           <h3 class="section-label">Detalle por categoría</h3>
-          <div *ngIf="breakdown.length === 0" class="h-64 flex items-center justify-center text-sm" style="color:#4d6080">
+          <div *ngIf="breakdown.length === 0" class="h-64 flex items-center justify-center text-sm" style="color:#666666">
             Sin datos
           </div>
           <ul class="space-y-2" *ngIf="breakdown.length > 0">
             <li *ngFor="let b of breakdown" class="flex items-center gap-2">
               <div class="flex-1">
                 <div class="flex justify-between text-sm mb-1">
-                  <span class="font-medium" style="color:#e2eeff">{{ b.categoryName }}</span>
-                  <span style="color:#4d6080">S/ {{ b.total | number:'1.2-2' }}</span>
+                  <span class="font-medium" style="color:#f0f0f0">{{ b.categoryName }}</span>
+                  <span style="color:#666666">S/ {{ b.total | number:'1.2-2' }}</span>
                 </div>
-                <div class="h-2 rounded-full overflow-hidden" style="background-color:#1a2744">
+                <div class="h-2 rounded-full overflow-hidden" style="background-color:#1e1e20">
                   <div class="h-2 rounded-full" [style.width.%]="b.percentage" style="background-color:#005bd3"></div>
                 </div>
               </div>
-              <span class="text-xs w-10 text-right" style="color:#4d6080">{{ b.percentage | number:'1.0-0' }}%</span>
+              <span class="text-xs w-10 text-right" style="color:#666666">{{ b.percentage | number:'1.0-0' }}%</span>
             </li>
           </ul>
         </div>
@@ -90,19 +90,19 @@ import { Budget } from '../../../core/models/budget.model';
             <div class="flex items-center justify-between mb-1.5">
               <div class="flex items-center gap-2">
                 <span class="w-2.5 h-2.5 rounded-full shrink-0" [style.background-color]="b.categoryColor"></span>
-                <span class="text-sm font-medium" style="color:#e2eeff">{{ b.categoryName }}</span>
+                <span class="text-sm font-medium" style="color:#f0f0f0">{{ b.categoryName }}</span>
                 <span *ngIf="b.percentage >= 100"
                       class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-red-500/20 text-red-400">SUPERADO</span>
                 <span *ngIf="b.percentage >= 80 && b.percentage < 100"
                       class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-yellow-500/20 text-yellow-400">ALERTA</span>
               </div>
-              <span class="text-sm" style="color:#4d6080">
+              <span class="text-sm" style="color:#666666">
                 S/ {{ b.spent | number:'1.2-2' }}
                 <span> / </span>
                 S/ {{ b.amount | number:'1.2-2' }}
               </span>
             </div>
-            <div class="h-2 rounded-full overflow-hidden" style="background-color:#1a2744">
+            <div class="h-2 rounded-full overflow-hidden" style="background-color:#1e1e20">
               <div class="h-2 rounded-full transition-all duration-500"
                    [style.width.%]="b.percentage"
                    [class.bg-green-500]="b.percentage < 80"
@@ -110,7 +110,7 @@ import { Budget } from '../../../core/models/budget.model';
                    [class.bg-red-500]="b.percentage >= 100">
               </div>
             </div>
-            <div class="flex justify-between text-xs mt-1" style="color:#4d6080">
+            <div class="flex justify-between text-xs mt-1" style="color:#666666">
               <span>{{ b.percentage | number:'1.0-0' }}% utilizado</span>
               <span>S/ {{ (b.amount - b.spent) | number:'1.2-2' }} restante</span>
             </div>

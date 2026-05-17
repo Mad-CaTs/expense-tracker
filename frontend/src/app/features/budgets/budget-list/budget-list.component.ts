@@ -59,22 +59,22 @@ import { Category } from '../../../core/models/category.model';
 
       <!-- Lista de presupuestos -->
       <div class="card overflow-hidden">
-        <div *ngIf="loading" class="p-8 text-center text-sm" style="color:#4d6080">Cargando...</div>
+        <div *ngIf="loading" class="p-8 text-center text-sm" style="color:#666666">Cargando...</div>
 
         <div *ngIf="!loading && budgets.length === 0" class="p-10 text-center">
           <svg class="w-10 h-10 text-gray-700 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
               d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
           </svg>
-          <p class="text-sm" style="color:#4d6080">No hay presupuestos para este período</p>
+          <p class="text-sm" style="color:#666666">No hay presupuestos para este período</p>
         </div>
 
-        <ul *ngIf="!loading && budgets.length > 0" class="divide-y" style="border-color:#1a2744">
+        <ul *ngIf="!loading && budgets.length > 0" class="divide-y" style="border-color:#1e1e20">
           <li *ngFor="let b of budgets" class="px-4 py-4">
             <div class="flex items-center justify-between gap-3 mb-2">
               <div class="flex items-center gap-2.5">
                 <span class="w-3 h-3 rounded-full shrink-0" [style.background-color]="b.categoryColor"></span>
-                <span class="font-medium text-sm" style="color:#e2eeff">{{ b.categoryName }}</span>
+                <span class="font-medium text-sm" style="color:#f0f0f0">{{ b.categoryName }}</span>
                 <span *ngIf="b.percentage >= 100"
                       class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-red-500/20 text-red-400">
                   SUPERADO
@@ -86,8 +86,8 @@ import { Category } from '../../../core/models/category.model';
               </div>
               <div class="flex items-center gap-3 shrink-0">
                 <div class="text-right hidden sm:block">
-                  <span class="text-sm font-bold" style="color:#e2eeff">S/ {{ b.spent | number:'1.2-2' }}</span>
-                  <span class="text-xs" style="color:#4d6080"> / S/ {{ b.amount | number:'1.2-2' }}</span>
+                  <span class="text-sm font-bold" style="color:#f0f0f0">S/ {{ b.spent | number:'1.2-2' }}</span>
+                  <span class="text-xs" style="color:#666666"> / S/ {{ b.amount | number:'1.2-2' }}</span>
                 </div>
                 <button (click)="startEdit(b)"
                         class="text-blue-400 text-xs font-medium min-h-[40px] min-w-[44px] flex items-center justify-center px-2">
@@ -101,13 +101,13 @@ import { Category } from '../../../core/models/category.model';
             </div>
 
             <!-- Montos en móvil -->
-            <div class="flex justify-between text-xs mb-1.5 sm:hidden" style="color:#4d6080">
+            <div class="flex justify-between text-xs mb-1.5 sm:hidden" style="color:#666666">
               <span>S/ {{ b.spent | number:'1.2-2' }} gastado</span>
               <span>S/ {{ b.amount | number:'1.2-2' }} límite</span>
             </div>
 
             <!-- Barra de progreso -->
-            <div class="h-2 rounded-full overflow-hidden" style="background-color:#1a2744">
+            <div class="h-2 rounded-full overflow-hidden" style="background-color:#1e1e20">
               <div class="h-2 rounded-full transition-all duration-500"
                    [style.width.%]="b.percentage"
                    [class.bg-green-500]="b.percentage < 80"
@@ -115,7 +115,7 @@ import { Category } from '../../../core/models/category.model';
                    [class.bg-red-500]="b.percentage >= 100">
               </div>
             </div>
-            <div class="flex justify-between text-xs mt-1" style="color:#4d6080">
+            <div class="flex justify-between text-xs mt-1" style="color:#666666">
               <span>{{ b.percentage | number:'1.0-0' }}% utilizado</span>
               <span>S/ {{ (b.amount - b.spent) | number:'1.2-2' }} restante</span>
             </div>
