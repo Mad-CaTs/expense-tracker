@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ExpenseService } from '../../../core/services/expense.service';
 import { CategoryService } from '../../../core/services/category.service';
+import { ToastService } from '../../../core/services/toast.service';
 import { Expense, ExpenseFilters } from '../../../core/models/expense.model';
 import { Category } from '../../../core/models/category.model';
 import { AttachmentsModalComponent } from '../attachments-modal/attachments-modal.component';
@@ -216,6 +217,7 @@ import { AttachmentsModalComponent } from '../attachments-modal/attachments-moda
 export class ExpenseListComponent implements OnInit {
   private readonly expenseService = inject(ExpenseService);
   private readonly categoryService = inject(CategoryService);
+  private readonly toastService = inject(ToastService);
 
   expenses: Expense[] = [];
   categories: Category[] = [];
@@ -282,7 +284,10 @@ export class ExpenseListComponent implements OnInit {
 
   delete(expense: Expense): void {
     if (!confirm(`¿Eliminar gasto de S/ ${expense.amount}?`)) return;
-    this.expenseService.delete(expense.id).subscribe(() => this.loadExpenses());
+    this.expenseService.delete(expense.id).subscribe({
+      next: () => { this.toastService.success('Gasto eliminado'); this.loadExpenses(); },
+      error: () => { this.toastService.error('Error al eliminar el gasto'); }
+    });
   }
 
   openAttachments(expense: Expense): void {

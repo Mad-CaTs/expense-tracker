@@ -4,6 +4,7 @@ import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { ExpenseService } from '../../../core/services/expense.service';
 import { CategoryService } from '../../../core/services/category.service';
+import { ToastService } from '../../../core/services/toast.service';
 import { Category } from '../../../core/models/category.model';
 import { AttachmentService } from '../../../core/services/attachment.service';
 import { Attachment } from '../../../core/models/attachment.model';
@@ -219,6 +220,7 @@ export class ExpenseFormComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
 
   private readonly attachmentService = inject(AttachmentService);
+  private readonly toastService = inject(ToastService);
 
   categories: Category[] = [];
   saving = false;
@@ -277,6 +279,7 @@ export class ExpenseFormComponent implements OnInit {
 
     request.subscribe({
       next: async (result) => {
+        this.toastService.success(this.isEditMode ? 'Gasto actualizado' : 'Gasto guardado');
         if (this.isEditMode) {
           this.router.navigate(['/expenses']);
         } else {
@@ -286,7 +289,7 @@ export class ExpenseFormComponent implements OnInit {
           this.router.navigate(['/expenses']);
         }
       },
-      error: () => { this.saving = false; }
+      error: () => { this.toastService.error('Error al guardar el gasto'); this.saving = false; }
     });
   }
 
