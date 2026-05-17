@@ -5,8 +5,10 @@ import { BaseChartDirective } from 'ng2-charts';
 import { ChartData, ChartOptions } from 'chart.js';
 import { ReportService } from '../../../core/services/report.service';
 import { BudgetService } from '../../../core/services/budget.service';
+import { CategoryService } from '../../../core/services/category.service';
 import { ReportSummary, CategoryBreakdown, PeriodType } from '../../../core/models/report.model';
 import { Budget } from '../../../core/models/budget.model';
+import { Category } from '../../../core/models/category.model';
 
 @Component({
   selector: 'app-report-dashboard',
@@ -14,15 +16,66 @@ import { Budget } from '../../../core/models/budget.model';
   imports: [CommonModule, FormsModule, BaseChartDirective, DecimalPipe],
   template: `
     <div class="space-y-6">
-      <div class="flex flex-col gap-3">
-        <h1 class="page-title">Reportes</h1>
-        <div class="grid grid-cols-3 sm:flex gap-2">
-          <button *ngFor="let p of periods"
-                  (click)="setPeriod(p.value)"
-                  [class]="period === p.value ? 'btn-primary' : 'btn-secondary'"
-                  class="text-xs">
-            {{ p.label }}
-          </button>
+      <h1 class="page-title">Reportes</h1>
+
+      <!-- Filtros -->
+      <div class="card overflow-hidden">
+        <button type="button" (click)="filtersOpen = !filtersOpen"
+                class="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-gray-800/40 transition-colors">
+          <div class="flex items-center gap-2">
+            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z"/>
+            </svg>
+            <span class="text-sm font-medium text-gray-300">Filtros</span>
+            <span *ngIf="activeFilterCount > 0"
+                  class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] font-bold">
+              {{ activeFilterCount }}
+            </span>
+          </div>
+          <svg class="w-4 h-4 text-gray-500 transition-transform duration-200"
+               [class.rotate-180]="filtersOpen"
+               fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+          </svg>
+        </button>
+
+        <div *ngIf="filtersOpen" class="px-4 pb-4 border-t border-gray-800 pt-3 space-y-3">
+          <!-- Fila 1: período + categoría -->
+          <div class="flex flex-wrap gap-2 items-end">
+            <div class="flex gap-2 flex-wrap flex-1">
+              <button *ngFor="let p of periods"
+                      (click)="setPeriod(p.value)"
+                      [class]="period === p.value ? 'btn-primary' : 'btn-secondary'"
+                      class="text-xs">
+                {{ p.label }}
+              </button>
+            </div>
+            <div class="flex gap-2 items-end shrink-0">
+              <div>
+                <label class="label">Categoría</label>
+                <select [(ngModel)]="categoryId" class="input-field" (change)="load()">
+                  <option [ngValue]="undefined" class="bg-gray-800">Todas</option>
+                  <option *ngFor="let c of categories" [ngValue]="c.id" class="bg-gray-800">{{ c.name }}</option>
+                </select>
+              </div>
+              <button *ngIf="categoryId != null" (click)="categoryId = undefined; load()" class="btn-secondary text-sm self-end">
+                Limpiar
+              </button>
+            </div>
+          </div>
+
+          <!-- Fila 2: Desde/Hasta — solo con Personalizado -->
+          <div *ngIf="period === 'CUSTOM'" class="flex gap-3">
+            <div class="flex-1">
+              <label class="label">Desde</label>
+              <input type="date" [(ngModel)]="fromDate" class="input-field w-full" (change)="load()">
+            </div>
+            <div class="flex-1">
+              <label class="label">Hasta</label>
+              <input type="date" [(ngModel)]="toDate" class="input-field w-full" (change)="load()">
+            </div>
+          </div>
         </div>
       </div>
 
@@ -123,17 +176,30 @@ import { Budget } from '../../../core/models/budget.model';
 export class ReportDashboardComponent implements OnInit {
   private readonly reportService = inject(ReportService);
   private readonly budgetService = inject(BudgetService);
+  private readonly categoryService = inject(CategoryService);
 
   summary: ReportSummary | null = null;
   breakdown: CategoryBreakdown[] = [];
   budgets: Budget[] = [];
+  categories: Category[] = [];
   period: PeriodType = 'MONTHLY';
+  filtersOpen = false;
+  fromDate = '';
+  toDate = '';
+  categoryId: number | undefined = undefined;
 
   periods = [
     { value: 'DAILY' as PeriodType, label: 'Hoy' },
     { value: 'WEEKLY' as PeriodType, label: 'Esta semana' },
     { value: 'MONTHLY' as PeriodType, label: 'Este mes' },
+    { value: 'YEARLY' as PeriodType, label: 'Este año' },
+    { value: 'ALL' as PeriodType, label: 'Todo' },
+    { value: 'CUSTOM' as PeriodType, label: 'Personalizado' },
   ];
+
+  get activeFilterCount(): number {
+    return this.categoryId != null ? 1 : 0;
+  }
 
   monthNames = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
                 'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
@@ -152,14 +218,32 @@ export class ReportDashboardComponent implements OnInit {
     }
   };
 
-  ngOnInit(): void { this.load(); }
+  ngOnInit(): void {
+    this.categoryService.getAll().subscribe(c => this.categories = c);
+    this.load();
+  }
 
-  setPeriod(p: PeriodType): void { this.period = p; this.load(); }
+  setPeriod(p: PeriodType): void {
+    this.period = p;
+    this.fromDate = '';
+    this.toDate = '';
+    this.load();
+  }
+
+  clearFilters(): void {
+    this.fromDate = '';
+    this.toDate = '';
+    this.categoryId = undefined;
+    this.period = 'MONTHLY';
+    this.load();
+  }
 
   load(): void {
     const now = new Date();
-    this.reportService.getSummary(this.period).subscribe(s => this.summary = s);
-    this.reportService.getCategoryBreakdown().subscribe(b => {
+    const from = this.period === 'CUSTOM' ? this.fromDate || undefined : undefined;
+    const to = this.period === 'CUSTOM' ? this.toDate || undefined : undefined;
+    this.reportService.getSummary(this.period, from, to, this.categoryId).subscribe(s => this.summary = s);
+    this.reportService.getCategoryBreakdown(this.period, from, to, this.categoryId).subscribe(b => {
       this.breakdown = b;
       this.pieData = b.length > 0 ? {
         labels: b.map(x => x.categoryName),

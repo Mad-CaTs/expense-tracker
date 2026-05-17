@@ -17,4 +17,4 @@ export interface CategoryBreakdown {
   count: number;
 }
 
-export type PeriodType = 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'CUSTOM';
+export type PeriodType = 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY' | 'ALL' | 'CUSTOM';

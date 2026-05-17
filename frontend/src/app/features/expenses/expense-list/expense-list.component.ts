@@ -58,28 +58,40 @@ import { AttachmentsModalComponent } from '../attachments-modal/attachments-moda
         </button>
 
         <!-- Panel colapsable -->
-        <div *ngIf="filtersOpen" class="px-4 pb-4 border-t border-gray-800 pt-3">
-          <div class="flex flex-col sm:flex-row sm:flex-wrap gap-3 sm:items-end">
-            <div class="flex gap-3 flex-1 sm:flex-none">
-              <div class="flex-1 sm:w-auto">
-                <label class="label">Desde</label>
-                <input type="date" [(ngModel)]="filters.from" class="input-field w-full" (change)="applyFilters()">
-              </div>
-              <div class="flex-1 sm:w-auto">
-                <label class="label">Hasta</label>
-                <input type="date" [(ngModel)]="filters.to" class="input-field w-full" (change)="applyFilters()">
-              </div>
+        <div *ngIf="filtersOpen" class="px-4 pb-4 border-t border-gray-800 pt-3 space-y-3">
+          <!-- Fila 1: período + categoría -->
+          <div class="flex flex-wrap gap-2 items-end">
+            <div class="flex gap-2 flex-wrap flex-1">
+              <button *ngFor="let p of periods"
+                      (click)="setPeriod(p.value)"
+                      [class]="period === p.value ? 'btn-primary' : 'btn-secondary'"
+                      class="text-xs">
+                {{ p.label }}
+              </button>
             </div>
-            <div class="sm:w-auto">
-              <label class="label">Categoría</label>
-              <select [(ngModel)]="filters.categoryId" class="input-field w-full" (change)="applyFilters()">
-                <option [ngValue]="undefined" class="bg-gray-800">Todas</option>
-                <option *ngFor="let c of categories" [ngValue]="c.id" class="bg-gray-800">{{ c.name }}</option>
-              </select>
+            <div class="flex gap-2 items-end shrink-0">
+              <div>
+                <label class="label">Categoría</label>
+                <select [(ngModel)]="filters.categoryId" class="input-field" (change)="applyFilters()">
+                  <option [ngValue]="undefined" class="bg-gray-800">Todas</option>
+                  <option *ngFor="let c of categories" [ngValue]="c.id" class="bg-gray-800">{{ c.name }}</option>
+                </select>
+              </div>
+              <button *ngIf="filters.categoryId != null" (click)="filters.categoryId = undefined; applyFilters()" class="btn-secondary text-sm self-end">
+                Limpiar
+              </button>
             </div>
-            <button *ngIf="activeFilterCount > 0" (click)="clearFilters()" class="btn-secondary sm:self-end text-sm">
-              Limpiar
-            </button>
+          </div>
+          <!-- Fila 2: Desde/Hasta — solo con Personalizado -->
+          <div *ngIf="period === 'CUSTOM'" class="flex gap-3">
+            <div class="flex-1">
+              <label class="label">Desde</label>
+              <input type="date" [(ngModel)]="filters.from" class="input-field w-full" (change)="applyFilters()">
+            </div>
+            <div class="flex-1">
+              <label class="label">Hasta</label>
+              <input type="date" [(ngModel)]="filters.to" class="input-field w-full" (change)="applyFilters()">
+            </div>
           </div>
         </div>
       </div>
@@ -228,14 +240,24 @@ export class ExpenseListComponent implements OnInit {
   totalElements = 0;
   filters: ExpenseFilters = {};
   filtersOpen = false;
+  period = 'MONTHLY';
+
+  periods = [
+    { value: 'DAILY',   label: 'Hoy' },
+    { value: 'WEEKLY',  label: 'Esta semana' },
+    { value: 'MONTHLY', label: 'Este mes' },
+    { value: 'YEARLY',  label: 'Este año' },
+    { value: 'ALL',     label: 'Todo' },
+    { value: 'CUSTOM',  label: 'Personalizado' },
+  ];
 
   get activeFilterCount(): number {
-    return [this.filters.from, this.filters.to, this.filters.categoryId].filter(v => v != null && v !== '').length;
+    return this.filters.categoryId != null ? 1 : 0;
   }
 
   ngOnInit(): void {
     this.loadCategories();
-    this.loadExpenses();
+    this.setPeriod('MONTHLY');
   }
 
   loadCategories(): void {
@@ -256,6 +278,35 @@ export class ExpenseListComponent implements OnInit {
       });
   }
 
+  setPeriod(p: string): void {
+    this.period = p;
+    const now = new Date();
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const today = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+
+    const monday = new Date(now);
+    monday.setDate(now.getDate() - ((now.getDay() + 6) % 7));
+
+    switch (p) {
+      case 'DAILY':
+        this.filters.from = today; this.filters.to = today; break;
+      case 'WEEKLY':
+        this.filters.from = `${monday.getFullYear()}-${pad(monday.getMonth() + 1)}-${pad(monday.getDate())}`;
+        this.filters.to = today; break;
+      case 'MONTHLY':
+        this.filters.from = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-01`;
+        this.filters.to = today; break;
+      case 'YEARLY':
+        this.filters.from = `${now.getFullYear()}-01-01`;
+        this.filters.to = today; break;
+      case 'ALL':
+        this.filters.from = '2000-01-01'; this.filters.to = today; break;
+      case 'CUSTOM':
+        this.filters.from = undefined; this.filters.to = undefined; break;
+    }
+    this.applyFilters();
+  }
+
   applyFilters(): void {
     this.currentPage = 0;
     this.loadExpenses();
@@ -263,7 +314,8 @@ export class ExpenseListComponent implements OnInit {
 
   clearFilters(): void {
     this.filters = {};
-    this.applyFilters();
+    this.period = 'MONTHLY';
+    this.setPeriod('MONTHLY');
   }
 
   changePage(page: number): void {

@@ -25,6 +25,18 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
     @Query("SELECT COALESCE(SUM(e.amount), 0) FROM Expense e WHERE e.user.id = :userId AND e.date BETWEEN :from AND :to")
     BigDecimal sumAmountByUserIdAndDateBetween(@Param("userId") Long userId, @Param("from") LocalDate from, @Param("to") LocalDate to);
 
+    @Query("SELECT COALESCE(SUM(e.amount), 0) FROM Expense e WHERE e.user.id = :userId AND e.date BETWEEN :from AND :to AND e.category.id = :categoryId")
+    BigDecimal sumAmountByUserIdAndDateBetweenAndCategoryId(@Param("userId") Long userId, @Param("from") LocalDate from, @Param("to") LocalDate to, @Param("categoryId") Long categoryId);
+
+    @Query("""
+        SELECT e.category.name, SUM(e.amount), COUNT(e)
+        FROM Expense e
+        WHERE e.user.id = :userId AND e.date BETWEEN :from AND :to AND e.category.id = :categoryId
+        GROUP BY e.category.name
+        ORDER BY SUM(e.amount) DESC
+        """)
+    List<Object[]> findCategoryBreakdownByUserIdAndCategoryId(@Param("userId") Long userId, @Param("from") LocalDate from, @Param("to") LocalDate to, @Param("categoryId") Long categoryId);
+
     @Query("""
         SELECT e.category.name, SUM(e.amount), COUNT(e)
         FROM Expense e

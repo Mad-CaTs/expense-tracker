@@ -33,7 +33,7 @@ class ReportServiceTest {
                 1L, LocalDate.of(2026, 3, 1), LocalDate.of(2026, 3, 31)))
                 .thenReturn(new BigDecimal("100.00"));
 
-        ReportSummaryDTO result = reportService.getSummary("MONTHLY", from, to, 1L);
+        ReportSummaryDTO result = reportService.getSummary("MONTHLY", from, to, 1L, null);
 
         assertThat(result.getCurrentTotal()).isEqualByComparingTo("200.00");
         assertThat(result.getPreviousTotal()).isEqualByComparingTo("100.00");
@@ -51,7 +51,7 @@ class ReportServiceTest {
         );
         when(expenseRepository.findCategoryBreakdownByUserId(1L, from, to)).thenReturn(raw);
 
-        List<CategoryBreakdownDTO> result = reportService.getCategoryBreakdown(from, to, 1L);
+        List<CategoryBreakdownDTO> result = reportService.getCategoryBreakdown(from, to, 1L, null);
 
         assertThat(result).hasSize(2);
         assertThat(result.get(0).getPercentage()).isEqualTo(80.0);

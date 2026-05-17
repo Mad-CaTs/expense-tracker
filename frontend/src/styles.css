@@ -24,32 +24,50 @@
   }
 }
 
+/* ─── Custom easing curves ─────────────────────────────────────────────────── */
+:root {
+  --ease-out:    cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+}
+
 @layer components {
   /* Buttons */
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] text-white text-sm font-semibold rounded-lg transition-colors duration-150 disabled:opacity-40 cursor-pointer select-none;
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] text-white text-sm font-semibold rounded-lg disabled:opacity-40 cursor-pointer select-none;
     background-color: #005bd3;
+    transition: background-color 160ms ease, transform 120ms var(--ease-out);
   }
   .btn-primary:hover  { background-color: #0052be; }
-  .btn-primary:active { background-color: #0047a8; }
+  .btn-primary:active {
+    background-color: #0047a8;
+    transform: scale(0.97);
+  }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] text-sm font-medium rounded-lg transition-colors duration-150 cursor-pointer select-none;
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] text-sm font-medium rounded-lg cursor-pointer select-none;
     background-color: transparent;
     color: #888888;
     border: 1px solid #1e1e20;
+    transition: background-color 160ms ease, color 160ms ease, transform 120ms var(--ease-out);
   }
   .btn-secondary:hover {
     background-color: #1a1a1c;
     color: #f0f0f0;
   }
+  .btn-secondary:active {
+    transform: scale(0.97);
+  }
 
   .btn-danger {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] text-white text-sm font-semibold rounded-lg transition-colors duration-150 cursor-pointer select-none;
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] text-white text-sm font-semibold rounded-lg cursor-pointer select-none;
     background-color: #b91c1c;
+    transition: background-color 160ms ease, transform 120ms var(--ease-out);
   }
   .btn-danger:hover  { background-color: #dc2626; }
-  .btn-danger:active { background-color: #991b1b; }
+  .btn-danger:active {
+    background-color: #991b1b;
+    transform: scale(0.97);
+  }
 
   /* Cards */
   .card {
@@ -60,7 +78,7 @@
 
   /* Form inputs */
   .input-field {
-    @apply block w-full rounded-lg px-3 py-2.5 min-h-[44px] text-base focus:outline-none focus:ring-2 transition-colors duration-150;
+    @apply block w-full rounded-lg px-3 py-2.5 min-h-[44px] text-base focus:outline-none focus:ring-2;
     background-color: #151517;
     border: 1px solid #1e1e20;
     color: #f0f0f0;
@@ -68,6 +86,7 @@
     -webkit-appearance: none;
     appearance: none;
     max-width: 100%;
+    transition: border-color 150ms ease, box-shadow 150ms ease;
   }
   .input-field::placeholder { color: #555555; }
   .input-field:focus { --tw-ring-color: #005bd3; border-color: transparent; }
@@ -105,7 +124,7 @@
     background-color: #1a1a1c;
     border: 1px solid #1e1e20;
     color: #f0f0f0;
-    animation: toast-in 0.2s ease-out;
+    animation: toast-in 280ms var(--ease-out) both;
   }
   .toast.toast-success::before {
     content: '';
@@ -125,14 +144,22 @@
   }
 
   @keyframes toast-in {
-    from { opacity: 0; transform: translateY(8px); }
-    to   { opacity: 1; transform: translateY(0); }
+    from { opacity: 0; transform: translateY(12px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
   }
 
   /* Skeleton */
   .skeleton {
-    @apply rounded-lg animate-pulse;
+    @apply rounded-lg;
     background-color: #1e1e20;
+    background-image: linear-gradient(90deg, #1e1e20 0%, #2a2a2e 50%, #1e1e20 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s ease infinite;
+  }
+
+  @keyframes shimmer {
+    from { background-position: 200% 0; }
+    to   { background-position: -200% 0; }
   }
 
   /* Category badge with dot */
@@ -160,4 +187,107 @@
   .kpi-delta-positive { @apply text-xs font-semibold mt-1; color: #22c55e; }
   .kpi-delta-negative { @apply text-xs font-semibold mt-1; color: #f87171; }
   .kpi-meta          { @apply text-xs mt-1; color: #555555; }
+}
+
+/* ─── Page enter animation ──────────────────────────────────────────────────── */
+router-outlet + * {
+  animation: page-in 220ms var(--ease-out) both;
+}
+
+@keyframes page-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── List rows stagger ─────────────────────────────────────────────────────── */
+/* Mobile cards */
+ul.divide-y li {
+  animation: row-in 200ms var(--ease-out) both;
+}
+ul.divide-y li:nth-child(1)  { animation-delay:  0ms; }
+ul.divide-y li:nth-child(2)  { animation-delay: 30ms; }
+ul.divide-y li:nth-child(3)  { animation-delay: 60ms; }
+ul.divide-y li:nth-child(4)  { animation-delay: 90ms; }
+ul.divide-y li:nth-child(5)  { animation-delay:120ms; }
+ul.divide-y li:nth-child(6)  { animation-delay:150ms; }
+ul.divide-y li:nth-child(7)  { animation-delay:180ms; }
+ul.divide-y li:nth-child(8)  { animation-delay:200ms; }
+ul.divide-y li:nth-child(n+9){ animation-delay:200ms; }
+
+/* Desktop table rows */
+tbody tr {
+  animation: row-in 200ms var(--ease-out) both;
+}
+tbody tr:nth-child(1)  { animation-delay:  0ms; }
+tbody tr:nth-child(2)  { animation-delay: 30ms; }
+tbody tr:nth-child(3)  { animation-delay: 60ms; }
+tbody tr:nth-child(4)  { animation-delay: 90ms; }
+tbody tr:nth-child(5)  { animation-delay:120ms; }
+tbody tr:nth-child(6)  { animation-delay:150ms; }
+tbody tr:nth-child(7)  { animation-delay:180ms; }
+tbody tr:nth-child(8)  { animation-delay:200ms; }
+tbody tr:nth-child(n+9){ animation-delay:200ms; }
+
+@keyframes row-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Table row hover ───────────────────────────────────────────────────────── */
+@media (hover: hover) and (pointer: fine) {
+  tbody tr {
+    transition: background-color 120ms ease;
+  }
+}
+
+/* ─── Modal enter ───────────────────────────────────────────────────────────── */
+/* Backdrop */
+.fixed.inset-0.z-50 {
+  animation: backdrop-in 200ms ease both;
+}
+@keyframes backdrop-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Modal panel */
+.fixed.inset-0.z-50 > div,
+.fixed.inset-0.z-\[50\] > div {
+  animation: modal-in 240ms var(--ease-out) both;
+}
+@keyframes modal-in {
+  from { opacity: 0; transform: scale(0.96) translateY(8px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* ─── Filters collapse chevron ──────────────────────────────────────────────── */
+.rotate-180 {
+  transition: transform 200ms var(--ease-out);
+}
+
+/* ─── Nav link active indicator ─────────────────────────────────────────────── */
+nav a {
+  transition: color 150ms ease, background-color 150ms ease;
+}
+
+/* ─── FAB pulse on mobile ───────────────────────────────────────────────────── */
+a[style*="005bd3"].fixed {
+  transition: transform 120ms var(--ease-out), box-shadow 120ms ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  a[style*="005bd3"].fixed:hover {
+    transform: scale(1.06);
+  }
+}
+a[style*="005bd3"].fixed:active {
+  transform: scale(0.94);
+}
+
+/* ─── Reduced motion ────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }

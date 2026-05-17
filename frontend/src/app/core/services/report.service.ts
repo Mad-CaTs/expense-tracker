@@ -8,17 +8,19 @@ export class ReportService {
   private readonly http = inject(HttpClient);
   private readonly base = '/api/reports';
 
-  getSummary(period: PeriodType, from?: string, to?: string): Observable<ReportSummary> {
+  getSummary(period: PeriodType, from?: string, to?: string, categoryId?: number): Observable<ReportSummary> {
     let params = new HttpParams().set('period', period);
     if (from) params = params.set('from', from);
     if (to) params = params.set('to', to);
+    if (categoryId != null) params = params.set('categoryId', categoryId);
     return this.http.get<ReportSummary>(`${this.base}/summary`, { params });
   }
 
-  getCategoryBreakdown(from?: string, to?: string): Observable<CategoryBreakdown[]> {
-    let params = new HttpParams();
+  getCategoryBreakdown(period: PeriodType, from?: string, to?: string, categoryId?: number): Observable<CategoryBreakdown[]> {
+    let params = new HttpParams().set('period', period);
     if (from) params = params.set('from', from);
     if (to) params = params.set('to', to);
+    if (categoryId != null) params = params.set('categoryId', categoryId);
     return this.http.get<CategoryBreakdown[]>(`${this.base}/by-category`, { params });
   }
 }

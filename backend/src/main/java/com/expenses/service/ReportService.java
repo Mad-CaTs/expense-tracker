@@ -18,13 +18,17 @@ public class ReportService {
 
     private final ExpenseRepository expenseRepository;
 
-    public ReportSummaryDTO getSummary(String period, LocalDate from, LocalDate to, Long userId) {
+    public ReportSummaryDTO getSummary(String period, LocalDate from, LocalDate to, Long userId, Long categoryId) {
         LocalDate[] prev = previousPeriod(period, from, to);
         LocalDate prevFrom = prev[0];
         LocalDate prevTo = prev[1];
 
-        BigDecimal current = expenseRepository.sumAmountByUserIdAndDateBetween(userId, from, to);
-        BigDecimal previous = expenseRepository.sumAmountByUserIdAndDateBetween(userId, prevFrom, prevTo);
+        BigDecimal current = categoryId != null
+                ? expenseRepository.sumAmountByUserIdAndDateBetweenAndCategoryId(userId, from, to, categoryId)
+                : expenseRepository.sumAmountByUserIdAndDateBetween(userId, from, to);
+        BigDecimal previous = categoryId != null
+                ? expenseRepository.sumAmountByUserIdAndDateBetweenAndCategoryId(userId, prevFrom, prevTo, categoryId)
+                : expenseRepository.sumAmountByUserIdAndDateBetween(userId, prevFrom, prevTo);
 
         long days = ChronoUnit.DAYS.between(from, to) + 1;
         BigDecimal dailyAverage = days > 0
@@ -52,8 +56,10 @@ public class ReportService {
         return dto;
     }
 
-    public List<CategoryBreakdownDTO> getCategoryBreakdown(LocalDate from, LocalDate to, Long userId) {
-        List<Object[]> raw = expenseRepository.findCategoryBreakdownByUserId(userId, from, to);
+    public List<CategoryBreakdownDTO> getCategoryBreakdown(LocalDate from, LocalDate to, Long userId, Long categoryId) {
+        List<Object[]> raw = categoryId != null
+                ? expenseRepository.findCategoryBreakdownByUserIdAndCategoryId(userId, from, to, categoryId)
+                : expenseRepository.findCategoryBreakdownByUserId(userId, from, to);
         BigDecimal total = raw.stream()
                 .map(r -> (BigDecimal) r[1])
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -78,6 +84,8 @@ public class ReportService {
                 LocalDate prevTo = prevFrom.withDayOfMonth(prevFrom.lengthOfMonth());
                 yield new LocalDate[]{ prevFrom, prevTo };
             }
+            case "YEARLY" -> new LocalDate[]{ from.minusYears(1), to.minusYears(1) };
+            case "ALL" -> new LocalDate[]{ from, to };
             default -> {
                 long days = ChronoUnit.DAYS.between(from, to) + 1;
                 yield new LocalDate[]{ from.minusDays(days), to.minusDays(days) };

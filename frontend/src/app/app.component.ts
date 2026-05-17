@@ -24,7 +24,7 @@ import { ToastComponent } from './shared/components/toast/toast.component';
                 </svg>
               </div>
               <span class="text-sm font-extrabold tracking-tight" style="color:#f0f0f0">
-                gastos<span style="color:#005bd3">.</span>
+                Gastos
               </span>
             </div>
             <div class="flex items-center gap-0.5">
@@ -78,7 +78,7 @@ import { ToastComponent } from './shared/components/toast/toast.component';
               </svg>
             </div>
             <span class="text-sm font-extrabold tracking-tight" style="color:#f0f0f0">
-              gastos<span style="color:#005bd3">.</span>
+              Gastos
             </span>
           </div>
           <button (click)="logout()"
