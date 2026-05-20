@@ -59,28 +59,27 @@ import { AttachmentsModalComponent } from '../attachments-modal/attachments-moda
 
         <!-- Panel colapsable -->
         <div *ngIf="filtersOpen" class="px-4 pb-4 border-t border-gray-800 pt-3 space-y-3">
-          <!-- Fila 1: período + categoría -->
-          <div class="flex flex-wrap gap-2 items-end">
-            <div class="flex gap-2 flex-wrap flex-1">
-              <button *ngFor="let p of periods"
-                      (click)="setPeriod(p.value)"
-                      [class]="period === p.value ? 'btn-primary' : 'btn-secondary'"
-                      class="text-xs">
-                {{ p.label }}
-              </button>
+          <!-- Fila 1: botones de período -->
+          <div class="flex gap-2 flex-wrap">
+            <button *ngFor="let p of periods"
+                    (click)="setPeriod(p.value)"
+                    [class]="period === p.value ? 'btn-primary' : 'btn-secondary'"
+                    class="text-xs">
+              {{ p.label }}
+            </button>
+          </div>
+          <!-- Fila 2: categoría -->
+          <div class="flex gap-2 items-end">
+            <div class="flex-1 sm:flex-none sm:w-48">
+              <label class="label">Categoría</label>
+              <select [(ngModel)]="filters.categoryId" class="input-field w-full" (change)="applyFilters()">
+                <option [ngValue]="undefined" class="bg-gray-800">Todas las categorías</option>
+                <option *ngFor="let c of categories" [ngValue]="c.id" class="bg-gray-800">{{ c.name }}</option>
+              </select>
             </div>
-            <div class="flex gap-2 items-end shrink-0">
-              <div>
-                <label class="label">Categoría</label>
-                <select [(ngModel)]="filters.categoryId" class="input-field" (change)="applyFilters()">
-                  <option [ngValue]="undefined" class="bg-gray-800">Todas</option>
-                  <option *ngFor="let c of categories" [ngValue]="c.id" class="bg-gray-800">{{ c.name }}</option>
-                </select>
-              </div>
-              <button *ngIf="filters.categoryId != null" (click)="filters.categoryId = undefined; applyFilters()" class="btn-secondary text-sm self-end">
-                Limpiar
-              </button>
-            </div>
+            <button *ngIf="filters.categoryId != null" (click)="filters.categoryId = undefined; applyFilters()" class="btn-secondary text-sm self-end">
+              Limpiar
+            </button>
           </div>
           <!-- Fila 2: Desde/Hasta — solo con Personalizado -->
           <div *ngIf="period === 'CUSTOM'" class="flex gap-3">
@@ -231,6 +230,8 @@ export class ExpenseListComponent implements OnInit {
   private readonly categoryService = inject(CategoryService);
   private readonly toastService = inject(ToastService);
 
+  private readonly STATE_KEY = 'expense-list-state';
+
   expenses: Expense[] = [];
   categories: Category[] = [];
   loading = false;
@@ -257,7 +258,17 @@ export class ExpenseListComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadCategories();
-    this.setPeriod('MONTHLY');
+    const saved = sessionStorage.getItem(this.STATE_KEY);
+    if (saved) {
+      const state = JSON.parse(saved);
+      this.period = state.period ?? 'MONTHLY';
+      this.filters = state.filters ?? {};
+      this.currentPage = state.currentPage ?? 0;
+      this.filtersOpen = state.filtersOpen ?? false;
+      this.loadExpenses();
+    } else {
+      this.setPeriod('MONTHLY');
+    }
   }
 
   loadCategories(): void {
@@ -265,6 +276,12 @@ export class ExpenseListComponent implements OnInit {
   }
 
   loadExpenses(): void {
+    sessionStorage.setItem(this.STATE_KEY, JSON.stringify({
+      period: this.period,
+      filters: this.filters,
+      currentPage: this.currentPage,
+      filtersOpen: this.filtersOpen,
+    }));
     this.loading = true;
     this.expenseService.getAll({ ...this.filters, page: this.currentPage, size: 20 })
       .subscribe({

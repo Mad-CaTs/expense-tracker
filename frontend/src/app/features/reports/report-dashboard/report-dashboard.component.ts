@@ -41,28 +41,27 @@ import { Category } from '../../../core/models/category.model';
         </button>
 
         <div *ngIf="filtersOpen" class="px-4 pb-4 border-t border-gray-800 pt-3 space-y-3">
-          <!-- Fila 1: período + categoría -->
-          <div class="flex flex-wrap gap-2 items-end">
-            <div class="flex gap-2 flex-wrap flex-1">
-              <button *ngFor="let p of periods"
-                      (click)="setPeriod(p.value)"
-                      [class]="period === p.value ? 'btn-primary' : 'btn-secondary'"
-                      class="text-xs">
-                {{ p.label }}
-              </button>
+          <!-- Fila 1: botones de período -->
+          <div class="flex gap-2 flex-wrap">
+            <button *ngFor="let p of periods"
+                    (click)="setPeriod(p.value)"
+                    [class]="period === p.value ? 'btn-primary' : 'btn-secondary'"
+                    class="text-xs">
+              {{ p.label }}
+            </button>
+          </div>
+          <!-- Fila 2: categoría -->
+          <div class="flex gap-2 items-end">
+            <div class="flex-1 sm:flex-none sm:w-48">
+              <label class="label">Categoría</label>
+              <select [(ngModel)]="categoryId" class="input-field w-full" (change)="load()">
+                <option [ngValue]="undefined" class="bg-gray-800">Todas las categorías</option>
+                <option *ngFor="let c of categories" [ngValue]="c.id" class="bg-gray-800">{{ c.name }}</option>
+              </select>
             </div>
-            <div class="flex gap-2 items-end shrink-0">
-              <div>
-                <label class="label">Categoría</label>
-                <select [(ngModel)]="categoryId" class="input-field" (change)="load()">
-                  <option [ngValue]="undefined" class="bg-gray-800">Todas</option>
-                  <option *ngFor="let c of categories" [ngValue]="c.id" class="bg-gray-800">{{ c.name }}</option>
-                </select>
-              </div>
-              <button *ngIf="categoryId != null" (click)="categoryId = undefined; load()" class="btn-secondary text-sm self-end">
-                Limpiar
-              </button>
-            </div>
+            <button *ngIf="categoryId != null" (click)="categoryId = undefined; load()" class="btn-secondary text-sm self-end">
+              Limpiar
+            </button>
           </div>
 
           <!-- Fila 2: Desde/Hasta — solo con Personalizado -->
@@ -80,25 +79,29 @@ import { Category } from '../../../core/models/category.model';
       </div>
 
       <!-- KPIs -->
-      <div *ngIf="summary" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div class="card p-4">
-          <p class="text-sm" style="color:#666666">Total período actual</p>
-          <p class="text-2xl font-bold" style="color:#f0f0f0">S/ {{ summary.currentTotal | number:'1.2-2' }}</p>
-          <p class="text-xs mt-1" style="color:#666666">{{ summary.currentFrom }} → {{ summary.currentTo }}</p>
+      <div *ngIf="summary" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <!-- Bloque principal: período actual (ocupa 1 columna) -->
+        <div class="card p-5">
+          <p class="kpi-label">Total período actual</p>
+          <p class="kpi-value">S/ {{ summary.currentTotal | number:'1.2-2' }}</p>
+          <p class="kpi-meta">{{ summary.currentFrom }} → {{ summary.currentTo }}</p>
+          <p class="kpi-meta mt-2">Promedio diario: S/ {{ summary.dailyAverage | number:'1.2-2' }}</p>
         </div>
-        <div class="card p-4">
-          <p class="text-sm" style="color:#666666">Total período anterior</p>
-          <p class="text-2xl font-bold" style="color:#f0f0f0">S/ {{ summary.previousTotal | number:'1.2-2' }}</p>
-          <p class="text-xs mt-1" style="color:#666666">{{ summary.previousFrom }} → {{ summary.previousTo }}</p>
-        </div>
-        <div class="card p-4">
-          <p class="text-sm" style="color:#666666">Variación</p>
-          <p class="text-2xl font-bold"
-             [class.text-green-400]="summary.changePercentage <= 0"
-             [class.text-red-400]="summary.changePercentage > 0">
-            {{ summary.changePercentage > 0 ? '+' : '' }}{{ summary.changePercentage | number:'1.1-1' }}%
-          </p>
-          <p class="text-xs mt-1" style="color:#666666">Promedio diario: S/ {{ summary.dailyAverage | number:'1.2-2' }}</p>
+        <!-- Bloque secundario: comparación (columna derecha, 2 filas) -->
+        <div class="grid grid-rows-2 gap-4">
+          <div class="card p-4">
+            <p class="kpi-label">Período anterior</p>
+            <p class="text-xl font-extrabold tracking-tight" style="color:#f0f0f0">S/ {{ summary.previousTotal | number:'1.2-2' }}</p>
+            <p class="kpi-meta">{{ summary.previousFrom }} → {{ summary.previousTo }}</p>
+          </div>
+          <div class="card p-4 flex flex-col justify-center">
+            <p class="kpi-label">Variación</p>
+            <p class="text-2xl font-extrabold tracking-tight"
+               [class.kpi-delta-positive]="summary.changePercentage <= 0"
+               [class.kpi-delta-negative]="summary.changePercentage > 0">
+              {{ summary.changePercentage > 0 ? '+' : '' }}{{ summary.changePercentage | number:'1.1-1' }}%
+            </p>
+          </div>
         </div>
       </div>
 
@@ -109,14 +112,24 @@ import { Category } from '../../../core/models/category.model';
           <div class="h-56 sm:h-64 flex items-center justify-center" *ngIf="pieData">
             <canvas baseChart [data]="pieData" type="pie" [options]="pieOptions"></canvas>
           </div>
-          <div *ngIf="!pieData" class="h-56 sm:h-64 flex items-center justify-center text-sm" style="color:#666666">
-            Sin datos
+          <div *ngIf="!pieData" class="h-56 sm:h-64 flex flex-col items-center justify-center gap-3">
+            <svg class="w-10 h-10" style="color:#2a2a2e" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/>
+            </svg>
+            <p class="text-sm" style="color:#555555">Sin datos para este período</p>
           </div>
         </div>
         <div class="card p-4">
           <h3 class="section-label">Detalle por categoría</h3>
-          <div *ngIf="breakdown.length === 0" class="h-64 flex items-center justify-center text-sm" style="color:#666666">
-            Sin datos
+          <div *ngIf="breakdown.length === 0" class="h-64 flex flex-col items-center justify-center gap-3">
+            <svg class="w-10 h-10" style="color:#2a2a2e" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+            </svg>
+            <p class="text-sm" style="color:#555555">Sin gastos registrados</p>
           </div>
           <ul class="space-y-2" *ngIf="breakdown.length > 0">
             <li *ngFor="let b of breakdown" class="flex items-center gap-2">

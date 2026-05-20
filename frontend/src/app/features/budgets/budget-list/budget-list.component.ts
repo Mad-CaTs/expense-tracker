@@ -59,7 +59,18 @@ import { Category } from '../../../core/models/category.model';
 
       <!-- Lista de presupuestos -->
       <div class="card overflow-hidden">
-        <div *ngIf="loading" class="p-8 text-center text-sm" style="color:#666666">Cargando...</div>
+        <div *ngIf="loading" class="space-y-px">
+          <div *ngFor="let i of [1,2,3]" class="px-4 py-4 border-b" style="border-color:#1e1e20">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-2.5">
+                <div class="skeleton w-3 h-3 rounded-full"></div>
+                <div class="skeleton h-4 w-24 rounded"></div>
+              </div>
+              <div class="skeleton h-4 w-20 rounded"></div>
+            </div>
+            <div class="skeleton h-2 w-full rounded-full"></div>
+          </div>
+        </div>
 
         <div *ngIf="!loading && budgets.length === 0" class="p-10 text-center">
           <svg class="w-10 h-10 text-gray-700 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">

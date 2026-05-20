@@ -260,6 +260,11 @@ tbody tr:nth-child(n+9){ animation-delay:200ms; }
   to   { opacity: 1; transform: scale(1) translateY(0); }
 }
 
+/* ─── Card tinted shadow ────────────────────────────────────────────────────── */
+.card {
+  box-shadow: 0 8px 32px -8px rgba(0, 0, 0, 0.5);
+}
+
 /* ─── Filters collapse chevron ──────────────────────────────────────────────── */
 .rotate-180 {
   transition: transform 200ms var(--ease-out);
