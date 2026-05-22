@@ -26,24 +26,22 @@ export function BudgetCard({ budget, index }: BudgetCardProps) {
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05 }}
-      className="bg-[#111] rounded-2xl p-5 flex flex-col gap-3"
+      className="flex flex-col gap-3 rounded-2xl bg-[#111] p-5"
     >
       <div className="flex items-start justify-between">
         <div>
           <p className="text-sm font-semibold text-[#e2e0d5]">{budget.name}</p>
-          {budget.category && (
-            <p className="text-xs text-[#555] mt-0.5">{budget.category.name}</p>
-          )}
+          {budget.category && <p className="mt-0.5 text-xs text-[#555]">{budget.category.name}</p>}
         </div>
         <div className="text-right">
-          <p className="tabular-nums text-sm font-bold text-[#e2e0d5]">
+          <p className="text-sm font-bold text-[#e2e0d5] tabular-nums">
             S/ {budget.spentAmount.toFixed(2)}
           </p>
           <p className="text-xs text-[#555]">de S/ {budget.limitAmount.toFixed(2)}</p>
         </div>
       </div>
 
-      <div className="h-1.5 bg-[#1a1a1a] rounded-full overflow-hidden">
+      <div className="h-1.5 overflow-hidden rounded-full bg-[#1a1a1a]">
         <motion.div
           initial={{ width: 0 }}
           animate={{ width: `${Math.min(pct, 100)}%` }}

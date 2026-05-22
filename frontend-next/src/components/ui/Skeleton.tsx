@@ -10,9 +10,9 @@ export function Skeleton({ className }: SkeletonProps) {
 
 export function ExpenseRowSkeleton() {
   return (
-    <div className="flex items-center justify-between px-4 py-4 border-b border-[#1a1a1a]">
+    <div className="flex items-center justify-between border-b border-[#1a1a1a] px-4 py-4">
       <div className="flex items-center gap-3">
-        <Skeleton className="w-9 h-9 rounded-xl" />
+        <Skeleton className="h-9 w-9 rounded-xl" />
         <div className="flex flex-col gap-1.5">
           <Skeleton className="h-3.5 w-28" />
           <Skeleton className="h-3 w-16" />
@@ -25,7 +25,7 @@ export function ExpenseRowSkeleton() {
 
 export function BudgetCardSkeleton() {
   return (
-    <div className="bg-[#111] rounded-2xl p-5 flex flex-col gap-3">
+    <div className="flex flex-col gap-3 rounded-2xl bg-[#111] p-5">
       <div className="flex justify-between">
         <Skeleton className="h-4 w-24" />
         <Skeleton className="h-4 w-16" />

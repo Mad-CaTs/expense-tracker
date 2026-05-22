@@ -1,8 +1,9 @@
 'use client'
 
-import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
+
+import { motion } from 'framer-motion'
 
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -31,7 +32,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0d0d0d] flex items-center justify-center px-6">
+    <div className="flex min-h-screen items-center justify-center bg-[#0d0d0d] px-6">
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
@@ -39,7 +40,7 @@ export default function LoginPage() {
         className="w-full max-w-sm"
       >
         <div className="mb-10 text-center">
-          <h1 className="text-4xl font-extrabold tracking-tight text-gold mb-1">gastos</h1>
+          <h1 className="text-gold mb-1 text-4xl font-extrabold tracking-tight">gastos</h1>
           <p className="text-sm text-[#555]">Control de gastos personales</p>
         </div>
 
@@ -64,7 +65,7 @@ export default function LoginPage() {
           />
 
           {error && (
-            <p className="text-xs text-[#ef4444] text-center" role="alert">
+            <p className="text-center text-xs text-[#ef4444]" role="alert">
               {error}
             </p>
           )}

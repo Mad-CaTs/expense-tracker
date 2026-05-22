@@ -2,11 +2,11 @@
 
 import { useRouter } from 'next/navigation'
 
+import { ExpenseFilters } from '@/components/features/expenses/ExpenseFilters'
+import { ExpenseRow } from '@/components/features/expenses/ExpenseRow'
 import { Button } from '@/components/ui/Button'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { ExpenseRowSkeleton } from '@/components/ui/Skeleton'
-import { ExpenseFilters } from '@/components/features/expenses/ExpenseFilters'
-import { ExpenseRow } from '@/components/features/expenses/ExpenseRow'
 import { useDeleteExpense, useExpenses } from '@/lib/hooks/useExpenses'
 import { useFilterStore } from '@/stores/filterStore'
 
@@ -32,7 +32,7 @@ export default function ExpensesPage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="mx-auto max-w-2xl">
       <div className="px-4 pt-6 pb-2 md:pt-8">
         <h1 className="text-2xl font-extrabold tracking-tight text-[#e2e0d5]">Gastos</h1>
       </div>
@@ -75,7 +75,7 @@ export default function ExpensesPage() {
           >
             Anterior
           </Button>
-          <span className="text-xs text-[#555] self-center">
+          <span className="self-center text-xs text-[#555]">
             {filters.currentPage + 1} / {data.totalPages}
           </span>
           <Button

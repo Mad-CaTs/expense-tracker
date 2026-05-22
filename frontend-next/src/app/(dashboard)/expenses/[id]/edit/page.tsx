@@ -9,8 +9,8 @@ export default async function EditExpensePage({ params }: EditExpensePageProps) 
   const expenseId = Number(id)
 
   return (
-    <div className="max-w-lg mx-auto pt-6 md:pt-8">
-      <div className="px-4 mb-6">
+    <div className="mx-auto max-w-lg pt-6 md:pt-8">
+      <div className="mb-6 px-4">
         <h1 className="text-2xl font-extrabold tracking-tight text-[#e2e0d5]">Editar gasto</h1>
       </div>
       <ExpenseForm expenseId={expenseId} />

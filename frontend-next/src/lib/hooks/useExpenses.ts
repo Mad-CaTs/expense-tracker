@@ -36,8 +36,13 @@ export function useCreateExpense() {
 export function useUpdateExpense() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Omit<Expense, 'id' | 'category'> & { categoryId: number } }) =>
-      updateExpense(id, data),
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: number
+      data: Omit<Expense, 'id' | 'category'> & { categoryId: number }
+    }) => updateExpense(id, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['expenses'] }),
   })
 }

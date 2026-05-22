@@ -19,13 +19,13 @@ export function ExpenseFilters() {
   const { data: categories } = useCategories()
 
   return (
-    <div className="px-4 pt-4 pb-2 border-b border-[#1a1a1a]">
-      <div className="flex items-center gap-2 mb-3">
+    <div className="border-b border-[#1a1a1a] px-4 pt-4 pb-2">
+      <div className="mb-3 flex items-center gap-2">
         {PERIODS.map(({ value, label }) => (
           <button
             key={value}
             onClick={() => setPeriod(value)}
-            className="px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors"
+            className="rounded-xl px-3 py-1.5 text-xs font-semibold transition-colors"
             style={
               period === value
                 ? { background: 'linear-gradient(135deg, #d4af37, #f0d060)', color: '#080808' }
@@ -37,11 +37,20 @@ export function ExpenseFilters() {
         ))}
         <button
           onClick={toggleFilters}
-          className="ml-auto p-2 rounded-xl hover:bg-[#161616] text-[#555] hover:text-[#e2e0d5] transition-colors"
+          className="ml-auto rounded-xl p-2 text-[#555] transition-colors hover:bg-[#161616] hover:text-[#e2e0d5]"
           aria-label="Mostrar filtros"
           aria-expanded={filtersOpen}
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <path d="M22 3H2l8 9.46V19l4 2v-8.54Z" />
           </svg>
         </button>
@@ -59,9 +68,7 @@ export function ExpenseFilters() {
             <div className="pb-3">
               <Select
                 value={categoryId?.toString() ?? ''}
-                onChange={(e) =>
-                  setCategoryId(e.target.value ? Number(e.target.value) : undefined)
-                }
+                onChange={(e) => setCategoryId(e.target.value ? Number(e.target.value) : undefined)}
                 aria-label="Filtrar por categoría"
               >
                 <option value="">Todas las categorías</option>

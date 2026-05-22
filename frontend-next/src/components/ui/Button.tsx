@@ -1,7 +1,8 @@
 'use client'
 
-import { motion } from 'framer-motion'
 import { type ButtonHTMLAttributes, forwardRef } from 'react'
+
+import { motion } from 'framer-motion'
 
 import { cn } from '@/lib/utils/cn'
 
@@ -40,7 +41,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       {...(props as React.ComponentProps<typeof motion.button>)}
     >
       {loading ? (
-        <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+        <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
       ) : (
         children
       )}

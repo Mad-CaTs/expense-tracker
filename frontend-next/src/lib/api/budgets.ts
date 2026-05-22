@@ -7,9 +7,7 @@ export async function getBudgets(): Promise<Budget[]> {
   return res.data
 }
 
-export async function createBudget(
-  data: Omit<Budget, 'id' | 'spentAmount'>
-): Promise<Budget> {
+export async function createBudget(data: Omit<Budget, 'id' | 'spentAmount'>): Promise<Budget> {
   const res = await apiClient.post<Budget>('/budgets', data)
   return res.data
 }

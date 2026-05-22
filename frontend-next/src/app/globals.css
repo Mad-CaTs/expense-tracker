@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @theme inline {
   --font-sans: var(--font-geist-sans);
@@ -69,8 +69,12 @@ body {
 
 /* Skeleton shimmer */
 @keyframes shimmer {
-  0% { background-position: -400px 0; }
-  100% { background-position: 400px 0; }
+  0% {
+    background-position: -400px 0;
+  }
+  100% {
+    background-position: 400px 0;
+  }
 }
 
 .skeleton {

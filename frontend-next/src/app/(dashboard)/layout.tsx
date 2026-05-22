@@ -1,8 +1,9 @@
 'use client'
 
-import { AnimatePresence, motion } from 'framer-motion'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
+
+import { AnimatePresence, motion } from 'framer-motion'
 
 import { BottomNav } from '@/components/layout/BottomNav'
 import { Sidebar } from '@/components/layout/Sidebar'
@@ -17,7 +18,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <Sidebar />
       <TopBar />
 
-      <main id="main-content" className="md:ml-[220px] pb-20 md:pb-0">
+      <main id="main-content" className="pb-20 md:ml-[220px] md:pb-0">
         <AnimatePresence mode="wait">
           <motion.div
             key={pathname}

@@ -1,43 +1,40 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
 import { useCategories } from '@/lib/hooks/useCategories'
 import { useCreateExpense, useExpense, useUpdateExpense } from '@/lib/hooks/useExpenses'
+import { Expense } from '@/types'
 
 interface ExpenseFormProps {
   expenseId?: number
 }
 
-export function ExpenseForm({ expenseId }: ExpenseFormProps) {
+interface FormInnerProps {
+  expense?: Expense
+  expenseId?: number
+}
+
+function ExpenseFormInner({ expense, expenseId }: FormInnerProps) {
   const router = useRouter()
   const isEdit = expenseId != null && expenseId > 0
 
-  const { data: expense, isLoading: loadingExpense } = useExpense(expenseId ?? 0)
   const { data: categories } = useCategories()
   const createExpense = useCreateExpense()
   const updateExpense = useUpdateExpense()
 
-  const [description, setDescription] = useState('')
-  const [amount, setAmount] = useState('')
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0])
-  const [categoryId, setCategoryId] = useState('')
-  const [notes, setNotes] = useState('')
+  const [description, setDescription] = useState(expense?.description ?? '')
+  const [amount, setAmount] = useState(expense ? expense.amount.toString() : '')
+  const [date, setDate] = useState(
+    expense ? expense.date.split('T')[0] : new Date().toISOString().split('T')[0]
+  )
+  const [categoryId, setCategoryId] = useState(expense ? expense.category.id.toString() : '')
+  const [notes, setNotes] = useState(expense?.notes ?? '')
   const [errors, setErrors] = useState<Record<string, string>>({})
-
-  useEffect(() => {
-    if (expense) {
-      setDescription(expense.description)
-      setAmount(expense.amount.toString())
-      setDate(expense.date.split('T')[0])
-      setCategoryId(expense.category.id.toString())
-      setNotes(expense.notes ?? '')
-    }
-  }, [expense])
 
   function validate() {
     const errs: Record<string, string> = {}
@@ -71,10 +68,6 @@ export function ExpenseForm({ expenseId }: ExpenseFormProps) {
   }
 
   const isSubmitting = createExpense.isPending || updateExpense.isPending
-
-  if (isEdit && loadingExpense) {
-    return <div className="px-4 py-8 text-sm text-[#555]">Cargando...</div>
-  }
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4 px-4" noValidate>
@@ -138,4 +131,15 @@ export function ExpenseForm({ expenseId }: ExpenseFormProps) {
       </div>
     </form>
   )
+}
+
+export function ExpenseForm({ expenseId }: ExpenseFormProps) {
+  const isEdit = expenseId != null && expenseId > 0
+  const { data: expense, isLoading: loadingExpense } = useExpense(expenseId ?? 0)
+
+  if (isEdit && loadingExpense) {
+    return <div className="px-4 py-8 text-sm text-[#555]">Cargando...</div>
+  }
+
+  return <ExpenseFormInner key={expense?.id ?? 'new'} expense={expense} expenseId={expenseId} />
 }
