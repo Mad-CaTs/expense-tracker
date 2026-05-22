@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 
+import { Providers } from '@/providers/Providers'
+
 import './globals.css'
 
 const geistSans = Geist({
@@ -27,7 +29,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <a href="#main-content" className="skip-link">
           Saltar al contenido
         </a>
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   )
