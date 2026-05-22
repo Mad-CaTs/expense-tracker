@@ -16,41 +16,98 @@ export function Sidebar() {
   const pathname = usePathname()
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-30 hidden w-[220px] flex-col border-r border-[#1a1a1a] bg-[#111] px-3 py-6 md:flex">
+    <aside className="fixed inset-y-0 left-0 z-30 hidden w-[220px] flex-col border-r border-[#161616] bg-[#0e0e0e] px-3 py-6 md:flex">
+      {/* Logo area */}
       <div className="mb-8 px-3">
-        <span className="text-gold text-xl font-extrabold tracking-tight">gastos</span>
-        <p className="mt-0.5 text-[10px] tracking-[0.2em] text-[#555] uppercase">smart tracker</p>
+        <div className="flex items-baseline gap-1.5">
+          <span className="text-gold text-[22px] font-extrabold tracking-[-0.04em]">gastos</span>
+          <span
+            className="rounded-full px-1.5 py-0.5 text-[8px] font-bold tracking-[0.12em] uppercase"
+            style={{
+              background: 'rgba(212,175,55,0.12)',
+              color: '#d4af37',
+            }}
+          >
+            beta
+          </span>
+        </div>
+        <p className="mt-0.5 text-[9px] tracking-[0.22em] text-[#383838] uppercase">
+          control de gastos
+        </p>
       </div>
 
-      <nav className="flex flex-1 flex-col gap-1" aria-label="Navegación principal">
+      {/* Divider */}
+      <div className="mx-3 mb-4 h-px bg-gradient-to-r from-transparent via-[#1c1c1c] to-transparent" />
+
+      <nav className="flex flex-1 flex-col gap-0.5" aria-label="Navegación principal">
         {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
           const active = pathname.startsWith(href)
           return (
             <Link
               key={href}
               href={href}
-              className="relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors"
-              style={{ color: active ? '#d4af37' : '#888' }}
+              className="group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-colors duration-200"
+              style={{ color: active ? '#e8e6db' : '#505050' }}
               aria-current={active ? 'page' : undefined}
             >
               {active && (
                 <motion.div
                   layoutId="sidebar-active"
-                  className="absolute inset-0 rounded-xl bg-[#d4af37]/10"
-                  transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                  className="absolute inset-0 rounded-xl"
+                  style={{
+                    background: 'rgba(212,175,55,0.08)',
+                    boxShadow: 'inset 0 1px 0 rgba(212,175,55,0.1)',
+                  }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 35 }}
                 />
               )}
-              <Icon size={16} />
+              <span
+                className="relative transition-colors duration-200"
+                style={{ color: active ? '#d4af37' : 'inherit' }}
+              >
+                <Icon size={15} />
+              </span>
               <span className="relative">{label}</span>
+              {active && (
+                <span
+                  className="absolute right-3 h-1 w-1 rounded-full"
+                  style={{ background: '#d4af37' }}
+                />
+              )}
             </Link>
           )
         })}
       </nav>
+
+      {/* Bottom divider */}
+      <div className="mx-3 mb-4 h-px bg-gradient-to-r from-transparent via-[#1c1c1c] to-transparent" />
+
+      {/* User placeholder */}
+      <div className="flex items-center gap-2.5 rounded-xl px-3 py-2">
+        <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-[#161616] ring-1 ring-[#242424]">
+          <svg
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#484848"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="12" cy="8" r="4" />
+            <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
+          </svg>
+        </div>
+        <div className="min-w-0">
+          <p className="truncate text-[11px] font-medium text-[#606060]">Mi cuenta</p>
+        </div>
+      </div>
     </aside>
   )
 }
 
-function ReceiptIcon({ size = 16 }: { size?: number }) {
+function ReceiptIcon({ size = 15 }: { size?: number }) {
   return (
     <svg
       width={size}
@@ -58,7 +115,7 @@ function ReceiptIcon({ size = 16 }: { size?: number }) {
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth="1.8"
+      strokeWidth="1.7"
       strokeLinecap="round"
       strokeLinejoin="round"
     >
@@ -68,7 +125,7 @@ function ReceiptIcon({ size = 16 }: { size?: number }) {
   )
 }
 
-function WalletIcon({ size = 16 }: { size?: number }) {
+function WalletIcon({ size = 15 }: { size?: number }) {
   return (
     <svg
       width={size}
@@ -76,7 +133,7 @@ function WalletIcon({ size = 16 }: { size?: number }) {
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth="1.8"
+      strokeWidth="1.7"
       strokeLinecap="round"
       strokeLinejoin="round"
     >
@@ -87,7 +144,7 @@ function WalletIcon({ size = 16 }: { size?: number }) {
   )
 }
 
-function ChartIcon({ size = 16 }: { size?: number }) {
+function ChartIcon({ size = 15 }: { size?: number }) {
   return (
     <svg
       width={size}
@@ -95,7 +152,7 @@ function ChartIcon({ size = 16 }: { size?: number }) {
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth="1.8"
+      strokeWidth="1.7"
       strokeLinecap="round"
       strokeLinejoin="round"
     >
@@ -105,7 +162,7 @@ function ChartIcon({ size = 16 }: { size?: number }) {
   )
 }
 
-function RepeatIcon({ size = 16 }: { size?: number }) {
+function RepeatIcon({ size = 15 }: { size?: number }) {
   return (
     <svg
       width={size}
@@ -113,7 +170,7 @@ function RepeatIcon({ size = 16 }: { size?: number }) {
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth="1.8"
+      strokeWidth="1.7"
       strokeLinecap="round"
       strokeLinejoin="round"
     >

@@ -9,7 +9,7 @@ import type { Period } from '@/types'
 
 const PERIODS: { value: Period; label: string }[] = [
   { value: 'MONTHLY', label: 'Este mes' },
-  { value: 'LAST_MONTH', label: 'Mes anterior' },
+  { value: 'LAST_MONTH', label: 'Anterior' },
   { value: 'YEARLY', label: 'Este año' },
 ]
 
@@ -19,35 +19,47 @@ export function ExpenseFilters() {
   const { data: categories } = useCategories()
 
   return (
-    <div className="border-b border-[#1a1a1a] px-4 pt-4 pb-2">
-      <div className="mb-3 flex items-center gap-2">
-        {PERIODS.map(({ value, label }) => (
-          <button
-            key={value}
-            onClick={() => setPeriod(value)}
-            className="rounded-xl px-3 py-1.5 text-xs font-semibold transition-colors"
-            style={
-              period === value
-                ? { background: 'linear-gradient(135deg, #d4af37, #f0d060)', color: '#080808' }
-                : { background: '#161616', color: '#888' }
-            }
-          >
-            {label}
-          </button>
-        ))}
+    <div className="border-b border-[#111] px-4 pt-3 pb-2">
+      <div className="flex items-center gap-2">
+        {/* Segmented control — pill container */}
+        <div className="flex gap-0.5 rounded-full border border-[#1a1a1a] bg-[#0a0a0a] p-0.5">
+          {PERIODS.map(({ value, label }) => {
+            const active = period === value
+            return (
+              <button
+                key={value}
+                onClick={() => setPeriod(value)}
+                className="relative rounded-full px-3 py-1.5 text-[11px] font-semibold transition-colors duration-150"
+                style={{ color: active ? '#060606' : '#484848' }}
+              >
+                {active && (
+                  <motion.span
+                    layoutId="period-active"
+                    className="bg-gold absolute inset-0 rounded-full"
+                    transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                  />
+                )}
+                <span className="relative">{label}</span>
+              </button>
+            )
+          })}
+        </div>
+
+        {/* Filter toggle */}
         <button
           onClick={toggleFilters}
-          className="ml-auto rounded-xl p-2 text-[#555] transition-colors hover:bg-[#161616] hover:text-[#e2e0d5]"
+          className="ml-auto flex h-8 w-8 items-center justify-center rounded-full border border-[#1a1a1a] bg-[#0a0a0a] transition-colors duration-150 hover:border-[#242424] hover:bg-[#111]"
+          style={{ color: filtersOpen ? '#d4af37' : '#484848' }}
           aria-label="Mostrar filtros"
           aria-expanded={filtersOpen}
         >
           <svg
-            width="14"
-            height="14"
+            width="13"
+            height="13"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
-            strokeWidth="2"
+            strokeWidth="1.8"
             strokeLinecap="round"
             strokeLinejoin="round"
           >
@@ -62,10 +74,10 @@ export function ExpenseFilters() {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.22, ease: [0.32, 0.72, 0, 1] }}
             className="overflow-hidden"
           >
-            <div className="pb-3">
+            <div className="pt-3 pb-1">
               <Select
                 value={categoryId?.toString() ?? ''}
                 onChange={(e) => setCategoryId(e.target.value ? Number(e.target.value) : undefined)}

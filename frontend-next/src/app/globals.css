@@ -5,18 +5,19 @@
   --font-mono: var(--font-geist-mono);
 
   /* Backgrounds */
-  --color-bg-base: #0d0d0d;
-  --color-bg-elevated: #111111;
-  --color-bg-subtle: #161616;
+  --color-bg-base: #080808;
+  --color-bg-elevated: #0e0e0e;
+  --color-bg-subtle: #141414;
+  --color-bg-card: #111111;
 
   /* Borders */
-  --color-border-subtle: #1a1a1a;
-  --color-border-default: #222222;
+  --color-border-subtle: #1c1c1c;
+  --color-border-default: #242424;
 
   /* Text */
-  --color-text-primary: #e2e0d5;
-  --color-text-secondary: #888888;
-  --color-text-muted: #555555;
+  --color-text-primary: #e8e6db;
+  --color-text-secondary: #808080;
+  --color-text-muted: #484848;
 
   /* Accent */
   --color-accent: #d4af37;
@@ -37,11 +38,23 @@ html {
 }
 
 body {
-  background-color: #0d0d0d;
-  color: #e2e0d5;
+  background-color: #080808;
+  color: #e8e6db;
   font-family: var(--font-geist-sans), sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Subtle noise overlay — fixed, pointer-events-none */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  pointer-events: none;
+  opacity: 0.022;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
 }
 
 /* Tabular numbers for financial data */
@@ -49,14 +62,15 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-/* Gold gradient utility */
+/* Gold gradient text */
 .text-gold {
-  background: linear-gradient(90deg, #d4af37, #f0d060);
+  background: linear-gradient(105deg, #c9a227 0%, #f0d060 55%, #d4af37 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
+/* Gold gradient background */
 .bg-gold {
   background: linear-gradient(135deg, #d4af37, #f0d060);
 }
@@ -70,18 +84,25 @@ body {
 /* Skeleton shimmer */
 @keyframes shimmer {
   0% {
-    background-position: -400px 0;
+    background-position: -600px 0;
   }
   100% {
-    background-position: 400px 0;
+    background-position: 600px 0;
   }
 }
 
 .skeleton {
-  background: linear-gradient(90deg, #1a1a1a 25%, #222 50%, #1a1a1a 75%);
-  background-size: 800px 100%;
-  animation: shimmer 1.4s ease-in-out infinite;
-  border-radius: 6px;
+  background: linear-gradient(90deg, #161616 25%, #1e1e1e 50%, #161616 75%);
+  background-size: 1200px 100%;
+  animation: shimmer 1.6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  border-radius: 8px;
+}
+
+/* Inset highlight — bezel inner glow */
+.inset-highlight {
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.06),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4);
 }
 
 /* Skip to content */

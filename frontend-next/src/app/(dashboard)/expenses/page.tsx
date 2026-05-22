@@ -10,6 +10,13 @@ import { ExpenseRowSkeleton } from '@/components/ui/Skeleton'
 import { useDeleteExpense, useExpenses } from '@/lib/hooks/useExpenses'
 import { useFilterStore } from '@/stores/filterStore'
 
+function getGreeting() {
+  const h = new Date().getHours()
+  if (h < 12) return 'Buenos días'
+  if (h < 19) return 'Buenas tardes'
+  return 'Buenas noches'
+}
+
 export default function ExpensesPage() {
   const router = useRouter()
   const filters = useFilterStore()
@@ -33,8 +40,19 @@ export default function ExpensesPage() {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <div className="px-4 pt-6 pb-2 md:pt-8">
-        <h1 className="text-2xl font-extrabold tracking-tight text-[#e2e0d5]">Gastos</h1>
+      {/* Header */}
+      <div className="flex items-end justify-between px-4 pt-7 pb-4 md:pt-9">
+        <div>
+          <p className="text-[10px] font-semibold tracking-[0.18em] text-[#383838] uppercase">
+            {getGreeting()}
+          </p>
+          <h1 className="mt-0.5 text-[22px] font-extrabold tracking-[-0.02em] text-[#e8e6db]">
+            Mis Gastos
+          </h1>
+        </div>
+        <Button size="sm" onClick={() => router.push('/expenses/new')}>
+          + Nuevo
+        </Button>
       </div>
 
       <ExpenseFilters />
@@ -66,16 +84,16 @@ export default function ExpensesPage() {
       </div>
 
       {data && data.totalPages > 1 && (
-        <div className="flex justify-center gap-2 p-4">
+        <div className="flex items-center justify-center gap-3 p-4">
           <Button
             variant="secondary"
             size="sm"
             disabled={filters.currentPage === 0}
             onClick={() => filters.setPage(filters.currentPage - 1)}
           >
-            Anterior
+            ← Anterior
           </Button>
-          <span className="self-center text-xs text-[#555]">
+          <span className="text-[11px] text-[#383838] tabular-nums">
             {filters.currentPage + 1} / {data.totalPages}
           </span>
           <Button
@@ -84,7 +102,7 @@ export default function ExpensesPage() {
             disabled={filters.currentPage >= data.totalPages - 1}
             onClick={() => filters.setPage(filters.currentPage + 1)}
           >
-            Siguiente
+            Siguiente →
           </Button>
         </div>
       )}

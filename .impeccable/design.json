@@ -1,0 +1,121 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-05-22T00:00:00.000Z",
+  "title": "Design System: gastos",
+  "extensions": {
+    "colorMeta": {
+      "void-black":     { "role": "neutral",   "displayName": "Void Black",        "canonical": "#080808", "tonalRamp": ["#050505","#080808","#111111","#1a1a1a","#242424","#383838","#484848","#808080"] },
+      "surface-base":   { "role": "neutral",   "displayName": "Surface Base",      "canonical": "#0e0e0e", "tonalRamp": ["#080808","#0e0e0e","#111111","#141414","#1c1c1c","#242424","#383838","#606060"] },
+      "text-primary":   { "role": "neutral",   "displayName": "Warm Parchment",    "canonical": "#e8e6db", "tonalRamp": ["#282520","#3a3830","#555048","#808080","#aaa89e","#c8c6bc","#dddbd0","#e8e6db"] },
+      "gold-mid":       { "role": "primary",   "displayName": "Oro Metálico",      "canonical": "#d4af37", "tonalRamp": ["#3a2e08","#6b5514","#9a7b1e","#c9a227","#d4af37","#dfc05a","#ebd383","#f0d060"] },
+      "danger":         { "role": "semantic",  "displayName": "Danger",            "canonical": "#ef4444", "tonalRamp": ["#3a0f0f","#7f1d1d","#b91c1c","#dc2626","#ef4444","#f87171","#fca5a5","#fee2e2"] },
+      "warning":        { "role": "semantic",  "displayName": "Warning",           "canonical": "#f97316", "tonalRamp": ["#431407","#7c2d12","#c2410c","#ea580c","#f97316","#fb923c","#fdba74","#fed7aa"] },
+      "success":        { "role": "semantic",  "displayName": "Success",           "canonical": "#4ade80", "tonalRamp": ["#052e16","#14532d","#166534","#15803d","#16a34a","#22c55e","#4ade80","#86efac"] }
+    },
+    "typographyMeta": {
+      "display":  { "displayName": "Display",  "purpose": "KPIs principales, totales de período. Máximo 1-2 por pantalla." },
+      "headline": { "displayName": "Headline", "purpose": "Títulos de página en desktop." },
+      "title":    { "displayName": "Title",    "purpose": "Nombres de gastos, presupuestos, ítems de lista." },
+      "body":     { "displayName": "Body",     "purpose": "Texto de soporte. Máx 65ch." },
+      "label":    { "displayName": "Label",    "purpose": "Labels uppercase de inputs, eyebrow tags de KPIs." },
+      "mono":     { "displayName": "Mono",     "purpose": "Todos los montos monetarios sin excepción." }
+    },
+    "shadows": [
+      { "name": "floating",        "value": "0 8px 32px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4)",         "purpose": "Modals y overlays. Nunca en cards." },
+      { "name": "inset-highlight", "value": "inset 0 1px 1px rgba(255,255,255,0.04), inset 0 -1px 0 rgba(0,0,0,0.4)", "purpose": "Inner core del bezel doble en inputs y cards." }
+    ],
+    "motion": [
+      { "name": "ease-premium",  "value": "cubic-bezier(0.32, 0.72, 0, 1)", "purpose": "Transiciones de página y entrada de elementos." },
+      { "name": "spring-snap",   "value": "spring { stiffness: 500, damping: 30 }", "purpose": "whileTap en botones, segmented control." },
+      { "name": "spring-layout", "value": "spring { stiffness: 400, damping: 35 }", "purpose": "layoutId de sidebar active indicator." }
+    ],
+    "breakpoints": [
+      { "name": "mobile-only", "value": "< 768px", "description": "Bottom nav + TopBar. Sin sidebar." },
+      { "name": "desktop",     "value": ">= 768px", "description": "Sidebar 220px fijo. Sin bottom nav." }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "CTA principal. Gradiente dorado, texto oscuro, cápsula completa.",
+      "html": "<button class=\"ds-btn-primary\">Iniciar sesión</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; height: 36px; padding: 0 16px; background: linear-gradient(135deg, #d4af37, #f0d060); color: #060606; font-family: Geist, system-ui, sans-serif; font-size: 14px; font-weight: 600; border: none; border-radius: 9999px; cursor: pointer; transition: opacity 0.15s; } .ds-btn-primary:hover { opacity: 0.88; } .ds-btn-primary:active { transform: scale(0.96); } .ds-btn-primary:focus-visible { outline: 2px solid #d4af37; outline-offset: 2px; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Acción secundaria. Superficie oscura, borde hairline, cápsula.",
+      "html": "<button class=\"ds-btn-secondary\">Cancelar</button>",
+      "css": ".ds-btn-secondary { display: inline-flex; align-items: center; justify-content: center; height: 36px; padding: 0 16px; background: #111111; color: #e8e6db; font-family: Geist, system-ui, sans-serif; font-size: 14px; font-weight: 600; border: 1px solid #1c1c1c; border-radius: 9999px; cursor: pointer; transition: background 0.15s, border-color 0.15s; } .ds-btn-secondary:hover { background: #161616; border-color: #242424; } .ds-btn-secondary:active { transform: scale(0.96); } .ds-btn-secondary:focus-visible { outline: 2px solid #d4af37; outline-offset: 2px; }"
+    },
+    {
+      "name": "Input Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Bezel doble: outer wrapper con borde, inner con inset highlight.",
+      "html": "<div class=\"ds-field\"><label class=\"ds-field-label\" for=\"ds-input-demo\">Descripción</label><div class=\"ds-field-wrap\"><input class=\"ds-field-input\" id=\"ds-input-demo\" placeholder=\"Ej: Almuerzo\" /></div></div>",
+      "css": ".ds-field { display: flex; flex-direction: column; gap: 6px; } .ds-field-label { font-family: Geist, system-ui, sans-serif; font-size: 9px; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: #484848; } .ds-field-wrap { border: 1px solid #1c1c1c; border-radius: 12px; padding: 1px; transition: border-color 0.15s; } .ds-field-wrap:focus-within { border-color: rgba(212,175,55,0.6); } .ds-field-input { width: 100%; height: 40px; padding: 0 12px; background: #111111; color: #e8e6db; font-family: Geist, system-ui, sans-serif; font-size: 13px; border: none; border-radius: 10px; box-shadow: inset 0 1px 1px rgba(255,255,255,0.04), inset 0 -1px 0 rgba(0,0,0,0.4); outline: none; } .ds-field-input::placeholder { color: #383838; }"
+    },
+    {
+      "name": "Budget Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Card con bezel doble. Progress bar gold/orange/red según porcentaje.",
+      "html": "<div class=\"ds-budget-card\"><div class=\"ds-budget-inner\"><div class=\"ds-budget-header\"><div><p class=\"ds-budget-name\">Alimentación</p><p class=\"ds-budget-cat\">Comida</p></div><div class=\"ds-budget-amounts\"><p class=\"ds-budget-spent\">S/ 234.50</p><p class=\"ds-budget-limit\">de S/ 400.00</p></div></div><div class=\"ds-progress-track\"><div class=\"ds-progress-bar\" style=\"width: 58%\"></div></div><div class=\"ds-budget-footer\"><span class=\"ds-budget-remaining\">S/ 165.50 restante</span><span class=\"ds-budget-pct\">58%</span></div></div></div>",
+      "css": ".ds-budget-card { border-radius: 18px; border: 1px solid #161616; background: #0a0a0a; padding: 1px; } .ds-budget-inner { border-radius: 17px; background: #0e0e0e; padding: 20px; box-shadow: inset 0 1px 1px rgba(255,255,255,0.03); display: flex; flex-direction: column; gap: 16px; } .ds-budget-header { display: flex; justify-content: space-between; align-items: flex-start; } .ds-budget-name { font-family: Geist, system-ui, sans-serif; font-size: 13px; font-weight: 600; color: #e8e6db; } .ds-budget-cat { font-size: 11px; color: #404040; margin-top: 2px; } .ds-budget-amounts { text-align: right; } .ds-budget-spent { font-family: 'Geist Mono', monospace; font-size: 13px; font-weight: 700; color: #e8e6db; font-variant-numeric: tabular-nums; } .ds-budget-limit { font-size: 11px; color: #404040; } .ds-progress-track { height: 3px; background: #161616; border-radius: 9999px; overflow: hidden; } .ds-progress-bar { height: 100%; background: linear-gradient(90deg, #d4af37, #f0d060); border-radius: 9999px; transition: width 0.7s cubic-bezier(0.32,0.72,0,1); } .ds-budget-footer { display: flex; justify-content: space-between; } .ds-budget-remaining { font-size: 11px; font-weight: 500; color: #484848; } .ds-budget-pct { font-family: 'Geist Mono', monospace; font-size: 11px; font-weight: 600; color: #484848; font-variant-numeric: tabular-nums; }"
+    },
+    {
+      "name": "Expense Row",
+      "kind": "custom",
+      "description": "Fila de gasto. Category icon con bezel, monto en Mono, acciones en hover.",
+      "html": "<div class=\"ds-expense-row\"><div class=\"ds-expense-left\"><div class=\"ds-expense-icon\">🍕</div><div><p class=\"ds-expense-desc\">Almuerzo en restaurante</p><p class=\"ds-expense-meta\">Alimentación · 12 may</p></div></div><span class=\"ds-expense-amount\">S/ 45.00</span></div>",
+      "css": ".ds-expense-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid #111; transition: background 0.15s; } .ds-expense-row:hover { background: #0e0e0e; } .ds-expense-left { display: flex; align-items: center; gap: 12px; } .ds-expense-icon { width: 36px; height: 36px; border-radius: 12px; background: rgba(212,175,55,0.08); box-shadow: inset 0 1px 1px rgba(255,255,255,0.04), 0 0 0 1px rgba(212,175,55,0.1); display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; } .ds-expense-desc { font-family: Geist, system-ui, sans-serif; font-size: 13px; font-weight: 500; color: #e8e6db; line-height: 1.3; } .ds-expense-meta { font-size: 11px; color: #404040; margin-top: 2px; } .ds-expense-amount { font-family: 'Geist Mono', monospace; font-size: 13px; font-weight: 700; color: #c8c6bb; font-variant-numeric: tabular-nums; }"
+    },
+    {
+      "name": "Segmented Control",
+      "kind": "custom",
+      "description": "Period selector con layoutId animado. Gold pill sobre fondo oscuro.",
+      "html": "<div class=\"ds-segmented\"><button class=\"ds-seg-btn ds-seg-active\">Este mes</button><button class=\"ds-seg-btn\">Anterior</button><button class=\"ds-seg-btn\">Este año</button></div>",
+      "css": ".ds-segmented { display: inline-flex; gap: 2px; border: 1px solid #1a1a1a; background: #0a0a0a; border-radius: 9999px; padding: 2px; } .ds-seg-btn { padding: 6px 12px; font-family: Geist, system-ui, sans-serif; font-size: 11px; font-weight: 600; border: none; border-radius: 9999px; cursor: pointer; transition: background 0.15s, color 0.15s; background: transparent; color: #484848; } .ds-seg-active { background: linear-gradient(135deg, #d4af37, #f0d060); color: #060606; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "El Terminal Financiero",
+    "overview": "Un sistema que trata los datos financieros como lo que son: información de precisión. La interfaz no decora ni celebra; indexa, muestra, y sale del camino. La densidad es un signo de respeto al usuario, no de descuido.\n\nEl fondo es casi void: #080808, con superficie elevada en #0e0e0e y #111. La jerarquía se comunica únicamente a través de diferencial de color de fondo — nunca con bordes decorativos. El acento dorado (#d4af37 → #f0d060) cumple exactamente una función: marcar el estado activo y las acciones primarias. Su rareza es su poder.\n\nEste sistema rechaza explícitamente: el neon de fintech cripto, el navy corporativo bancario, y el grid Bootstrap simétrico del SaaS genérico.",
+    "keyCharacteristics": [
+      "Datos primero: los números tienen la mayor jerarquía tipográfica",
+      "Elevación tonal: profundidad sin sombras en superficies estáticas",
+      "Gold como señal, no como decoración",
+      "Tipografía Geist con monospace para cifras",
+      "Bezel doble en inputs y cards premium"
+    ],
+    "rules": [
+      { "name": "La Regla del Acento Único",      "body": "El dorado aparece en ≤ 10% de cualquier pantalla. Su escasez es su señal.", "section": "colors" },
+      { "name": "La Regla del Semantic Accesible", "body": "Color semántico nunca solo: danger siempre con icono o prefijo textual.", "section": "colors" },
+      { "name": "La Regla del Mono Financiero",    "body": "Cualquier cifra con símbolo de moneda usa Geist Mono con tabular-nums.", "section": "typography" },
+      { "name": "La Regla Flat-By-Default",        "body": "Toda superficie está plana en reposo. Las sombras son para elementos flotantes.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do usar Geist Mono con tabular-nums para todos los montos monetarios sin excepción",
+      "Do comunicar elevación con diferencial de color de fondo",
+      "Do aplicar el bezel doble en inputs y cards de primer nivel",
+      "Do usar border-radius: 9999px en todos los botones",
+      "Do limitar el oro a acciones primarias y estado activo",
+      "Do usar spring { stiffness: 500, damping: 30 } para transiciones de estado"
+    ],
+    "donts": [
+      "Don't usar gradiente en texto (background-clip: text)",
+      "Don't usar box-shadow en cards estáticas",
+      "Don't aplicar backdrop-blur a contenedores que hacen scroll",
+      "Don't crear grids de tarjetas idénticas con icon+título+texto",
+      "Don't usar Inter, Roboto, Open Sans",
+      "Don't usar navy azul corporativo, violeta, ni neon",
+      "Don't usar border-left colorido como accent en items de lista",
+      "Don't mostrar errores solo con color rojo sin texto acompañante",
+      "Don't animar propiedades de layout: solo transform y opacity"
+    ]
+  }
+}
