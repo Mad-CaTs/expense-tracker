@@ -25,7 +25,7 @@ export function ReportSummary({ summary }: { summary: ReportSummaryType }) {
             Total gastado
           </p>
           <div>
-            <p className="mt-3 text-[32px] leading-none font-extrabold tracking-[-0.03em] text-[#e8e6db] tabular-nums">
+            <p className="mono-amount mt-3 text-[32px] leading-none font-extrabold tracking-[-0.03em] text-[#e8e6db]">
               S/ {summary.totalAmount.toFixed(2)}
             </p>
             <div className="mt-3 flex items-center gap-1.5">
@@ -59,7 +59,7 @@ export function ReportSummary({ summary }: { summary: ReportSummaryType }) {
             <p className="text-[9px] font-semibold tracking-[0.18em] text-[#383838] uppercase">
               Presupuesto
             </p>
-            <p className="mt-1.5 text-lg font-bold text-[#c8c6bb] tabular-nums">
+            <p className="mono-amount mt-1.5 text-lg font-bold text-[#c8c6bb]">
               S/ {summary.totalBudget.toFixed(2)}
             </p>
           </div>
@@ -79,7 +79,7 @@ export function ReportSummary({ summary }: { summary: ReportSummaryType }) {
               Restante
             </p>
             <p
-              className="mt-1.5 text-lg font-bold tabular-nums"
+              className="mono-amount mt-1.5 text-lg font-bold"
               style={{ color: budgetPct < 20 ? '#f97316' : '#e8e6db' }}
             >
               S/ {summary.remainingBudget.toFixed(2)}

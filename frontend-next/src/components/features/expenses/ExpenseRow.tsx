@@ -48,7 +48,7 @@ export function ExpenseRow({ expense, onEdit, onDelete, index }: ExpenseRowProps
       </div>
 
       <div className="flex items-center gap-2">
-        <span className="text-[13px] font-bold tracking-tight text-[#c8c6bb] tabular-nums transition-colors duration-150 group-hover:text-[#e8e6db]">
+        <span className="mono-amount text-[13px] font-bold tracking-tight text-[#c8c6bb] transition-colors duration-150 group-hover:text-[#e8e6db]">
           S/{' '}
           <span className="group-hover:text-gold-value transition-colors duration-150">
             {expense.amount.toFixed(2)}

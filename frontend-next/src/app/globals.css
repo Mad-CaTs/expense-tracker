@@ -45,16 +45,27 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Subtle noise overlay — fixed, pointer-events-none */
+/* Subtle noise overlay — fixed, pointer-events-none, below all interactive layers */
 body::before {
   content: '';
   position: fixed;
   inset: 0;
-  z-index: 100;
+  z-index: 1;
   pointer-events: none;
   opacity: 0.022;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
   background-size: 200px 200px;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 /* Tabular numbers for financial data */
@@ -62,12 +73,15 @@ body::before {
   font-variant-numeric: tabular-nums;
 }
 
-/* Gold gradient text */
+/* Mono financial amounts — Geist Mono + tabular-nums (La Regla del Mono Financiero) */
+.mono-amount {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Gold text — solid, no gradient clip (banned per DESIGN.md) */
 .text-gold {
-  background: linear-gradient(105deg, #c9a227 0%, #f0d060 55%, #d4af37 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #d4af37;
 }
 
 /* Gold gradient background */

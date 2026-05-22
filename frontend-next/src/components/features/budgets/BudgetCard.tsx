@@ -40,10 +40,12 @@ export function BudgetCard({ budget, index }: BudgetCardProps) {
             )}
           </div>
           <div className="text-right">
-            <p className="text-[13px] font-bold text-[#e8e6db] tabular-nums">
+            <p className="mono-amount text-[13px] font-bold text-[#e8e6db]">
               S/ {budget.spentAmount.toFixed(2)}
             </p>
-            <p className="text-[11px] text-[#404040]">de S/ {budget.limitAmount.toFixed(2)}</p>
+            <p className="mono-amount text-[11px] text-[#404040]">
+              de S/ {budget.limitAmount.toFixed(2)}
+            </p>
           </div>
         </div>
 
@@ -74,7 +76,7 @@ export function BudgetCard({ budget, index }: BudgetCardProps) {
               : `S/ ${remaining.toFixed(2)} restante`}
           </span>
           <span
-            className="text-[11px] font-semibold tabular-nums"
+            className="mono-amount text-[11px] font-semibold"
             style={{
               color: isOverBudget ? '#ef4444' : isNearLimit ? '#f97316' : '#484848',
             }}

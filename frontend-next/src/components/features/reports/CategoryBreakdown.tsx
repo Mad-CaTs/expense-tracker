@@ -17,7 +17,7 @@ export function CategoryBreakdown({ breakdown }: { breakdown: CategoryBreakdownT
           <div key={category.id} className="flex flex-col gap-1.5">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium text-[#e2e0d5]">{category.name}</span>
-              <span className="text-sm font-bold text-[#e2e0d5] tabular-nums">
+              <span className="mono-amount text-sm font-bold text-[#e8e6db]">
                 S/ {amount.toFixed(2)}
               </span>
             </div>
