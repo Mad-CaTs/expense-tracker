@@ -1,7 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
-import { createBudget, deleteBudget, getBudgets, updateBudget } from '@/lib/api/budgets'
-import type { Budget } from '@/types'
+import { createBudget, deleteBudget, getBudgets, type CreateBudgetPayload } from '@/lib/api/budgets'
 
 export function useBudgets() {
   return useQuery({
@@ -13,16 +12,7 @@ export function useBudgets() {
 export function useCreateBudget() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: createBudget,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['budgets'] }),
-  })
-}
-
-export function useUpdateBudget() {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Omit<Budget, 'id' | 'spentAmount'> }) =>
-      updateBudget(id, data),
+    mutationFn: (data: CreateBudgetPayload) => createBudget(data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['budgets'] }),
   })
 }

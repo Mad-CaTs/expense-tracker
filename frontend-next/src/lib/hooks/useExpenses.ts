@@ -41,7 +41,7 @@ export function useUpdateExpense() {
       data,
     }: {
       id: number
-      data: Omit<Expense, 'id' | 'category'> & { categoryId: number }
+      data: Pick<Expense, 'description' | 'amount' | 'date' | 'notes'> & { categoryId: number }
     }) => updateExpense(id, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['expenses'] }),
   })

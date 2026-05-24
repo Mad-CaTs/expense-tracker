@@ -1,32 +1,63 @@
 @import 'tailwindcss';
 
+/* ── Dark mode (default) ── */
+:root {
+  --bg-base: #080808;
+  --bg-elevated: #0e0e0e;
+  --bg-subtle: #0a0a0a;
+  --bg-card: #0a0a0a;
+  --bg-card-inner: #0e0e0e;
+  --bg-input: #111111;
+  --bg-hover: #161616;
+
+  --border-subtle: #1c1c1c;
+  --border-default: #242424;
+  --border-strong: #2a2a2a;
+
+  --text-primary: #e8e6db;
+  --text-secondary: #c8c6bb;
+  --text-tertiary: #606060;
+  --text-muted: #484848;
+  --text-dim: #404040;
+  --text-placeholder: #383838;
+
+  --accent: #d4af37;
+  --accent-light: #f0d060;
+  --accent-bg: rgba(212, 175, 55, 0.08);
+  --accent-ring: rgba(212, 175, 55, 0.3);
+
+  --danger: #ef4444;
+  --success: #4ade80;
+  --warning: #f97316;
+
+  --skeleton-from: #161616;
+  --skeleton-to: #1e1e1e;
+  --inset-highlight: inset 0 1px 1px rgba(255,255,255,0.06), inset 0 -1px 0 rgba(0,0,0,0.4);
+  --card-shadow: 0 1px 3px rgba(0,0,0,0.4);
+  --sidebar-border: #161616;
+  --topbar-bg: rgba(10,10,10,0.92);
+  --bottomnav-bg: rgba(17,17,17,0.95);
+}
+
+
 @theme inline {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 
-  /* Backgrounds */
-  --color-bg-base: #080808;
-  --color-bg-elevated: #0e0e0e;
-  --color-bg-subtle: #141414;
-  --color-bg-card: #111111;
-
-  /* Borders */
-  --color-border-subtle: #1c1c1c;
-  --color-border-default: #242424;
-
-  /* Text */
-  --color-text-primary: #e8e6db;
-  --color-text-secondary: #808080;
-  --color-text-muted: #484848;
-
-  /* Accent */
-  --color-accent: #d4af37;
-  --color-accent-light: #f0d060;
-
-  /* Semantic */
-  --color-danger: #ef4444;
-  --color-success: #4ade80;
-  --color-warning: #f97316;
+  --color-bg-base: var(--bg-base);
+  --color-bg-elevated: var(--bg-elevated);
+  --color-bg-subtle: var(--bg-subtle);
+  --color-bg-card: var(--bg-card);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-accent: var(--accent);
+  --color-accent-light: var(--accent-light);
+  --color-border-subtle: var(--border-subtle);
+  --color-border-default: var(--border-default);
+  --color-danger: var(--danger);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
 }
 
 * {
@@ -38,11 +69,12 @@ html {
 }
 
 body {
-  background-color: #080808;
-  color: #e8e6db;
+  background-color: var(--bg-base);
+  color: var(--text-primary);
   font-family: var(--font-geist-sans), sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 /* Subtle noise overlay — fixed, pointer-events-none, below all interactive layers */
@@ -55,6 +87,11 @@ body::before {
   opacity: 0.022;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
   background-size: 200px 200px;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-placeholder);
 }
 
 /* Reduced motion */
@@ -106,7 +143,7 @@ body::before {
 }
 
 .skeleton {
-  background: linear-gradient(90deg, #161616 25%, #1e1e1e 50%, #161616 75%);
+  background: linear-gradient(90deg, var(--skeleton-from) 25%, var(--skeleton-to) 50%, var(--skeleton-from) 75%);
   background-size: 1200px 100%;
   animation: shimmer 1.6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   border-radius: 8px;
@@ -114,10 +151,9 @@ body::before {
 
 /* Inset highlight — bezel inner glow */
 .inset-highlight {
-  box-shadow:
-    inset 0 1px 1px rgba(255, 255, 255, 0.06),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.4);
+  box-shadow: var(--inset-highlight);
 }
+
 
 /* Skip to content */
 .skip-link {

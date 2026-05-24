@@ -2,7 +2,13 @@
 
 import { AnimatePresence, motion } from 'framer-motion'
 
-import { Select } from '@/components/ui/Select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/Select'
 import { useCategories } from '@/lib/hooks/useCategories'
 import { useFilterStore } from '@/stores/filterStore'
 import type { Period } from '@/types'
@@ -13,16 +19,16 @@ const PERIODS: { value: Period; label: string }[] = [
   { value: 'YEARLY', label: 'Este año' },
 ]
 
-export function ExpenseFilters() {
+export function ExpenseFilters({ onNew }: { onNew?: () => void }) {
   const { period, categoryId, filtersOpen, setPeriod, setCategoryId, toggleFilters } =
     useFilterStore()
   const { data: categories } = useCategories()
 
   return (
-    <div className="border-b border-[#111] px-4 pt-3 pb-2">
+    <div className="border-b px-4 pt-3 pb-2" style={{ borderColor: 'var(--border-subtle)' }}>
       <div className="flex items-center gap-2">
         {/* Segmented control — pill container */}
-        <div className="flex gap-0.5 rounded-full border border-[#1a1a1a] bg-[#0a0a0a] p-0.5">
+        <div className="flex gap-0.5 rounded-full border p-0.5" style={{ borderColor: 'var(--border-default)', background: 'var(--bg-subtle)' }}>
           {PERIODS.map(({ value, label }) => {
             const active = period === value
             return (
@@ -30,7 +36,7 @@ export function ExpenseFilters() {
                 key={value}
                 onClick={() => setPeriod(value)}
                 className="relative rounded-full px-3 py-1.5 text-[11px] font-semibold transition-colors duration-150"
-                style={{ color: active ? '#060606' : '#484848' }}
+                style={{ color: active ? 'var(--bg-base)' : 'var(--text-muted)' }}
               >
                 {active && (
                   <motion.span
@@ -45,11 +51,27 @@ export function ExpenseFilters() {
           })}
         </div>
 
+        {/* New button */}
+        {onNew && (
+          <button
+            onClick={onNew}
+            className="flex h-8 items-center gap-1 rounded-full bg-[#d4af37] px-3 text-[11px] font-bold text-[#080808]"
+          >
+            + Nuevo
+          </button>
+        )}
+
         {/* Filter toggle */}
         <button
           onClick={toggleFilters}
-          className="ml-auto flex h-8 w-8 items-center justify-center rounded-full border border-[#1a1a1a] bg-[#0a0a0a] transition-colors duration-150 hover:border-[#242424] hover:bg-[#111]"
-          style={{ color: filtersOpen ? '#d4af37' : '#484848' }}
+          className="ml-auto flex h-8 w-8 items-center justify-center rounded-full border transition-colors duration-150"
+          style={{
+            borderColor: 'var(--border-default)',
+            background: 'var(--bg-subtle)',
+            color: filtersOpen ? 'var(--accent)' : 'var(--text-muted)',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-hover)' }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-subtle)' }}
           aria-label="Mostrar filtros"
           aria-expanded={filtersOpen}
         >
@@ -79,16 +101,20 @@ export function ExpenseFilters() {
           >
             <div className="pt-3 pb-1">
               <Select
-                value={categoryId?.toString() ?? ''}
-                onChange={(e) => setCategoryId(e.target.value ? Number(e.target.value) : undefined)}
-                aria-label="Filtrar por categoría"
+                value={categoryId?.toString() ?? 'all'}
+                onValueChange={(v) => setCategoryId(v === 'all' ? undefined : Number(v))}
               >
-                <option value="">Todas las categorías</option>
-                {categories?.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
+                <SelectTrigger aria-label="Filtrar por categoría">
+                  <SelectValue placeholder="Todas las categorías" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas las categorías</SelectItem>
+                  {categories?.map((c) => (
+                    <SelectItem key={c.id} value={c.id.toString()}>
+                      {c.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
               </Select>
             </div>
           </motion.div>

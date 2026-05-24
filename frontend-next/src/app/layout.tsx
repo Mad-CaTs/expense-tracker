@@ -25,7 +25,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es" className={`${geistSans.variable} ${geistMono.variable} h-full`}>
-      <body className="h-full bg-[#0d0d0d] text-[#e2e0d5] antialiased">
+      <body className="h-full antialiased" style={{ background: 'var(--bg-base)', color: 'var(--text-primary)' }}>
         <a href="#main-content" className="skip-link">
           Saltar al contenido
         </a>

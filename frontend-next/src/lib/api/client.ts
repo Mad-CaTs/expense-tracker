@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 export const apiClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8080',
+  baseURL: `${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8080'}/api`,
   headers: { 'Content-Type': 'application/json' },
 })
 
@@ -15,12 +15,16 @@ apiClient.interceptors.request.use((config) => {
   return config
 })
 
+let redirecting = false
+
 apiClient.interceptors.response.use(
   (res) => res,
   (error) => {
-    if (error.response?.status === 401 && typeof window !== 'undefined') {
+    const isAuthEndpoint = error.config?.url?.includes('/auth/')
+    if (error.response?.status === 401 && !isAuthEndpoint && typeof window !== 'undefined' && !redirecting) {
+      redirecting = true
       localStorage.removeItem('auth_token')
-      window.location.href = '/login'
+      window.location.replace('/login')
     }
     return Promise.reject(error)
   }

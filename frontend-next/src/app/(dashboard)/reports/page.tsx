@@ -2,11 +2,12 @@
 
 import { useState } from 'react'
 
+import { PageHeader } from '@/components/layout/PageHeader'
 import { CategoryBreakdown } from '@/components/features/reports/CategoryBreakdown'
 import { ReportSummary } from '@/components/features/reports/ReportSummary'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Skeleton } from '@/components/ui/Skeleton'
-import { useReportSummary } from '@/lib/hooks/useReports'
+import { useCategoryBreakdown, useReportSummary } from '@/lib/hooks/useReports'
 import type { Period } from '@/types'
 
 const PERIODS: { value: Period; label: string }[] = [
@@ -18,12 +19,13 @@ const PERIODS: { value: Period; label: string }[] = [
 export default function ReportsPage() {
   const [period, setPeriod] = useState<Period>('MONTHLY')
   const { data, isLoading } = useReportSummary(period)
+  const { data: breakdown } = useCategoryBreakdown(period)
 
   return (
-    <div className="mx-auto max-w-2xl px-4 pt-6 md:pt-8">
-      <h1 className="mb-4 text-2xl font-extrabold tracking-tight text-[#e2e0d5]">Reportes</h1>
-
-      <div className="mb-6 flex gap-2">
+    <div className="mx-auto max-w-3xl">
+      <PageHeader title="Reportes" />
+      <div className="px-4">
+<div className="mb-6 flex gap-2">
         {PERIODS.map(({ value, label }) => (
           <button
             key={value}
@@ -50,9 +52,10 @@ export default function ReportsPage() {
       ) : (
         <>
           <ReportSummary summary={data} />
-          <CategoryBreakdown breakdown={data.categoryBreakdown} />
+          <CategoryBreakdown breakdown={breakdown ?? []} />
         </>
       )}
+      </div>
     </div>
   )
 }

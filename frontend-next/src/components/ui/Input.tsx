@@ -5,10 +5,11 @@ import { cn } from '@/lib/utils/cn'
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string
   error?: string
+  suffix?: React.ReactNode
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
-  { label, error, className, id, ...props },
+  { label, error, suffix, className, id, ...props },
   ref
 ) {
   const inputId = id ?? label?.toLowerCase().replace(/\s+/g, '-')
@@ -18,7 +19,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
       {label && (
         <label
           htmlFor={inputId}
-          className="text-[10px] font-semibold tracking-[0.15em] text-[#484848] uppercase"
+          className="text-[10px] font-semibold tracking-[0.15em] uppercase" style={{ color: 'var(--text-muted)' }}
         >
           {label}
         </label>
@@ -26,19 +27,26 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
       <div
         className={cn(
           'rounded-xl border p-[1px] transition-colors',
-          error ? 'border-[#ef4444]/50' : 'border-[#1c1c1c] focus-within:border-[#d4af37]/60'
+          error ? 'border-[#ef4444]/50' : 'focus-within:border-[var(--accent)]/60'
         )}
+        style={!error ? { borderColor: 'var(--border-subtle)' } : undefined}
       >
-        <input
-          ref={ref}
-          id={inputId}
-          className={cn(
-            'inset-highlight h-10 w-full rounded-[10px] bg-[#111] px-3 text-sm text-[#e8e6db] placeholder:text-[#383838]',
-            'transition-colors outline-none',
-            className
+        <div className="relative flex items-center">
+          <input
+            ref={ref}
+            id={inputId}
+            className={cn(
+              'inset-highlight h-10 w-full rounded-[10px] px-3 text-sm transition-colors outline-none',
+              suffix ? 'pr-10' : '',
+              className
+            )}
+            style={{ background: 'var(--bg-input)', color: 'var(--text-primary)' }}
+            {...props}
+          />
+          {suffix && (
+            <div className="absolute right-3 flex items-center">{suffix}</div>
           )}
-          {...props}
-        />
+        </div>
       </div>
       {error && <p className="text-[11px] text-[#ef4444]">{error}</p>}
     </div>

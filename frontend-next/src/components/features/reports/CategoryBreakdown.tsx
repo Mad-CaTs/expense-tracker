@@ -13,23 +13,23 @@ export function CategoryBreakdown({ breakdown }: { breakdown: CategoryBreakdownT
         Por categoría
       </p>
       <div className="flex flex-col gap-3">
-        {breakdown.map(({ category, amount, percentage }, i) => (
-          <div key={category.id} className="flex flex-col gap-1.5">
+        {breakdown.map(({ categoryName, total, percentage }, i) => (
+          <div key={categoryName} className="flex flex-col gap-1.5">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-[#e2e0d5]">{category.name}</span>
+              <span className="text-sm font-medium text-[#e2e0d5]">{categoryName}</span>
               <span className="mono-amount text-sm font-bold text-[#e8e6db]">
-                S/ {amount.toFixed(2)}
+                S/ {(total ?? 0).toFixed(2)}
               </span>
             </div>
             <div className="h-1 overflow-hidden rounded-full bg-[#1a1a1a]">
               <motion.div
                 initial={{ width: 0 }}
-                animate={{ width: `${percentage}%` }}
+                animate={{ width: `${percentage ?? 0}%` }}
                 transition={{ duration: 0.5, delay: i * 0.04, ease: 'easeOut' }}
                 className="bg-gold h-full rounded-full"
               />
             </div>
-            <p className="text-[10px] text-[#555]">{percentage.toFixed(1)}%</p>
+            <p className="text-[10px] text-[#555]">{(percentage ?? 0).toFixed(1)}%</p>
           </div>
         ))}
       </div>

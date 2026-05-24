@@ -16,7 +16,10 @@ export interface Expense {
   description: string
   amount: number
   date: string
-  category: Category
+  categoryId: number
+  categoryName: string
+  categoryColor?: string
+  categoryIcon?: string
   notes?: string
 }
 
@@ -43,36 +46,70 @@ export interface ExpenseFilters {
 
 export interface Budget {
   id: number
-  name: string
-  limitAmount: number
-  spentAmount: number
-  category?: Category
-  period: Period
+  categoryId?: number
+  categoryName?: string
+  categoryColor?: string
+  categoryIcon?: string
+  amount: number
+  month: number
+  year: number
+  spent: number
+  percentage: number
 }
 
 export interface ReportSummary {
-  totalAmount: number
-  previousAmount: number
-  changePercent: number
-  totalBudget: number
-  remainingBudget: number
-  categoryBreakdown: CategoryBreakdown[]
+  currentTotal: number
+  previousTotal: number
+  changePercentage: number
+  dailyAverage: number
+  period: string
+  currentFrom: string
+  currentTo: string
+  previousFrom: string
+  previousTo: string
 }
 
 export interface CategoryBreakdown {
-  category: Category
-  amount: number
+  categoryName: string
+  total: number
   percentage: number
-  transactionCount: number
+  count: number
+}
+
+export type RecurringFrequency = 'MONTHLY' | 'WEEKLY' | 'YEARLY'
+
+export interface RecurringExpense {
+  id: number
+  categoryId: number
+  categoryName: string
+  categoryColor?: string
+  categoryIcon?: string
+  amount: number
+  description: string
+  frequency: RecurringFrequency
+  startDate: string
+  nextDate: string
+  active: boolean
+}
+
+export interface CreateRecurringPayload {
+  categoryId: number
+  amount: number
+  description: string
+  frequency: RecurringFrequency
+  startDate: string
 }
 
 export interface LoginRequest {
-  email: string
+  username: string
   password: string
 }
 
 export interface LoginResponse {
-  token: string
+  accessToken: string
+  refreshToken: string
+  mustChangePassword: boolean
+  username: string
   user: User
 }
 

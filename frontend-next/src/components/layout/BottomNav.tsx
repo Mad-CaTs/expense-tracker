@@ -1,140 +1,73 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
+
+import { BarChart2, Plus, Receipt, RefreshCw, Wallet } from 'lucide-react'
 
 const NAV_ITEMS = [
-  { href: '/expenses', label: 'Gastos', icon: ReceiptIcon },
-  { href: '/budgets', label: 'Presupuestos', icon: WalletIcon },
+  { href: '/expenses',  label: 'Gastos',      Icon: Receipt   },
+  { href: '/budgets',   label: 'Presupuestos', Icon: Wallet    },
   null,
-  { href: '/reports', label: 'Reportes', icon: ChartIcon },
-  { href: '/recurring', label: 'Recurrentes', icon: RepeatIcon },
+  { href: '/reports',   label: 'Reportes',     Icon: BarChart2 },
+  { href: '/recurring', label: 'Recurrentes',  Icon: RefreshCw },
 ]
 
-export function BottomNav({ onFABClick }: { onFABClick: () => void }) {
+export function BottomNav({ onFABClick }: { onFABClick?: () => void }) {
   const pathname = usePathname()
+  const router = useRouter()
 
   return (
-    <nav
-      className="fixed right-0 bottom-0 left-0 z-30 border-t border-[#1a1a1a] bg-[#111] md:hidden"
-      aria-label="Navegación inferior"
-    >
-      <div className="flex h-16 items-center justify-around px-2">
-        {NAV_ITEMS.map((item) => {
+    <div className="fixed bottom-0 left-0 right-0 z-30 flex justify-center pb-4 md:hidden">
+      <nav
+        className="flex items-center gap-1 rounded-full border px-2 py-2 backdrop-blur-md"
+        style={{ borderColor: 'var(--border-default)', background: 'var(--bottomnav-bg)', boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }}
+        aria-label="Navegación"
+      >
+        {NAV_ITEMS.map((item, i) => {
           if (!item) {
             return (
               <button
                 key="fab"
-                onClick={onFABClick}
-                className="bg-gold -mt-4 flex h-12 w-12 items-center justify-center rounded-full"
+                onClick={() => { onFABClick?.(); router.push('/expenses/new') }}
                 aria-label="Nuevo gasto"
+                className="mx-1 flex h-11 w-11 items-center justify-center rounded-full transition-transform active:scale-90 cursor-pointer"
+                style={{ background: 'var(--accent)', boxShadow: '0 4px 16px var(--accent-ring)' }}
               >
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="#080808"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                >
-                  <path d="M12 5v14M5 12h14" />
-                </svg>
+                <Plus size={20} strokeWidth={2.5} style={{ color: 'var(--bg-base)' }} />
               </button>
             )
           }
+
           const active = pathname.startsWith(item.href)
-          const Icon = item.icon
+          const { Icon } = item
+
           return (
             <Link
               key={item.href}
               href={item.href}
-              className="flex min-w-[48px] flex-col items-center gap-1 py-1"
               aria-current={active ? 'page' : undefined}
+              aria-label={item.label}
+              className="flex items-center gap-2 rounded-full px-3.5 py-2.5 transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]"
+              style={{ background: active ? 'var(--accent-bg)' : 'transparent' }}
             >
-              <Icon size={20} color={active ? '#d4af37' : '#555'} />
-              <span className="text-[10px]" style={{ color: active ? '#d4af37' : '#555' }}>
+              <Icon
+                size={18}
+                strokeWidth={active ? 2 : 1.7}
+                style={{ color: active ? 'var(--accent)' : 'var(--text-tertiary)', flexShrink: 0 }}
+              />
+              <span
+                className={`overflow-hidden whitespace-nowrap text-[12px] font-semibold transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${
+                  active ? 'max-w-[80px] opacity-100' : 'max-w-0 opacity-0'
+                }`}
+                style={{ color: 'var(--accent)' }}
+              >
                 {item.label}
               </span>
             </Link>
           )
         })}
-      </div>
-    </nav>
-  )
-}
-
-function ReceiptIcon({ size = 20, color = 'currentColor' }: { size?: number; color?: string }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke={color}
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z" />
-      <path d="M8 8h8M8 12h8M8 16h5" />
-    </svg>
-  )
-}
-
-function WalletIcon({ size = 20, color = 'currentColor' }: { size?: number; color?: string }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke={color}
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4" />
-      <path d="M3 5v14a2 2 0 0 0 2 2h16v-5" />
-      <path d="M18 12a2 2 0 1 0 4 0 2 2 0 0 0-4 0Z" />
-    </svg>
-  )
-}
-
-function ChartIcon({ size = 20, color = 'currentColor' }: { size?: number; color?: string }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke={color}
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M3 3v18h18" />
-      <path d="M7 16l4-4 4 4 4-6" />
-    </svg>
-  )
-}
-
-function RepeatIcon({ size = 20, color = 'currentColor' }: { size?: number; color?: string }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke={color}
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M17 1l4 4-4 4" />
-      <path d="M3 11V9a4 4 0 0 1 4-4h14" />
-      <path d="M7 23l-4-4 4-4" />
-      <path d="M21 13v2a4 4 0 0 1-4 4H3" />
-    </svg>
+      </nav>
+    </div>
   )
 }
