@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { Check, Pencil, Plus, Trash2, X } from 'lucide-react'
 
 import { PageHeader } from '@/components/layout/PageHeader'
+import { useTheme } from '@/providers/ThemeProvider'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import {
   useCategories,
@@ -56,23 +57,43 @@ function CategoryIcon({ name, size = 15, color }: { name: string; size?: number;
 
 // ─── Theme Switch ──────────────────────────────────────────────────────────────
 function ThemeSwitch() {
+  const { theme, toggle } = useTheme()
+  const isDark = theme === 'dark'
+
   return (
     <div className="flex items-center justify-between py-3.5">
       <div>
-        <p className="text-[13px] font-medium" style={{ color: 'var(--text-secondary)' }}>Apariencia</p>
-        <p className="mt-0.5 text-[11px]" style={{ color: 'var(--text-dim)' }}>Modo oscuro</p>
+        <p className="text-[13px] font-medium" style={{ color: 'var(--text-secondary)' }}>
+          Apariencia
+        </p>
+        <p className="mt-0.5 text-[11px]" style={{ color: 'var(--text-dim)' }}>
+          {isDark ? 'Modo oscuro activo' : 'Modo claro activo'}
+        </p>
       </div>
-      <div
-        className="relative h-6 w-11 rounded-full"
-        style={{ background: 'var(--accent)' }}
+      <button
+        onClick={toggle}
+        aria-label={isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+        className="relative h-6 w-11 rounded-full transition-colors duration-300 focus:outline-none cursor-pointer"
+        style={{ background: isDark ? 'var(--accent)' : 'var(--border-strong)' }}
       >
-        <span
-          className="absolute top-[3px] left-[20px] flex h-[18px] w-[18px] items-center justify-center rounded-full"
+        <motion.span
+          animate={{ x: isDark ? 20 : 2 }}
+          transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+          className="absolute top-[3px] flex h-[18px] w-[18px] items-center justify-center rounded-full"
           style={{ background: 'var(--bg-elevated)' }}
         >
-          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
-        </span>
-      </div>
+          {isDark ? (
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round">
+              <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
+            </svg>
+          ) : (
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" strokeWidth="2.5" strokeLinecap="round">
+              <circle cx="12" cy="12" r="4"/>
+              <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+            </svg>
+          )}
+        </motion.span>
+      </button>
     </div>
   )
 }
