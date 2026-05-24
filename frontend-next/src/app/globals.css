@@ -39,6 +39,44 @@
   --bottomnav-bg: rgba(17,17,17,0.95);
 }
 
+/* ── Light mode (Warm Paper) ── */
+.light {
+  --bg-base:       #f5f2eb;
+  --bg-elevated:   #ffffff;
+  --bg-subtle:     #ede9e0;
+  --bg-card:       #ffffff;
+  --bg-card-inner: #fafaf8;
+  --bg-input:      #eeeae0;
+  --bg-hover:      #e8e4da;
+
+  --border-subtle:  #e2ddd4;
+  --border-default: #d4cfc5;
+  --border-strong:  #c4bfb5;
+
+  --text-primary:     #1a1816;
+  --text-secondary:   #3a3530;
+  --text-tertiary:    #6a6560;
+  --text-muted:       #8a8580;
+  --text-dim:         #7a7570;
+  --text-placeholder: #b0ab9f;
+
+  --accent:       #b8960e;
+  --accent-light: #d4af37;
+  --accent-bg:    rgba(184, 150, 14, 0.10);
+  --accent-ring:  rgba(184, 150, 14, 0.35);
+
+  --danger:  #dc2626;
+  --success: #16a34a;
+  --warning: #c2560c;
+
+  --skeleton-from: #e8e4da;
+  --skeleton-to:   #dedad0;
+  --inset-highlight: inset 0 1px 1px rgba(255,255,255,0.9), inset 0 -1px 0 rgba(0,0,0,0.06);
+  --card-shadow:     0 1px 4px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04);
+  --sidebar-border:  #e2ddd4;
+  --topbar-bg:       rgba(245,242,235,0.92);
+  --bottomnav-bg:    rgba(245,242,235,0.95);
+}
 
 @theme inline {
   --font-sans: var(--font-geist-sans);
