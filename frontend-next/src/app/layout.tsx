@@ -24,7 +24,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es" className={`${geistSans.variable} ${geistMono.variable} h-full dark`}>
+    <html lang="es" className={`${geistSans.variable} ${geistMono.variable} h-full dark`} suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{
