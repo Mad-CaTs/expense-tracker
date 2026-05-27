@@ -74,7 +74,8 @@ export default function BudgetsPage() {
             onClick={() => setShowForm((v) => !v)}
             whileTap={{ scale: 0.95 }}
             transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-            className="flex h-7 items-center gap-1.5 rounded-full bg-[#d4af37] px-3 text-[11px] font-bold text-[#080808]"
+            className="flex h-7 items-center gap-1.5 rounded-full px-3 text-[11px] font-bold"
+            style={{ background: 'var(--accent-light)', color: 'var(--bg-base)' }}
           >
             {showForm ? <X size={12} /> : <Plus size={12} />}
             {showForm ? 'Cancelar' : 'Nuevo'}
@@ -95,12 +96,12 @@ export default function BudgetsPage() {
             transition={{ duration: 0.18, ease: 'easeOut' }}
             className="pb-1"
           >
-            <div className="rounded-[18px] border border-[#1c1c1c] bg-[#0a0a0a] p-[1px]">
+            <div className="rounded-[18px] border p-[1px]" style={{ borderColor: 'var(--border-subtle)', background: 'var(--bg-subtle)' }}>
               <div
-                className="flex flex-col gap-3 rounded-[17px] bg-[#0e0e0e] p-5"
-                style={{ boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.03)' }}
+                className="flex flex-col gap-3 rounded-[17px] p-5"
+                style={{ background: 'var(--bg-card-inner)', boxShadow: 'var(--inset-highlight)' }}
               >
-                <p className="text-[10px] font-semibold tracking-[0.18em] text-[#383838] uppercase">
+                <p className="text-[10px] font-semibold tracking-[0.18em] uppercase" style={{ color: 'var(--text-placeholder)' }}>
                   Nuevo presupuesto
                 </p>
 
@@ -123,7 +124,7 @@ export default function BudgetsPage() {
 
                   {/* Amount */}
                   <div className="col-span-2 flex flex-col gap-1.5">
-                    <label className="text-xs font-medium tracking-widest text-[#888] uppercase">
+                    <label className="text-xs font-medium tracking-widest uppercase" style={{ color: 'var(--text-muted)' }}>
                       Límite (S/)
                     </label>
                     <input
@@ -133,11 +134,10 @@ export default function BudgetsPage() {
                       value={amount}
                       onChange={(e) => setAmount(e.target.value)}
                       placeholder="0.00"
-                      className={`h-10 w-full rounded-xl border bg-[#161616] px-3 text-sm text-[#e2e0d5] transition-colors focus:outline-none focus:border-[#d4af37]/60 ${
-                        errors.amount ? 'border-[#ef4444]' : 'border-transparent'
-                      }`}
+                      className="input-wrapper h-10 w-full px-3 text-sm"
+                      style={{ color: 'var(--text-primary)', ...(errors.amount ? { borderColor: 'var(--danger)' } : {}) }}
                     />
-                    {errors.amount && <p className="text-[11px] text-[#ef4444]">{errors.amount}</p>}
+                    {errors.amount && <p className="text-[11px]" style={{ color: 'var(--danger)' }}>{errors.amount}</p>}
                   </div>
 
                   {/* Month */}
@@ -174,7 +174,8 @@ export default function BudgetsPage() {
                   disabled={createBudget.isPending}
                   whileTap={{ scale: 0.97 }}
                   transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                  className="mt-1 h-10 w-full rounded-full bg-[#d4af37] text-[13px] font-bold text-[#080808] disabled:opacity-50"
+                  className="mt-1 h-10 w-full rounded-full text-[13px] font-bold disabled:opacity-50"
+                  style={{ background: 'var(--accent-light)', color: 'var(--bg-base)' }}
                 >
                   {createBudget.isPending ? 'Guardando...' : 'Crear presupuesto'}
                 </motion.button>

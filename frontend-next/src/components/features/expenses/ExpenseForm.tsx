@@ -119,18 +119,17 @@ function ExpenseFormInner({ expense, expenseId }: FormInnerProps) {
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Descripción del gasto"
-          className={`w-full rounded-xl border bg-[#141414] px-3 py-2.5 text-[14px] font-medium text-[#e8e6db] placeholder-[#484848] transition-colors focus:outline-none focus:border-[#d4af37]/60 ${
-            errors.description ? 'border-[#ef4444]' : 'border-[#242424]'
-          }`}
+          className="input-wrapper w-full px-3 py-2.5 text-[14px] font-medium"
+          style={{ color: 'var(--text-primary)', ...(errors.description ? { borderColor: 'var(--danger)' } : {}) }}
         />
         {errors.description && (
-          <p className="mt-1 text-[11px] text-[#ef4444]">{errors.description}</p>
+          <p className="mt-1 text-[11px]" style={{ color: 'var(--danger)' }}>{errors.description}</p>
         )}
       </div>
 
-      {/* Amount display — tap to focus hidden input for keyboard entry */}
+      {/* Amount display */}
       <div className="flex flex-col items-center py-8">
-        <p className="mb-1 text-[10px] font-semibold tracking-[0.2em] text-[#383838] uppercase">
+        <p className="mb-1 text-[10px] font-semibold tracking-[0.2em] uppercase" style={{ color: 'var(--text-placeholder)' }}>
           Monto
         </p>
         <div className="relative" onClick={() => document.getElementById('amount-keyboard-input')?.focus()}>
@@ -149,20 +148,19 @@ function ExpenseFormInner({ expense, expenseId }: FormInnerProps) {
             initial={{ scale: 0.95, opacity: 0.6 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.08 }}
-            className={`mono-amount text-[52px] font-extrabold leading-none tracking-[-0.03em] ${
-              amountNum > 0 ? 'text-[#e8e6db]' : 'text-[#2a2a2a]'
-            }`}
+            className="mono-amount text-[52px] font-extrabold leading-none tracking-[-0.03em]"
+            style={{ color: amountNum > 0 ? 'var(--text-primary)' : 'var(--border-strong)' }}
           >
             S/ {formatDisplay(rawAmount)}
           </motion.p>
         </div>
         {errors.amount && (
-          <p className="mt-2 text-[11px] text-[#ef4444]">{errors.amount}</p>
+          <p className="mt-2 text-[11px]" style={{ color: 'var(--danger)' }}>{errors.amount}</p>
         )}
       </div>
 
       {/* Category + Date row */}
-      <div className="grid grid-cols-2 gap-2 border-t border-[#161616] px-4 py-3">
+      <div className="grid grid-cols-2 gap-2 border-t px-4 py-3" style={{ borderColor: 'var(--border-subtle)' }}>
         <Select value={categoryId} onValueChange={setCategoryId}>
           <SelectTrigger error={errors.categoryId}>
             <SelectValue placeholder="Categoría" />
@@ -179,29 +177,38 @@ function ExpenseFormInner({ expense, expenseId }: FormInnerProps) {
         <button
           type="button"
           onClick={() => setShowDatePicker(true)}
-          className={`flex h-10 w-full items-center gap-2 rounded-xl border bg-[#161616] px-3 text-sm text-[#e2e0d5] transition-colors ${
-            errors.date ? 'border-[#ef4444]' : 'border-transparent hover:border-[#2a2a2a]'
-          }`}
+          className="input-wrapper flex h-10 w-full items-center gap-2 px-3 text-sm"
+          style={{
+            color: 'var(--text-primary)',
+            ...(errors.date ? { borderColor: 'var(--danger)' } : {}),
+          }}
         >
-          <CalendarDays size={14} className="shrink-0 text-[#484848]" />
+          <CalendarDays size={14} className="shrink-0" style={{ color: 'var(--text-muted)' }} />
           <span className="font-medium tabular-nums">{formatDateLabel(date)}</span>
         </button>
       </div>
 
-      {/* Date wheel picker — absolute modal floating over the form */}
+      {/* Date wheel picker */}
       {showDatePicker && (
         <>
           <div
             className="absolute inset-0 z-10 rounded-[19px] bg-black/60"
             onClick={() => setShowDatePicker(false)}
           />
-          <div className="absolute inset-x-0 top-1/2 z-20 mx-4 -translate-y-1/2 rounded-[20px] border border-[#1c1c1c] bg-[#0a0a0a] p-[1px]">
-            <div className="rounded-[19px] bg-[#0e0e0e] px-4 pb-5 pt-4" style={{ boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.04)' }}>
+          <div
+            className="absolute inset-x-0 top-1/2 z-20 mx-4 -translate-y-1/2 rounded-[20px] border p-[1px]"
+            style={{ borderColor: 'var(--border-subtle)', background: 'var(--bg-subtle)' }}
+          >
+            <div
+              className="rounded-[19px] px-4 pb-5 pt-4"
+              style={{ background: 'var(--bg-card-inner)', boxShadow: 'var(--inset-highlight)' }}
+            >
               <div className="mb-4 flex items-center justify-between">
-                <p className="text-[11px] font-semibold tracking-[0.16em] text-[#383838] uppercase">Fecha</p>
+                <p className="text-[11px] font-semibold tracking-[0.16em] uppercase" style={{ color: 'var(--text-placeholder)' }}>Fecha</p>
                 <button
                   onClick={() => setShowDatePicker(false)}
-                  className="rounded-full bg-[#1c1c1c] px-4 py-1.5 text-[12px] font-semibold text-[#d4af37]"
+                  className="rounded-full px-4 py-1.5 text-[12px] font-semibold"
+                  style={{ background: 'var(--bg-hover)', color: 'var(--accent-light)' }}
                 >
                   Listo
                 </button>
@@ -222,18 +229,19 @@ function ExpenseFormInner({ expense, expenseId }: FormInnerProps) {
       )}
 
       {/* Notes */}
-      <div className="border-t border-[#161616] px-4 py-3">
+      <div className="border-t px-4 py-3" style={{ borderColor: 'var(--border-subtle)' }}>
         <input
           type="text"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           placeholder="Nota o comercio (opcional)"
-          className="w-full rounded-xl border border-[#242424] bg-[#141414] px-3 py-2.5 text-[13px] text-[#808080] placeholder-[#484848] transition-colors focus:border-[#d4af37]/60 focus:outline-none"
+          className="input-wrapper w-full px-3 py-2.5 text-[13px]"
+          style={{ color: 'var(--text-secondary)' }}
         />
       </div>
 
       {/* Numpad */}
-      <div className="border-t border-[#161616] px-2 pt-3 pb-2">
+      <div className="border-t px-2 pt-3 pb-2" style={{ borderColor: 'var(--border-subtle)' }}>
         <div className="grid grid-cols-3 gap-1.5">
           {NUMPAD.map((key) => (
             <motion.button
@@ -242,11 +250,11 @@ function ExpenseFormInner({ expense, expenseId }: FormInnerProps) {
               onClick={() => handleNumpad(key)}
               whileTap={{ scale: 0.92 }}
               transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-              className={`flex h-14 items-center justify-center rounded-2xl text-xl font-semibold transition-colors ${
-                key === '⌫'
-                  ? 'text-[#888] active:bg-[#1a1a1a]'
-                  : 'bg-[#141414] text-[#e8e6db] hover:bg-[#1c1c1c] active:bg-[#222]'
-              }`}
+              className="flex h-14 items-center justify-center rounded-2xl text-xl font-semibold transition-colors"
+              style={key === '⌫'
+                ? { color: 'var(--text-muted)' }
+                : { background: 'var(--bg-input)', color: 'var(--text-primary)' }
+              }
             >
               {key}
             </motion.button>
@@ -255,11 +263,12 @@ function ExpenseFormInner({ expense, expenseId }: FormInnerProps) {
       </div>
 
       {/* Actions */}
-      <div className="grid grid-cols-2 gap-2 border-t border-[#161616] px-4 py-4">
+      <div className="grid grid-cols-2 gap-2 border-t px-4 py-4" style={{ borderColor: 'var(--border-subtle)' }}>
         <button
           type="button"
           onClick={() => router.push('/expenses')}
-          className="h-12 rounded-full border border-[#242424] text-[13px] font-semibold text-[#808080] transition-colors hover:border-[#383838] hover:text-[#e8e6db]"
+          className="h-12 rounded-full border text-[13px] font-semibold transition-colors"
+          style={{ borderColor: 'var(--border-default)', color: 'var(--text-muted)' }}
         >
           Cancelar
         </button>
@@ -269,7 +278,8 @@ function ExpenseFormInner({ expense, expenseId }: FormInnerProps) {
           disabled={isSubmitting}
           whileTap={{ scale: 0.97 }}
           transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-          className="h-12 rounded-full bg-[#d4af37] text-[13px] font-bold text-[#080808] disabled:opacity-50"
+          className="h-12 rounded-full text-[13px] font-bold disabled:opacity-50"
+          style={{ background: 'var(--accent-light)', color: 'var(--bg-base)' }}
         >
           {isSubmitting ? '...' : isEdit ? 'Actualizar' : 'Registrar'}
         </motion.button>
@@ -283,7 +293,7 @@ export function ExpenseForm({ expenseId }: ExpenseFormProps) {
   const { data: expense, isLoading: loadingExpense } = useExpense(expenseId ?? 0)
 
   if (isEdit && loadingExpense) {
-    return <div className="px-4 py-8 text-sm text-[#555]">Cargando...</div>
+    return <div className="px-4 py-8 text-sm" style={{ color: 'var(--text-muted)' }}>Cargando...</div>
   }
 
   return <ExpenseFormInner key={expense?.id ?? 'new'} expense={expense} expenseId={expenseId} />

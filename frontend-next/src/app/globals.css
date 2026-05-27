@@ -86,8 +86,12 @@
   --color-bg-elevated: var(--bg-elevated);
   --color-bg-subtle: var(--bg-subtle);
   --color-bg-card: var(--bg-card);
+  --color-bg-hover: var(--bg-hover);
+  --color-bg-input: var(--bg-input);
+  --color-accent-bg: var(--accent-bg);
   --color-text-primary: var(--text-primary);
   --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
   --color-text-muted: var(--text-muted);
   --color-accent: var(--accent);
   --color-accent-light: var(--accent-light);
@@ -100,6 +104,49 @@
 
 * {
   box-sizing: border-box;
+}
+
+.icon-btn {
+  color: var(--text-muted);
+  transition: background 0.15s, color 0.15s;
+}
+.icon-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+.icon-btn-danger:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--danger);
+}
+
+.btn-danger-soft {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--danger);
+  transition: background 0.15s;
+}
+.btn-danger-soft:hover {
+  background: rgba(239, 68, 68, 0.18);
+}
+
+.input-wrapper {
+  border: 1px solid var(--border-default);
+  background: var(--bg-input);
+  border-radius: 12px;
+  transition: border-color 0.15s;
+}
+.input-wrapper:hover {
+  border-color: var(--border-strong);
+}
+.input-wrapper:focus:not([data-state="closed"]),
+.input-wrapper:focus-within:not([data-state="closed"]),
+input.input-wrapper:focus,
+textarea.input-wrapper:focus,
+button.input-wrapper:focus:not([data-state="closed"]),
+.input-wrapper[data-state="open"] {
+  border-color: var(--accent-light) !important;
+}
+.input-wrapper[data-state="closed"] {
+  border-color: var(--border-default) !important;
 }
 
 html {
@@ -164,10 +211,25 @@ textarea::placeholder {
   background: linear-gradient(135deg, #d4af37, #f0d060);
 }
 
-/* Focus ring */
-:focus-visible {
-  outline: 2px solid #d4af37;
+/* Focus ring — solo para elementos interactivos que no son inputs ni selects */
+:focus-visible:not(input):not(textarea):not(select):not([role="combobox"]):not([role="option"]):not(.input-wrapper) {
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
+}
+[role="option"]:focus-visible {
+  outline: none;
+}
+
+/* Quitar outline del browser en todos los inputs */
+input:focus,
+input:focus-visible,
+textarea:focus,
+textarea:focus-visible,
+select:focus,
+select:focus-visible,
+[role="combobox"]:focus,
+[role="combobox"]:focus-visible {
+  outline: none;
 }
 
 /* Skeleton shimmer */

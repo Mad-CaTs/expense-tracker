@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 
 import { AnimatePresence, motion } from 'framer-motion'
-import { Check, Pencil, Plus, Trash2, X } from 'lucide-react'
+import { Check, Plus, X } from 'lucide-react'
 
 import { PageHeader } from '@/components/layout/PageHeader'
 import { useTheme } from '@/providers/ThemeProvider'
@@ -101,146 +101,144 @@ function ThemeSwitch() {
 // ─── Category row (view + inline edit) ────────────────────────────────────────
 function CategoryRow({
   id, name, icon, color,
+  isEditing, onStartEdit, onDone,
   onDelete,
 }: {
   id: number; name: string; icon: string; color: string
+  isEditing: boolean
+  onStartEdit: () => void
+  onDone: () => void
   onDelete: (id: number) => void
 }) {
-  const [editing, setEditing] = useState(false)
   const [editName, setEditName] = useState(name)
   const [editIcon, setEditIcon] = useState(icon)
   const [editColor, setEditColor] = useState(color)
   const [error, setError] = useState('')
   const updateCategory = useUpdateCategory()
 
+  useEffect(() => {
+    if (isEditing) {
+      setEditName(name)
+      setEditIcon(icon)
+      setEditColor(color)
+      setError('')
+    }
+  }, [isEditing, name, icon, color])
+
   async function handleSave() {
     if (!editName.trim()) { setError('El nombre es requerido'); return }
     await updateCategory.mutateAsync({ id, data: { name: editName.trim(), icon: editIcon, color: editColor } })
-    setEditing(false)
-    setError('')
+    onDone()
   }
 
   function handleCancel() {
-    setEditName(name)
-    setEditIcon(icon)
-    setEditColor(color)
-    setEditing(false)
-    setError('')
+    onDone()
   }
 
   return (
-    <motion.div
-      layout
-      className="border-b border-[#111] last:border-0"
-    >
+    <div className="border-b last:border-0" style={{ borderColor: 'var(--border-subtle)' }}>
       {/* View row */}
-      {!editing && (
-        <div className="flex items-center gap-3 py-3">
-          <div
-            className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl"
-            style={{ background: `${color}14`, boxShadow: `inset 0 1px 1px rgba(255,255,255,0.04), 0 0 0 1px ${color}20` }}
+      <div className="flex items-center gap-3 py-3">
+        <div
+          className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl"
+          style={{ background: `${color}14`, boxShadow: `inset 0 1px 1px rgba(255,255,255,0.04), 0 0 0 1px ${color}20` }}
+        >
+          <CategoryIcon name={icon} size={14} color={color} />
+        </div>
+        <span className="flex-1 text-[13px] font-medium" style={{ color: 'var(--text-secondary)' }}>{name}</span>
+        <div className="flex gap-0.5">
+          <button
+            onClick={onStartEdit}
+            className={`icon-btn flex h-7 w-7 items-center justify-center rounded-lg ${isEditing ? 'text-accent-light' : ''}`}
+            aria-label="Editar"
           >
-            <CategoryIcon name={icon} size={14} color={color} />
-          </div>
-          <span className="flex-1 text-[13px] font-medium text-[#c8c6bb]">{name}</span>
-          <div className="flex gap-0.5">
-            <button
-              onClick={() => setEditing(true)}
-              className="flex h-7 w-7 items-center justify-center rounded-lg text-[#404040] transition-colors hover:bg-[#161616] hover:text-[#e8e6db]"
-              aria-label="Editar"
-            >
-              <Pencil size={12} />
-            </button>
-            <button
-              onClick={() => onDelete(id)}
-              className="flex h-7 w-7 items-center justify-center rounded-lg text-[#404040] transition-colors hover:bg-[#ef4444]/10 hover:text-[#ef4444]"
-              aria-label="Eliminar"
-            >
-              <Trash2 size={12} />
-            </button>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z" />
+            </svg>
+          </button>
+          <button
+            onClick={() => onDelete(id)}
+            className="icon-btn icon-btn-danger flex h-7 w-7 items-center justify-center rounded-lg"
+            aria-label="Eliminar"
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      {/* Edit panel — CSS grid-rows */}
+      <div
+        className="grid transition-[grid-template-rows] duration-[220ms] ease-[cubic-bezier(0.32,0.72,0,1)]"
+        style={{ gridTemplateRows: isEditing ? '1fr' : '0fr' }}
+      >
+        <div className="overflow-hidden">
+          <div className="mb-3 flex flex-col gap-3 rounded-[16px] border p-4" style={{ borderColor: 'var(--border-subtle)', background: 'var(--bg-subtle)' }}>
+            <input
+              type="text"
+              value={editName}
+              onChange={(e) => { setEditName(e.target.value); setError('') }}
+              placeholder="Nombre de categoría"
+              className="input-wrapper h-9 w-full px-3 text-[13px]"
+              style={{ color: 'var(--text-primary)', ...(error ? { borderColor: 'var(--danger)' } : {}) }}
+            />
+            {error && <p className="-mt-2 text-[11px]" style={{ color: 'var(--danger)' }}>{error}</p>}
+            <div className="flex flex-wrap gap-1.5">
+              {ICON_OPTIONS.map((ic) => (
+                <button
+                  key={ic}
+                  onClick={() => setEditIcon(ic)}
+                  title={ICON_LABELS[ic]}
+                  className="flex h-8 w-8 items-center justify-center rounded-xl transition-colors"
+                  style={{
+                    background: editIcon === ic ? `${editColor}20` : 'var(--bg-input)',
+                    boxShadow: editIcon === ic ? `0 0 0 1.5px ${editColor}` : `0 0 0 1px var(--border-default)`,
+                  }}
+                >
+                  <CategoryIcon name={ic} size={13} color={editIcon === ic ? editColor : 'var(--text-muted)'} />
+                </button>
+              ))}
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {COLOR_PRESETS.map((c) => (
+                <button
+                  key={c}
+                  onClick={() => setEditColor(c)}
+                  className="h-6 w-6 rounded-full transition-transform"
+                  style={{
+                    background: c,
+                    boxShadow: editColor === c ? `0 0 0 2px var(--bg-card-inner), 0 0 0 3.5px ${c}` : 'none',
+                    transform: editColor === c ? 'scale(1.1)' : 'scale(1)',
+                  }}
+                  aria-label={c}
+                />
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={handleCancel}
+                className="flex h-8 flex-1 items-center justify-center gap-1.5 rounded-full border text-[12px] font-semibold transition-colors"
+                style={{ borderColor: 'var(--border-default)', color: 'var(--text-muted)' }}
+              >
+                <X size={12} /> Cancelar
+              </button>
+              <motion.button
+                onClick={handleSave}
+                disabled={updateCategory.isPending}
+                whileTap={{ scale: 0.97 }}
+                transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                className="flex h-8 flex-1 items-center justify-center gap-1.5 rounded-full text-[12px] font-bold disabled:opacity-50"
+                style={{ background: 'var(--accent-light)', color: 'var(--bg-base)' }}
+              >
+                <Check size={12} /> {updateCategory.isPending ? 'Guardando...' : 'Guardar'}
+              </motion.button>
+            </div>
           </div>
         </div>
-      )}
-
-      {/* Edit row */}
-      <AnimatePresence>
-        {editing && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.2, ease: [0.32, 0.72, 0, 1] }}
-            className="overflow-hidden"
-          >
-            <div className="flex flex-col gap-3 py-3">
-              {/* Name input */}
-              <input
-                type="text"
-                value={editName}
-                onChange={(e) => { setEditName(e.target.value); setError('') }}
-                placeholder="Nombre de categoría"
-                className={`h-9 w-full rounded-xl border bg-[#141414] px-3 text-[13px] text-[#e8e6db] placeholder-[#484848] focus:outline-none focus:border-[#d4af37]/60 transition-colors ${error ? 'border-[#ef4444]' : 'border-[#242424]'}`}
-              />
-              {error && <p className="-mt-2 text-[11px] text-[#ef4444]">{error}</p>}
-
-              {/* Icon picker */}
-              <div className="flex flex-wrap gap-1.5">
-                {ICON_OPTIONS.map((ic) => (
-                  <button
-                    key={ic}
-                    onClick={() => setEditIcon(ic)}
-                    title={ICON_LABELS[ic]}
-                    className="flex h-8 w-8 items-center justify-center rounded-xl transition-colors"
-                    style={{
-                      background: editIcon === ic ? `${editColor}20` : '#141414',
-                      boxShadow: editIcon === ic ? `0 0 0 1.5px ${editColor}` : '0 0 0 1px #242424',
-                    }}
-                  >
-                    <CategoryIcon name={ic} size={13} color={editIcon === ic ? editColor : '#484848'} />
-                  </button>
-                ))}
-              </div>
-
-              {/* Color picker */}
-              <div className="flex flex-wrap gap-1.5">
-                {COLOR_PRESETS.map((c) => (
-                  <button
-                    key={c}
-                    onClick={() => setEditColor(c)}
-                    className="h-6 w-6 rounded-full transition-transform"
-                    style={{
-                      background: c,
-                      boxShadow: editColor === c ? `0 0 0 2px #0e0e0e, 0 0 0 3.5px ${c}` : 'none',
-                      transform: editColor === c ? 'scale(1.1)' : 'scale(1)',
-                    }}
-                    aria-label={c}
-                  />
-                ))}
-              </div>
-
-              {/* Actions */}
-              <div className="flex gap-2">
-                <button
-                  onClick={handleCancel}
-                  className="flex h-8 flex-1 items-center justify-center gap-1.5 rounded-full border border-[#242424] text-[12px] font-semibold text-[#606060] transition-colors hover:border-[#383838] hover:text-[#888]"
-                >
-                  <X size={12} /> Cancelar
-                </button>
-                <motion.button
-                  onClick={handleSave}
-                  disabled={updateCategory.isPending}
-                  whileTap={{ scale: 0.97 }}
-                  transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                  className="flex h-8 flex-1 items-center justify-center gap-1.5 rounded-full bg-[#d4af37] text-[12px] font-bold text-[#080808] disabled:opacity-50"
-                >
-                  <Check size={12} /> {updateCategory.isPending ? 'Guardando...' : 'Guardar'}
-                </motion.button>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
+      </div>
+    </div>
   )
 }
 
@@ -259,77 +257,72 @@ function CreateCategoryForm({ onDone }: { onDone: () => void }) {
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, height: 0 }}
-      animate={{ opacity: 1, height: 'auto' }}
-      exit={{ opacity: 0, height: 0 }}
-      transition={{ duration: 0.22, ease: [0.32, 0.72, 0, 1] }}
-      className="overflow-hidden"
-    >
-      <div className="flex flex-col gap-3 rounded-[16px] border border-[#1c1c1c] bg-[#0a0a0a] p-4 mb-2">
-        <p className="text-[10px] font-semibold tracking-[0.18em] text-[#383838] uppercase">Nueva categoría</p>
+    <div className="flex flex-col gap-3 rounded-[16px] border p-4 mb-2 mt-3" style={{ borderColor: 'var(--border-subtle)', background: 'var(--bg-subtle)' }}>
+      <p className="text-[10px] font-semibold tracking-[0.18em] uppercase" style={{ color: 'var(--text-placeholder)' }}>Nueva categoría</p>
 
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => { setName(e.target.value); setError('') }}
-          placeholder="Nombre"
-          className={`h-9 w-full rounded-xl border bg-[#141414] px-3 text-[13px] text-[#e8e6db] placeholder-[#484848] focus:outline-none focus:border-[#d4af37]/60 transition-colors ${error ? 'border-[#ef4444]' : 'border-[#242424]'}`}
-        />
-        {error && <p className="-mt-2 text-[11px] text-[#ef4444]">{error}</p>}
+      <input
+        type="text"
+        value={name}
+        onChange={(e) => { setName(e.target.value); setError('') }}
+        placeholder="Nombre"
+        className="input-wrapper h-9 w-full px-3 text-[13px]"
+        style={{ color: 'var(--text-primary)', ...(error ? { borderColor: 'var(--danger)' } : {}) }}
+      />
+      {error && <p className="-mt-2 text-[11px]" style={{ color: 'var(--danger)' }}>{error}</p>}
 
-        <div className="flex flex-wrap gap-1.5">
-          {ICON_OPTIONS.map((ic) => (
-            <button
-              key={ic}
-              onClick={() => setIcon(ic)}
-              title={ICON_LABELS[ic]}
-              className="flex h-8 w-8 items-center justify-center rounded-xl transition-colors"
-              style={{
-                background: icon === ic ? `${color}20` : '#141414',
-                boxShadow: icon === ic ? `0 0 0 1.5px ${color}` : '0 0 0 1px #242424',
-              }}
-            >
-              <CategoryIcon name={ic} size={13} color={icon === ic ? color : '#484848'} />
-            </button>
-          ))}
-        </div>
-
-        <div className="flex flex-wrap gap-1.5">
-          {COLOR_PRESETS.map((c) => (
-            <button
-              key={c}
-              onClick={() => setColor(c)}
-              className="h-6 w-6 rounded-full transition-transform"
-              style={{
-                background: c,
-                boxShadow: color === c ? `0 0 0 2px #0a0a0a, 0 0 0 3.5px ${c}` : 'none',
-                transform: color === c ? 'scale(1.1)' : 'scale(1)',
-              }}
-              aria-label={c}
-            />
-          ))}
-        </div>
-
-        <div className="flex gap-2">
+      <div className="flex flex-wrap gap-1.5">
+        {ICON_OPTIONS.map((ic) => (
           <button
-            onClick={onDone}
-            className="flex h-8 flex-1 items-center justify-center gap-1.5 rounded-full border border-[#242424] text-[12px] font-semibold text-[#606060] transition-colors hover:border-[#383838] hover:text-[#888]"
+            key={ic}
+            onClick={() => setIcon(ic)}
+            title={ICON_LABELS[ic]}
+            className="flex h-8 w-8 items-center justify-center rounded-xl transition-colors"
+            style={{
+              background: icon === ic ? `${color}20` : 'var(--bg-input)',
+              boxShadow: icon === ic ? `0 0 0 1.5px ${color}` : `0 0 0 1px var(--border-default)`,
+            }}
           >
-            <X size={12} /> Cancelar
+            <CategoryIcon name={ic} size={13} color={icon === ic ? color : 'var(--text-muted)'} />
           </button>
-          <motion.button
-            onClick={handleCreate}
-            disabled={create.isPending}
-            whileTap={{ scale: 0.97 }}
-            transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-            className="flex h-8 flex-1 items-center justify-center gap-1.5 rounded-full bg-[#d4af37] text-[12px] font-bold text-[#080808] disabled:opacity-50"
-          >
-            <Check size={12} /> {create.isPending ? 'Creando...' : 'Crear'}
-          </motion.button>
-        </div>
+        ))}
       </div>
-    </motion.div>
+
+      <div className="flex flex-wrap gap-1.5">
+        {COLOR_PRESETS.map((c) => (
+          <button
+            key={c}
+            onClick={() => setColor(c)}
+            className="h-6 w-6 rounded-full transition-transform"
+            style={{
+              background: c,
+              boxShadow: color === c ? `0 0 0 2px var(--bg-subtle), 0 0 0 3.5px ${c}` : 'none',
+              transform: color === c ? 'scale(1.1)' : 'scale(1)',
+            }}
+            aria-label={c}
+          />
+        ))}
+      </div>
+
+      <div className="flex gap-2">
+        <button
+          onClick={onDone}
+          className="flex h-8 flex-1 items-center justify-center gap-1.5 rounded-full border text-[12px] font-semibold transition-colors"
+          style={{ borderColor: 'var(--border-default)', color: 'var(--text-muted)' }}
+        >
+          <X size={12} /> Cancelar
+        </button>
+        <motion.button
+          onClick={handleCreate}
+          disabled={create.isPending}
+          whileTap={{ scale: 0.97 }}
+          transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+          className="flex h-8 flex-1 items-center justify-center gap-1.5 rounded-full text-[12px] font-bold disabled:opacity-50"
+          style={{ background: 'var(--accent-light)', color: 'var(--bg-base)' }}
+        >
+          <Check size={12} /> {create.isPending ? 'Creando...' : 'Crear'}
+        </motion.button>
+      </div>
+    </div>
   )
 }
 
@@ -337,10 +330,10 @@ function CreateCategoryForm({ onDone }: { onDone: () => void }) {
 function Section({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="mb-8">
-      <p className="mb-3 text-[10px] font-semibold tracking-[0.2em] text-[#383838] uppercase">{label}</p>
+      <p className="mb-3 text-[10px] font-semibold tracking-[0.2em] uppercase" style={{ color: 'var(--text-placeholder)' }}>{label}</p>
       <div
-        className="rounded-[18px] border border-[#1c1c1c] bg-[#0e0e0e] px-4"
-        style={{ boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.02)' }}
+        className="rounded-[18px] border px-4"
+        style={{ borderColor: 'var(--border-subtle)', background: 'var(--bg-card-inner)', boxShadow: 'var(--inset-highlight)' }}
       >
         {children}
       </div>
@@ -354,6 +347,7 @@ export default function SettingsPage() {
   const deleteCategory = useDeleteCategory()
   const [showCreate, setShowCreate] = useState(false)
   const [deleteId, setDeleteId] = useState<number | null>(null)
+  const [editingId, setEditingId] = useState<number | null>(null)
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -367,40 +361,44 @@ export default function SettingsPage() {
         {/* Categories */}
         <Section label="Categorías">
           {/* Add button row */}
-          <div className="flex items-center justify-between border-b border-[#111] py-3">
-            <p className="text-[13px] text-[#505050]">
+          <div className="flex items-center justify-between border-b py-3" style={{ borderColor: 'var(--border-subtle)' }}>
+            <p className="text-[13px]" style={{ color: 'var(--text-muted)' }}>
               {categories?.length ?? 0} categoría{categories?.length !== 1 ? 's' : ''}
             </p>
-            <button
-              onClick={() => setShowCreate((v) => !v)}
-              className="flex h-7 items-center gap-1.5 rounded-full bg-[#d4af37] px-3 text-[11px] font-bold text-[#080808]"
+            <motion.button
+              onClick={() => { setShowCreate((v) => !v); setEditingId(null) }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+              className="flex h-7 items-center gap-1.5 rounded-full px-3 text-[11px] font-bold"
+              style={{ background: 'var(--accent-light)', color: 'var(--bg-base)' }}
             >
               {showCreate ? <X size={11} /> : <Plus size={11} />}
               {showCreate ? 'Cancelar' : 'Nueva'}
-            </button>
+            </motion.button>
           </div>
 
-          {/* Create form */}
-          <AnimatePresence>
-            {showCreate && (
-              <div className="pt-3">
-                <CreateCategoryForm onDone={() => setShowCreate(false)} />
-              </div>
-            )}
-          </AnimatePresence>
+          {/* Create form — CSS grid-rows para animación suave sin bugs de height:auto */}
+          <div
+            className="grid transition-[grid-template-rows] duration-[240ms] ease-[cubic-bezier(0.32,0.72,0,1)]"
+            style={{ gridTemplateRows: showCreate ? '1fr' : '0fr' }}
+          >
+            <div className="overflow-hidden">
+              <CreateCategoryForm onDone={() => setShowCreate(false)} />
+            </div>
+          </div>
 
           {/* List */}
           {isLoading ? (
             <div className="flex flex-col gap-0">
               {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="flex items-center gap-3 border-b border-[#111] py-3 last:border-0">
-                  <div className="h-8 w-8 rounded-xl bg-[#161616] animate-pulse" />
-                  <div className="h-3 w-32 rounded bg-[#161616] animate-pulse" />
+                <div key={i} className="flex items-center gap-3 border-b py-3 last:border-0" style={{ borderColor: 'var(--border-subtle)' }}>
+                  <div className="h-8 w-8 rounded-xl animate-pulse" style={{ background: 'var(--skeleton-from)' }} />
+                  <div className="h-3 w-32 rounded animate-pulse" style={{ background: 'var(--skeleton-from)' }} />
                 </div>
               ))}
             </div>
           ) : !categories?.length ? (
-            <p className="py-6 text-center text-[13px] text-[#383838]">Sin categorías. Crea una para empezar.</p>
+            <p className="py-6 text-center text-[13px]" style={{ color: 'var(--text-muted)' }}>Sin categorías. Crea una para empezar.</p>
           ) : (
             <AnimatePresence>
               {categories.map((cat) => (
@@ -410,6 +408,9 @@ export default function SettingsPage() {
                   name={cat.name}
                   icon={cat.icon ?? 'ellipsis'}
                   color={cat.color ?? '#d4af37'}
+                  isEditing={editingId === cat.id}
+                  onStartEdit={() => { setEditingId(cat.id); setShowCreate(false) }}
+                  onDone={() => setEditingId(null)}
                   onDelete={(id) => setDeleteId(id)}
                 />
               ))}

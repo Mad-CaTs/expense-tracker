@@ -48,7 +48,7 @@ export function PageHeader({ title, action }: { title?: string; action?: React.R
         <h1 className="text-[22px] font-extrabold tracking-[-0.02em]" style={{ color: 'var(--text-primary)' }}>
           {title ?? 'Inicio'}
         </h1>
-        <p className="mt-0.5 text-[11px] font-medium" style={{ color: 'var(--text-tertiary)' }}>
+        <p className="text-[11px] font-medium" style={{ color: 'var(--text-tertiary)' }}>
           {username ? `Hola, ${username} · ` : ''}{getTodayLabel()}
         </p>
       </div>
@@ -61,7 +61,8 @@ export function PageHeader({ title, action }: { title?: string; action?: React.R
           <div ref={profileRef} className="relative">
             <button
               onClick={() => setProfileOpen((v) => !v)}
-              className="flex h-8 w-8 items-center justify-center rounded-full bg-[#d4af37]/15 ring-1 ring-[#d4af37]/30 text-[12px] font-bold text-[#d4af37] transition-colors hover:bg-[#d4af37]/25"
+              className="flex h-8 w-8 items-center justify-center rounded-full text-[12px] font-bold transition-colors"
+              style={{ background: 'var(--accent-bg)', color: 'var(--accent-light)', boxShadow: '0 0 0 1px var(--accent-ring)' }}
               aria-label="Perfil"
             >
               {username ? username[0].toUpperCase() : '?'}
@@ -73,16 +74,16 @@ export function PageHeader({ title, action }: { title?: string; action?: React.R
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 4, scale: 0.96 }}
                   transition={{ duration: 0.15, ease: [0.32, 0.72, 0, 1] }}
-                  className="absolute right-0 top-full mt-2 w-44 rounded-xl border border-[#1c1c1c] bg-[#0e0e0e] p-1 z-50"
-                  style={{ boxShadow: '0 8px 24px rgba(0,0,0,0.5)' }}
+                  className="absolute right-0 top-full mt-2 w-44 rounded-xl border p-1 z-50"
+                  style={{ borderColor: 'var(--border-subtle)', background: 'var(--bg-card-inner)', boxShadow: 'var(--card-shadow)' }}
                 >
-                  <div className="border-b border-[#161616] px-3 py-2 mb-1">
-                    <p className="text-[10px] font-semibold uppercase tracking-widest text-[#383838]">Cuenta</p>
-                    <p className="truncate text-[12px] font-medium text-[#606060]">{username.toUpperCase()}</p>
+                  <div className="border-b px-3 py-2 mb-1" style={{ borderColor: 'var(--border-subtle)' }}>
+                    <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-placeholder)' }}>Cuenta</p>
+                    <p className="truncate text-[12px] font-medium" style={{ color: 'var(--text-tertiary)' }}>{username.toUpperCase()}</p>
                   </div>
                   <button
                     onClick={handleLogout}
-                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-[12px] text-[#606060] transition-colors hover:bg-[#ef4444]/10 hover:text-[#ef4444]"
+                    className="icon-btn icon-btn-danger flex w-full items-center gap-2 rounded-lg px-3 py-2 text-[12px]"
                   >
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
@@ -99,7 +100,7 @@ export function PageHeader({ title, action }: { title?: string; action?: React.R
           {/* Settings */}
           <button
             onClick={() => router.push('/settings')}
-            className="flex h-8 w-8 items-center justify-center rounded-full text-[#383838] transition-colors hover:bg-[#161616] hover:text-[#808080]"
+            className="icon-btn flex h-8 w-8 items-center justify-center rounded-full"
             aria-label="Configuración"
           >
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">

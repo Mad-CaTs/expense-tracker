@@ -98,7 +98,7 @@ export default function LoginPage() {
                   <button
                     type="button"
                     onClick={() => setShowPassword((v) => !v)}
-                    className="text-[#484848] transition-colors hover:text-[#808080]"
+                    className="transition-colors" style={{ color: 'var(--text-muted)' }}
                     aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                   >
                     {showPassword ? (
@@ -141,7 +141,7 @@ export default function LoginPage() {
         </div>
 
         {/* Footer */}
-        <p className="mt-6 text-center text-[10px] tracking-[0.12em] text-[#2a2a2a] uppercase">
+        <p className="mt-6 text-center text-[10px] tracking-[0.12em] uppercase" style={{ color: 'var(--text-dim)' }}>
           Datos protegidos localmente
         </p>
       </motion.div>

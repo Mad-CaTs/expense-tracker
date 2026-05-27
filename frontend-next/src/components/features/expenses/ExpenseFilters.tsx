@@ -55,7 +55,8 @@ export function ExpenseFilters({ onNew }: { onNew?: () => void }) {
         {onNew && (
           <button
             onClick={onNew}
-            className="flex h-8 items-center gap-1 rounded-full bg-[#d4af37] px-3 text-[11px] font-bold text-[#080808]"
+            className="flex h-8 items-center gap-1 rounded-full px-3 text-[11px] font-bold"
+            style={{ background: 'var(--accent-light)', color: 'var(--bg-base)' }}
           >
             + Nuevo
           </button>

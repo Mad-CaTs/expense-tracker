@@ -3,6 +3,9 @@
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
+import { motion } from 'framer-motion'
+import { Plus } from 'lucide-react'
+
 import { ExpenseFilters } from '@/components/features/expenses/ExpenseFilters'
 import { ExpenseRow } from '@/components/features/expenses/ExpenseRow'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
@@ -47,12 +50,16 @@ export default function ExpensesPage() {
         <PageHeader
           title="Mis Gastos"
           action={
-            <button
+            <motion.button
               onClick={() => router.push('/expenses/new')}
-              className="flex h-7 items-center gap-1 rounded-full bg-[#d4af37] px-3 text-[11px] font-bold text-[#080808]"
+              whileTap={{ scale: 0.95 }}
+              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+              className="flex h-7 items-center gap-1.5 rounded-full px-3 text-[11px] font-bold"
+              style={{ background: 'var(--accent-light)', color: 'var(--bg-base)' }}
             >
-              + Nuevo
-            </button>
+              <Plus size={12} />
+              Nuevo
+            </motion.button>
           }
         />
 
@@ -82,17 +89,23 @@ export default function ExpensesPage() {
         {data && data.totalPages > 1 && (
           <div className="flex items-center justify-center gap-3 p-4">
             <button
-              className="h-8 rounded-full border border-[#242424] px-4 text-[11px] font-semibold text-[#808080] disabled:opacity-30 hover:border-[#383838] hover:text-[#e8e6db] transition-colors"
+              className="h-8 rounded-full border px-4 text-[11px] font-semibold transition-colors disabled:opacity-30"
+              style={{ borderColor: 'var(--border-default)', color: 'var(--text-muted)' }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--border-strong)'; e.currentTarget.style.color = 'var(--text-primary)' }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-default)'; e.currentTarget.style.color = 'var(--text-muted)' }}
               disabled={filters.currentPage === 0}
               onClick={() => filters.setPage(filters.currentPage - 1)}
             >
               ← Anterior
             </button>
-            <span className="text-[11px] text-[#383838] tabular-nums">
+            <span className="text-[11px] tabular-nums" style={{ color: 'var(--text-muted)' }}>
               {filters.currentPage + 1} / {data.totalPages}
             </span>
             <button
-              className="h-8 rounded-full border border-[#242424] px-4 text-[11px] font-semibold text-[#808080] disabled:opacity-30 hover:border-[#383838] hover:text-[#e8e6db] transition-colors"
+              className="h-8 rounded-full border px-4 text-[11px] font-semibold transition-colors disabled:opacity-30"
+              style={{ borderColor: 'var(--border-default)', color: 'var(--text-muted)' }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--border-strong)'; e.currentTarget.style.color = 'var(--text-primary)' }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-default)'; e.currentTarget.style.color = 'var(--text-muted)' }}
               disabled={filters.currentPage >= data.totalPages - 1}
               onClick={() => filters.setPage(filters.currentPage + 1)}
             >

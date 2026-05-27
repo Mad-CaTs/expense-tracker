@@ -116,17 +116,18 @@ function WheelColumn({ items, selectedIndex, onSelectIndex, itemHeight, disabled
         className="pointer-events-none absolute inset-x-0 top-0 z-10"
         style={{
           height: centerOffset,
-          background: 'linear-gradient(to bottom, #0e0e0e 0%, transparent 100%)',
+          background: 'linear-gradient(to bottom, var(--bg-card-inner) 0%, transparent 100%)',
         }}
       />
 
       {/* Selection band */}
       <div
-        className="pointer-events-none absolute inset-x-0 z-10 rounded-lg border border-[#2a2a2a]"
+        className="pointer-events-none absolute inset-x-0 z-10 rounded-lg border"
         style={{
           top: centerOffset,
           height: itemHeight,
-          background: 'rgba(212,175,55,0.06)',
+          background: 'var(--accent-bg)',
+          borderColor: 'var(--border-default)',
         }}
       />
 
@@ -135,7 +136,7 @@ function WheelColumn({ items, selectedIndex, onSelectIndex, itemHeight, disabled
         className="pointer-events-none absolute inset-x-0 bottom-0 z-10"
         style={{
           height: centerOffset,
-          background: 'linear-gradient(to top, #0e0e0e 0%, transparent 100%)',
+          background: 'linear-gradient(to top, var(--bg-card-inner) 0%, transparent 100%)',
         }}
       />
 
@@ -157,10 +158,10 @@ function WheelColumn({ items, selectedIndex, onSelectIndex, itemHeight, disabled
                 fontWeight: distance === 0 ? 600 : 400,
                 color:
                   distance === 0
-                    ? '#e8e6db'
+                    ? 'var(--text-primary)'
                     : distance === 1
-                    ? '#505050'
-                    : '#2e2e2e',
+                    ? 'var(--text-muted)'
+                    : 'var(--border-strong)',
                 transition: 'color 0.15s, font-size 0.15s',
               }}
             >
@@ -217,8 +218,8 @@ export function DateWheelPicker({
 
   return (
     <div
-      className="flex w-full gap-1 rounded-xl bg-[#0e0e0e]"
-      style={{ touchAction: 'none' }}
+      className="flex w-full gap-1 rounded-xl"
+      style={{ background: 'var(--bg-card-inner)', touchAction: 'none' }}
     >
       {/* Day */}
       <div className="flex-1">

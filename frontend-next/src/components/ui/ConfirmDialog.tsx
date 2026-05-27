@@ -23,7 +23,6 @@ export function ConfirmDialog({
     <AnimatePresence>
       {open && (
         <>
-          {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -33,7 +32,6 @@ export function ConfirmDialog({
             onClick={onCancel}
           />
 
-          {/* Dialog */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 8 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -41,19 +39,17 @@ export function ConfirmDialog({
             transition={{ duration: 0.18, ease: [0.32, 0.72, 0, 1] }}
             className="fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 -translate-y-1/2"
           >
-            <div className="rounded-[20px] border border-[#1c1c1c] bg-[#0a0a0a] p-[1px]">
-              <div
-                className="rounded-[19px] bg-[#0e0e0e] p-6"
-                style={{ boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.04)' }}
-              >
-                <p className="text-[15px] font-semibold text-[#e8e6db]">{title}</p>
+            <div className="rounded-[20px] border p-[1px]" style={{ borderColor: 'var(--border-subtle)', background: 'var(--bg-subtle)' }}>
+              <div className="rounded-[19px] p-6" style={{ background: 'var(--bg-card-inner)', boxShadow: 'var(--inset-highlight)' }}>
+                <p className="text-[15px] font-semibold" style={{ color: 'var(--text-primary)' }}>{title}</p>
                 {description && (
-                  <p className="mt-1.5 text-[13px] text-[#606060]">{description}</p>
+                  <p className="mt-1.5 text-[13px]" style={{ color: 'var(--text-tertiary)' }}>{description}</p>
                 )}
                 <div className="mt-5 flex gap-2">
                   <button
                     onClick={onCancel}
-                    className="flex-1 h-10 rounded-full border border-[#242424] text-[13px] font-semibold text-[#808080] transition-colors hover:border-[#383838] hover:text-[#e8e6db]"
+                    className="flex-1 h-10 rounded-full border text-[13px] font-semibold transition-colors"
+                    style={{ borderColor: 'var(--border-default)', color: 'var(--text-muted)' }}
                   >
                     Cancelar
                   </button>
@@ -61,7 +57,7 @@ export function ConfirmDialog({
                     onClick={onConfirm}
                     whileTap={{ scale: 0.97 }}
                     transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                    className="flex-1 h-10 rounded-full bg-[#ef4444]/10 text-[13px] font-bold text-[#ef4444] transition-colors hover:bg-[#ef4444]/20"
+                    className="btn-danger-soft flex-1 h-10 rounded-full text-[13px] font-bold"
                   >
                     {confirmLabel}
                   </motion.button>

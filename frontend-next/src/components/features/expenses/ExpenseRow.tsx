@@ -82,10 +82,7 @@ export function ExpenseRow({ expense, onEdit, onDelete, index }: ExpenseRowProps
           <div className="flex gap-0.5">
             <button
               onClick={() => onEdit(expense.id)}
-              className="flex h-7 w-7 items-center justify-center rounded-lg transition-colors cursor-pointer"
-              style={{ color: 'var(--text-muted)' }}
-              onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-hover)'; e.currentTarget.style.color = 'var(--text-primary)' }}
-              onMouseLeave={e => { e.currentTarget.style.background = ''; e.currentTarget.style.color = 'var(--text-muted)' }}
+              className="icon-btn flex h-7 w-7 items-center justify-center rounded-lg cursor-pointer"
               aria-label={`Editar ${expense.description}`}
             >
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -95,10 +92,7 @@ export function ExpenseRow({ expense, onEdit, onDelete, index }: ExpenseRowProps
             </button>
             <button
               onClick={() => onDelete(expense.id)}
-              className="flex h-7 w-7 items-center justify-center rounded-lg transition-colors cursor-pointer"
-              style={{ color: 'var(--text-muted)' }}
-              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.1)'; e.currentTarget.style.color = '#ef4444' }}
-              onMouseLeave={e => { e.currentTarget.style.background = ''; e.currentTarget.style.color = 'var(--text-muted)' }}
+              className="icon-btn icon-btn-danger flex h-7 w-7 items-center justify-center rounded-lg cursor-pointer"
               aria-label={`Eliminar ${expense.description}`}
             >
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">

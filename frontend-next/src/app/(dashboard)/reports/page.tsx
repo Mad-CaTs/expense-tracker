@@ -33,8 +33,8 @@ export default function ReportsPage() {
             className="rounded-xl px-3 py-1.5 text-xs font-semibold transition-colors"
             style={
               period === value
-                ? { background: 'linear-gradient(135deg, #d4af37, #f0d060)', color: '#080808' }
-                : { background: '#161616', color: '#888' }
+                ? { background: 'var(--accent-light)', color: 'var(--bg-base)' }
+                : { background: 'var(--bg-input)', color: 'var(--text-muted)' }
             }
           >
             {label}

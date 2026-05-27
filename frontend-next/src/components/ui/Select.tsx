@@ -3,30 +3,10 @@
 import * as React from 'react'
 
 import * as SelectPrimitive from '@radix-ui/react-select'
-import { cva, type VariantProps } from 'class-variance-authority'
 import { Check, ChevronDown, type LucideIcon } from 'lucide-react'
 import { motion } from 'framer-motion'
 
 import { cn } from '@/lib/utils/cn'
-
-const selectTriggerVariants = cva(
-  [
-    'group flex h-10 w-full items-center justify-between gap-2 rounded-xl px-3 text-sm',
-    'border transition-colors cursor-pointer',
-    'focus:outline-none focus-visible:border-[#d4af37]/60',
-    'disabled:cursor-not-allowed disabled:opacity-50',
-    '[&>span]:line-clamp-1',
-  ],
-  {
-    variants: {
-      variant: {
-        default: 'bg-[#161616] border-transparent hover:border-[#242424] text-[#e2e0d5]',
-        outline: 'bg-transparent border-[#242424] hover:border-[#383838] text-[#e2e0d5]',
-      },
-    },
-    defaultVariants: { variant: 'default' },
-  }
-)
 
 const Select = SelectPrimitive.Root
 const SelectGroup = SelectPrimitive.Group
@@ -38,15 +18,14 @@ const SelectValue = React.forwardRef<
   <SelectPrimitive.Value
     ref={ref}
     className={cn('select-none text-sm', className)}
-    placeholder={placeholder && <span className="text-[#484848]">{placeholder}</span>}
+    placeholder={placeholder && <span style={{ color: 'var(--text-placeholder)' }}>{placeholder}</span>}
     {...props}
   />
 ))
 SelectValue.displayName = SelectPrimitive.Value.displayName
 
 interface SelectTriggerProps
-  extends React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger>,
-    VariantProps<typeof selectTriggerVariants> {
+  extends React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger> {
   icon?: LucideIcon
   label?: string
   error?: string
@@ -55,32 +34,39 @@ interface SelectTriggerProps
 const SelectTrigger = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Trigger>,
   SelectTriggerProps
->(({ className, children, variant, icon: Icon, label, error, ...props }, ref) => (
+>(({ className, children, icon: Icon, label, error, ...props }, ref) => (
   <div className="flex flex-col gap-1.5">
     {label && (
-      <span className="text-xs font-medium tracking-widest text-[#888] uppercase">{label}</span>
+      <span className="text-xs font-medium tracking-widest uppercase" style={{ color: 'var(--text-muted)' }}>{label}</span>
     )}
     <SelectPrimitive.Trigger
       ref={ref}
       className={cn(
-        selectTriggerVariants({ variant }),
-        error && 'border-[#ef4444]',
+        'input-wrapper group flex h-10 w-full items-center justify-between gap-2 px-3 text-sm',
+        'cursor-pointer focus:outline-none',
+        'disabled:cursor-not-allowed disabled:opacity-50',
+        '[&>span]:line-clamp-1',
         className
       )}
+      style={{
+        color: 'var(--text-primary)',
+        ...(error ? { borderColor: 'var(--danger)' } : {}),
+      } as React.CSSProperties}
       {...props}
     >
       <div className="flex min-w-0 flex-1 items-center gap-2">
-        {Icon && <Icon size={14} className="shrink-0 text-[#484848]" />}
+        {Icon && <Icon size={14} className="shrink-0" style={{ color: 'var(--text-muted)' }} />}
         <span className="truncate">{children}</span>
       </div>
       <SelectPrimitive.Icon asChild>
         <ChevronDown
           size={14}
-          className="shrink-0 text-[#484848] opacity-70 transition-transform duration-200 group-data-[state=open]:rotate-180"
+          className="shrink-0 opacity-70 transition-transform duration-200 group-data-[state=open]:rotate-180"
+          style={{ color: 'var(--text-muted)' }}
         />
       </SelectPrimitive.Icon>
     </SelectPrimitive.Trigger>
-    {error && <p className="text-xs text-[#ef4444]">{error}</p>}
+    {error && <p className="text-xs" style={{ color: 'var(--danger)' }}>{error}</p>}
   </div>
 ))
 SelectTrigger.displayName = SelectPrimitive.Trigger.displayName
@@ -95,12 +81,15 @@ const SelectContent = React.forwardRef<
     <SelectPrimitive.Content
       ref={ref}
       className={cn(
-        'relative z-50 min-w-[8rem] overflow-hidden',
-        'rounded-xl border border-[#1c1c1c] bg-[#0e0e0e]',
-        'shadow-[0_8px_32px_rgba(0,0,0,0.5)]',
+        'relative z-50 min-w-[8rem] rounded-xl border',
         position === 'popper' && 'mt-1 data-[side=bottom]:translate-y-1',
         className
       )}
+      style={{
+        borderColor: 'var(--border-subtle)',
+        background: 'var(--bg-elevated)',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
+      }}
       position={position}
       {...props}
     >
@@ -130,7 +119,8 @@ const SelectLabel = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <SelectPrimitive.Label
     ref={ref}
-    className={cn('px-3 py-1.5 text-[10px] font-semibold tracking-widest text-[#484848] uppercase', className)}
+    className={cn('px-3 py-1.5 text-[10px] font-semibold tracking-widest uppercase', className)}
+    style={{ color: 'var(--text-placeholder)' }}
     {...props}
   />
 ))
@@ -146,12 +136,11 @@ const SelectItem = React.forwardRef<React.ElementRef<typeof SelectPrimitive.Item
       ref={ref}
       className={cn(
         'relative flex w-full cursor-default select-none items-center rounded-lg py-2 pl-3 pr-8 text-sm',
-        'text-[#c8c6bb] outline-none transition-colors',
-        'focus:bg-[#161616] focus:text-[#e8e6db]',
+        'outline-none transition-colors',
         'data-[disabled]:pointer-events-none data-[disabled]:opacity-40',
-        'data-[state=checked]:text-[#e8e6db]',
         className
       )}
+      style={{ color: 'var(--text-secondary)' }}
       {...props}
     >
       <motion.div
@@ -159,7 +148,7 @@ const SelectItem = React.forwardRef<React.ElementRef<typeof SelectPrimitive.Item
         whileHover={{ x: 2 }}
         transition={{ duration: 0.1 }}
       >
-        {Icon && <Icon size={14} className="shrink-0 text-[#484848]" />}
+        {Icon && <Icon size={14} className="shrink-0" style={{ color: 'var(--text-muted)' }} />}
         <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
       </motion.div>
       <span className="absolute right-3 flex h-3.5 w-3.5 items-center justify-center">
@@ -169,7 +158,7 @@ const SelectItem = React.forwardRef<React.ElementRef<typeof SelectPrimitive.Item
             animate={{ scale: 1 }}
             transition={{ duration: 0.1, type: 'spring', stiffness: 500, damping: 30 }}
           >
-            <Check size={12} className="text-[#d4af37]" />
+            <Check size={12} style={{ color: 'var(--accent-light)' }} />
           </motion.div>
         </SelectPrimitive.ItemIndicator>
       </span>
@@ -184,7 +173,8 @@ const SelectSeparator = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <SelectPrimitive.Separator
     ref={ref}
-    className={cn('-mx-1 my-1 h-px bg-[#1c1c1c]', className)}
+    className={cn('-mx-1 my-1 h-px', className)}
+    style={{ background: 'var(--border-subtle)' }}
     {...props}
   />
 ))
