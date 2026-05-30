@@ -3,16 +3,22 @@ import { useQuery } from '@tanstack/react-query'
 import { getCategoryBreakdown, getReportSummary } from '@/lib/api/reports'
 import type { Period } from '@/types'
 
-export function useReportSummary(period: Period) {
+interface ReportFilters {
+  period: Period
+  from?: string
+  to?: string
+}
+
+export function useReportSummary(filters: ReportFilters) {
   return useQuery({
-    queryKey: ['reports', 'summary', period],
-    queryFn: () => getReportSummary(period),
+    queryKey: ['reports', 'summary', filters],
+    queryFn: () => getReportSummary(filters),
   })
 }
 
-export function useCategoryBreakdown(period: Period) {
+export function useCategoryBreakdown(filters: ReportFilters) {
   return useQuery({
-    queryKey: ['reports', 'by-category', period],
-    queryFn: () => getCategoryBreakdown(period),
+    queryKey: ['reports', 'by-category', filters],
+    queryFn: () => getCategoryBreakdown(filters),
   })
 }

@@ -2,59 +2,160 @@
 
 import { useState } from 'react'
 
-import { PageHeader } from '@/components/layout/PageHeader'
+import { motion } from 'framer-motion'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
+
 import { CategoryBreakdown } from '@/components/features/reports/CategoryBreakdown'
-import { ReportSummary } from '@/components/features/reports/ReportSummary'
+import { ReportSummaryCards } from '@/components/features/reports/ReportSummaryCards'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { PageHeader } from '@/components/layout/PageHeader'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { useCategoryBreakdown, useReportSummary } from '@/lib/hooks/useReports'
-import type { Period } from '@/types'
 
-const PERIODS: { value: Period; label: string }[] = [
-  { value: 'MONTHLY', label: 'Este mes' },
-  { value: 'LAST_MONTH', label: 'Mes anterior' },
-  { value: 'YEARLY', label: 'Este año' },
-]
+type Granularity = 'WEEKLY' | 'MONTHLY'
+
+const MONTHS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+
+function formatPeriodLabel(granularity: Granularity, date: Date): string {
+  if (granularity === 'MONTHLY') {
+    return `${MONTHS[date.getMonth()]} ${date.getFullYear()}`
+  }
+  // For weekly show the week's monday–sunday
+  const monday = new Date(date)
+  monday.setDate(date.getDate() - ((date.getDay() + 6) % 7))
+  const sunday = new Date(monday)
+  sunday.setDate(monday.getDate() + 6)
+  const fmt = (d: Date) => `${d.getDate()} ${MONTHS[d.getMonth()]}`
+  return `${fmt(monday)} – ${fmt(sunday)}`
+}
+
+function getRange(granularity: Granularity, date: Date): { from: string; to: string } {
+  const pad = (n: number) => String(n).padStart(2, '0')
+  const iso = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+
+  if (granularity === 'MONTHLY') {
+    const from = new Date(date.getFullYear(), date.getMonth(), 1)
+    const to = new Date(date.getFullYear(), date.getMonth() + 1, 0)
+    return { from: iso(from), to: iso(to) }
+  }
+  // Weekly: monday to sunday of week containing `date`
+  const monday = new Date(date)
+  monday.setDate(date.getDate() - ((date.getDay() + 6) % 7))
+  const sunday = new Date(monday)
+  sunday.setDate(monday.getDate() + 6)
+  return { from: iso(monday), to: iso(sunday) }
+}
+
+function navigate(granularity: Granularity, date: Date, delta: number): Date {
+  const d = new Date(date)
+  if (granularity === 'MONTHLY') {
+    d.setMonth(d.getMonth() + delta)
+    d.setDate(1)
+  } else {
+    d.setDate(d.getDate() + delta * 7)
+  }
+  return d
+}
 
 export default function ReportsPage() {
-  const [period, setPeriod] = useState<Period>('MONTHLY')
-  const { data, isLoading } = useReportSummary(period)
-  const { data: breakdown } = useCategoryBreakdown(period)
+  const [granularity, setGranularity] = useState<Granularity>('MONTHLY')
+  const [periodDate, setPeriodDate] = useState(new Date())
+  const { from, to } = getRange(granularity, periodDate)
+  const filters = { period: 'CUSTOM' as const, from, to }
+
+  const { data, isLoading } = useReportSummary(filters)
+  const { data: breakdown } = useCategoryBreakdown(filters)
+
+  const isCurrentPeriod = (() => {
+    const now = new Date()
+    const { from: nf, to: nt } = getRange(granularity, now)
+    return from === nf && to === nt
+  })()
 
   return (
     <div className="mx-auto max-w-3xl">
       <PageHeader title="Reportes" />
       <div className="px-4">
-<div className="mb-6 flex gap-2">
-        {PERIODS.map(({ value, label }) => (
-          <button
-            key={value}
-            onClick={() => setPeriod(value)}
-            className="rounded-xl px-3 py-1.5 text-xs font-semibold transition-colors"
-            style={
-              period === value
-                ? { background: 'var(--accent-light)', color: 'var(--bg-base)' }
-                : { background: 'var(--bg-input)', color: 'var(--text-muted)' }
-            }
-          >
-            {label}
-          </button>
-        ))}
-      </div>
 
-      {isLoading ? (
-        <div className="flex flex-col gap-3">
-          <Skeleton className="h-32 w-full rounded-2xl" />
-          <Skeleton className="h-48 w-full rounded-2xl" />
+        {/* Granularity toggles — mismo estilo que /expenses */}
+        <div className="mb-4 flex gap-1.5">
+          {(['MONTHLY', 'WEEKLY'] as Granularity[]).map((g) => (
+            <motion.button
+              key={g}
+              onClick={() => { setGranularity(g); setPeriodDate(new Date()) }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+              className="rounded-full px-3.5 py-1.5 text-[11px] font-semibold transition-colors"
+              style={
+                granularity === g
+                  ? { background: 'var(--accent-light)', color: 'var(--bg-base)' }
+                  : { background: 'var(--bg-input)', color: 'var(--text-muted)' }
+              }
+            >
+              {g === 'MONTHLY' ? 'Mensual' : 'Semanal'}
+            </motion.button>
+          ))}
         </div>
-      ) : !data ? (
-        <EmptyState title="Sin datos para este período" />
-      ) : (
-        <>
-          <ReportSummary summary={data} />
-          <CategoryBreakdown breakdown={breakdown ?? []} />
-        </>
-      )}
+
+        {/* Period navigator */}
+        <div className="relative mb-5">
+          <div
+            className="flex items-center justify-between rounded-[14px] border px-3 py-2.5"
+            style={{ borderColor: 'var(--border-subtle)', background: 'var(--bg-card-inner)' }}
+          >
+            <motion.button
+              onClick={() => setPeriodDate(d => navigate(granularity, d, -1))}
+              whileTap={{ scale: 0.9 }}
+              className="flex h-7 w-7 items-center justify-center rounded-full cursor-pointer transition-colors"
+              style={{ color: 'var(--text-muted)' }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-hover)'; e.currentTarget.style.color = 'var(--text-primary)' }}
+              onMouseLeave={e => { e.currentTarget.style.background = ''; e.currentTarget.style.color = 'var(--text-muted)' }}
+            >
+              <ChevronLeft size={15} />
+            </motion.button>
+
+            <span className="text-[13px] font-semibold" style={{ color: 'var(--text-primary)' }}>
+              {formatPeriodLabel(granularity, periodDate)}
+            </span>
+
+            <motion.button
+              onClick={() => !isCurrentPeriod && setPeriodDate(d => navigate(granularity, d, 1))}
+              whileTap={{ scale: 0.9 }}
+              className="flex h-7 w-7 items-center justify-center rounded-full transition-colors"
+              style={{
+                color: isCurrentPeriod ? 'var(--border-subtle)' : 'var(--text-muted)',
+                cursor: isCurrentPeriod ? 'default' : 'pointer',
+              }}
+              onMouseEnter={e => {
+                if (!isCurrentPeriod) { e.currentTarget.style.background = 'var(--bg-hover)'; e.currentTarget.style.color = 'var(--text-primary)' }
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.background = ''
+                e.currentTarget.style.color = isCurrentPeriod ? 'var(--border-subtle)' : 'var(--text-muted)'
+              }}
+            >
+              <ChevronRight size={15} />
+            </motion.button>
+          </div>
+
+        </div>
+
+        {/* Content */}
+        {isLoading ? (
+          <div className="flex flex-col gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              {[0, 1, 2].map(i => <Skeleton key={i} className="h-24 rounded-[18px]" />)}
+            </div>
+            <Skeleton className="h-48 w-full rounded-2xl" />
+          </div>
+        ) : !data ? (
+          <EmptyState title="Sin datos para este período" />
+        ) : (
+          <>
+            <ReportSummaryCards summary={data} />
+            <CategoryBreakdown breakdown={breakdown ?? []} />
+          </>
+        )}
       </div>
     </div>
   )

@@ -32,7 +32,7 @@ export interface ExpensePage {
   size: number
 }
 
-export type Period = 'MONTHLY' | 'LAST_MONTH' | 'YEARLY' | 'CUSTOM'
+export type Period = 'MONTHLY' | 'LAST_MONTH' | 'YEARLY' | 'WEEKLY' | 'CUSTOM'
 
 export interface ExpenseFilters {
   period: Period

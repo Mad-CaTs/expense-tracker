@@ -249,6 +249,12 @@ select:focus-visible,
   border-radius: 8px;
 }
 
+.recharts-wrapper,
+.recharts-wrapper svg,
+.recharts-surface {
+  outline: none !important;
+}
+
 /* Inset highlight — bezel inner glow */
 .inset-highlight {
   box-shadow: var(--inset-highlight);
