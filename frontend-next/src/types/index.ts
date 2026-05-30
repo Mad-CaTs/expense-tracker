@@ -21,6 +21,7 @@ export interface Expense {
   categoryColor?: string
   categoryIcon?: string
   notes?: string
+  attachmentCount?: number
 }
 
 export interface ExpensePage {
@@ -111,6 +112,14 @@ export interface LoginResponse {
   mustChangePassword: boolean
   username: string
   user: User
+}
+
+export interface Attachment {
+  id: number
+  fileName: string
+  contentType: string
+  fileSize: number
+  createdAt: string
 }
 
 export interface ApiError {

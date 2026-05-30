@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 
-import { motion } from 'framer-motion'
-import { Plus, X } from 'lucide-react'
+import { AnimatePresence, motion } from 'framer-motion'
+import { ChevronDown, Plus, X } from 'lucide-react'
 
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -73,94 +73,128 @@ function RecurringCard({
   index,
   onToggle,
   onDelete,
+  expanded,
+  onExpandToggle,
 }: {
   item: RecurringExpense
   index: number
   onToggle: (id: number) => void
   onDelete: (id: number) => void
+  expanded: boolean
+  onExpandToggle: () => void
 }) {
   const Icon = item.categoryIcon ? (ICON_MAP[item.categoryIcon] ?? Wallet) : Wallet
   const color = item.categoryColor ?? '#d4af37'
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 6 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.04, duration: 0.22, ease: [0.32, 0.72, 0, 1] }}
-      className={`rounded-[18px] border p-[1px] transition-opacity ${item.active ? 'opacity-100' : 'opacity-50'}`}
-      style={{ borderColor: 'var(--border-subtle)', background: 'var(--bg-subtle)' }}
-    >
-      <div
-        className="rounded-[17px] px-4 py-3.5"
-        style={{ background: 'var(--bg-card-inner)', boxShadow: 'var(--inset-highlight)' }}
+    <>
+      <motion.button
+        initial={{ opacity: 0, y: 4 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: index * 0.03, duration: 0.18, ease: [0.32, 0.72, 0, 1] }}
+        onClick={onExpandToggle}
+        className={`w-full cursor-pointer transition-colors duration-150 ${!item.active ? 'opacity-50' : ''}`}
+        style={{ background: expanded ? 'var(--bg-hover)' : 'transparent' }}
+        onMouseEnter={e => { if (!expanded) (e.currentTarget as HTMLElement).style.background = 'var(--bg-hover)' }}
+        onMouseLeave={e => { if (!expanded) (e.currentTarget as HTMLElement).style.background = 'transparent' }}
       >
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div
-              className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl"
-              style={{ backgroundColor: `${color}14`, boxShadow: `0 0 0 1px ${color}18` }}
+        <div className="flex items-center gap-3 px-4 py-3">
+          <motion.div
+            animate={{ rotate: expanded ? 180 : 0 }}
+            transition={{ duration: 0.2, ease: [0.32, 0.72, 0, 1] }}
+            className="flex-shrink-0"
+          >
+            <ChevronDown size={13} style={{ color: 'var(--text-muted)' }} />
+          </motion.div>
+
+          <div
+            className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl"
+            style={{ backgroundColor: `${color}14`, boxShadow: `0 0 0 1px ${color}18` }}
+          >
+            <Icon size={14} style={{ color }} strokeWidth={1.6} />
+          </div>
+
+          <div className="flex min-w-0 flex-1 items-center gap-2">
+            <p className="truncate text-[13px] font-semibold" style={{ color: 'var(--text-primary)' }}>
+              {item.description}
+            </p>
+            <span
+              className="flex-shrink-0 rounded-full px-2 py-0.5 text-[9px] font-bold tracking-wide"
+              style={{ background: `${color}18`, color }}
             >
-              <Icon size={16} style={{ color }} strokeWidth={1.6} />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <p className="text-[13px] font-semibold leading-tight" style={{ color: 'var(--text-primary)' }}>
-                  {item.description}
-                </p>
-                <span
-                  className="rounded-full px-2 py-0.5 text-[9px] font-bold tracking-wide"
-                  style={{ background: `${color}18`, color }}
-                >
-                  {FREQUENCY_LABELS[item.frequency]}
-                </span>
-                {!item.active && (
-                  <span className="rounded-full px-2 py-0.5 text-[9px] font-bold tracking-widest uppercase" style={{ background: 'var(--border-subtle)', color: 'var(--text-muted)' }}>
-                    Pausado
-                  </span>
-                )}
-              </div>
-              <p className="mt-0.5 text-[11px]" style={{ color: 'var(--text-dim)' }}>
-                {item.categoryName}
-                <span className="mx-1.5" style={{ color: 'var(--border-default)' }}>·</span>
-                <CalendarClock size={10} className="mr-0.5 inline-block" style={{ color: 'var(--text-muted)', verticalAlign: 'middle' }} />
-                <span>{formatNextDate(item.nextDate)}</span>
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="mono-amount text-[13px] font-bold tracking-tight" style={{ color: 'var(--text-secondary)' }}>
-              S/ {(item.amount ?? 0).toFixed(2)}
+              {FREQUENCY_LABELS[item.frequency]}
             </span>
-            <div className="flex gap-0.5">
-              <button
-                onClick={() => onToggle(item.id)}
-                className="icon-btn flex h-7 w-7 items-center justify-center rounded-lg"
-                aria-label={item.active ? 'Pausar' : 'Activar'}
-              >
-                {item.active ? (
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="6" y="4" width="4" height="16" /><rect x="14" y="4" width="4" height="16" />
-                  </svg>
-                ) : (
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                    <polygon points="5 3 19 12 5 21 5 3" />
-                  </svg>
-                )}
-              </button>
-              <button
-                onClick={() => onDelete(item.id)}
-                className="icon-btn icon-btn-danger flex h-7 w-7 items-center justify-center rounded-lg"
-                aria-label="Eliminar"
-              >
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-                </svg>
-              </button>
-            </div>
+            {!item.active && (
+              <span className="flex-shrink-0 rounded-full px-2 py-0.5 text-[9px] font-bold tracking-widest uppercase" style={{ background: 'var(--border-subtle)', color: 'var(--text-muted)' }}>
+                Pausado
+              </span>
+            )}
           </div>
+
+          <span className="mono-amount flex-shrink-0 text-[13px] font-bold tracking-tight" style={{ color: 'var(--text-secondary)' }}>
+            S/ {(item.amount ?? 0).toFixed(2)}
+          </span>
         </div>
-      </div>
-    </motion.div>
+      </motion.button>
+
+      <AnimatePresence initial={false}>
+        {expanded && (
+          <motion.div
+            key="details"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: [0.32, 0.72, 0, 1] }}
+            className="overflow-hidden border-t"
+            style={{ borderColor: 'var(--border-subtle)', background: 'var(--bg-subtle)' }}
+          >
+            <div className="space-y-3 px-4 py-3.5">
+              <div className="grid grid-cols-2 gap-3 text-[12px]">
+                <div>
+                  <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.15em]" style={{ color: 'var(--text-placeholder)' }}>Categoría</p>
+                  <p style={{ color: 'var(--text-secondary)' }}>{item.categoryName}</p>
+                </div>
+                <div>
+                  <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.15em]" style={{ color: 'var(--text-placeholder)' }}>Próximo cobro</p>
+                  <div className="flex items-center gap-1">
+                    <CalendarClock size={11} style={{ color: 'var(--text-muted)' }} />
+                    <p className="font-mono" style={{ color: 'var(--text-secondary)' }}>{formatNextDate(item.nextDate)}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-2 pt-1">
+                <button
+                  onClick={(e) => { e.stopPropagation(); onToggle(item.id) }}
+                  className="flex h-7 flex-1 items-center justify-center gap-1.5 rounded-lg border text-[11px] font-semibold transition-colors cursor-pointer"
+                  style={{ borderColor: 'var(--border-default)', color: 'var(--text-muted)' }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--border-strong)'; e.currentTarget.style.color = 'var(--text-primary)' }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-default)'; e.currentTarget.style.color = 'var(--text-muted)' }}
+                >
+                  {item.active ? (
+                    <><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="6" y="4" width="4" height="16" /><rect x="14" y="4" width="4" height="16" /></svg> Pausar</>
+                  ) : (
+                    <><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3" /></svg> Activar</>
+                  )}
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); onDelete(item.id) }}
+                  className="flex h-7 flex-1 items-center justify-center gap-1.5 rounded-lg text-[11px] font-semibold transition-colors cursor-pointer"
+                  style={{ background: 'rgba(239,68,68,0.08)', color: 'var(--danger)' }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.15)' }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.08)' }}
+                >
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                  </svg>
+                  Eliminar
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   )
 }
 
@@ -182,6 +216,7 @@ export default function RecurringPage() {
   const [showDatePicker, setShowDatePicker] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [deleteId, setDeleteId] = useState<number | null>(null)
+  const [expandedId, setExpandedId] = useState<number | null>(null)
 
   const startDateObj = new Date(startDate + 'T12:00:00')
 
@@ -399,24 +434,34 @@ export default function RecurringPage() {
       </div>
 
       {/* List */}
-      <div className="flex flex-col gap-3">
+      <div className="mt-3">
         {isLoading ? (
-          Array.from({ length: 3 }).map((_, i) => <BudgetCardSkeleton key={i} />)
+          <div className="overflow-hidden rounded-[18px] border" style={{ borderColor: 'var(--border-subtle)' }}>
+            {Array.from({ length: 3 }).map((_, i) => <BudgetCardSkeleton key={i} />)}
+          </div>
         ) : !data?.length ? (
           <EmptyState
             title="Sin gastos recurrentes"
             description="Crea un recurrente para suscripciones o gastos fijos como alquiler."
           />
         ) : (
-          data.map((item, i) => (
-            <RecurringCard
-              key={item.id}
-              item={item}
-              index={i}
-              onToggle={(id) => toggleRecurring.mutate(id)}
-              onDelete={(id) => setDeleteId(id)}
-            />
-          ))
+          <div
+            className="overflow-hidden rounded-[18px] border divide-y divide-[var(--border-subtle)]"
+            style={{ borderColor: 'var(--border-subtle)', background: 'var(--bg-card-inner)' }}
+          >
+            {data.map((item, i) => (
+              <div key={item.id}>
+                <RecurringCard
+                  item={item}
+                  index={i}
+                  onToggle={(id) => toggleRecurring.mutate(id)}
+                  onDelete={(id) => setDeleteId(id)}
+                  expanded={expandedId === item.id}
+                  onExpandToggle={() => setExpandedId(prev => prev === item.id ? null : item.id)}
+                />
+              </div>
+            ))}
+          </div>
         )}
       </div>
       </div>

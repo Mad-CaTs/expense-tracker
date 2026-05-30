@@ -6,6 +6,7 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { CalendarDays } from 'lucide-react'
 
+import { AttachmentSection, type PendingFile } from '@/components/features/expenses/AttachmentSection'
 import { DateWheelPicker } from '@/components/ui/DateWheelPicker'
 import {
   Select,
@@ -14,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/Select'
+import { uploadAttachment } from '@/lib/api/attachments'
 import { useCategories } from '@/lib/hooks/useCategories'
 import { useCreateExpense, useExpense, useUpdateExpense } from '@/lib/hooks/useExpenses'
 import { Expense } from '@/types'
@@ -53,6 +55,7 @@ function ExpenseFormInner({ expense, expenseId }: FormInnerProps) {
   const [notes, setNotes] = useState(expense?.notes ?? '')
   const [showDatePicker, setShowDatePicker] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([])
 
   const dateObj = new Date(date + 'T12:00:00')
 
@@ -101,9 +104,11 @@ function ExpenseFormInner({ expense, expenseId }: FormInnerProps) {
     }
     if (isEdit && expenseId) {
       await updateExpense.mutateAsync({ id: expenseId, data: payload })
+      await Promise.all(pendingFiles.map(p => uploadAttachment(expenseId, p.file)))
     } else {
       await createExpense.mutateAsync(payload)
     }
+    setPendingFiles([])
     router.push('/expenses')
   }
 
@@ -239,6 +244,16 @@ function ExpenseFormInner({ expense, expenseId }: FormInnerProps) {
           style={{ color: 'var(--text-secondary)' }}
         />
       </div>
+
+      {/* Attachments — solo en edición */}
+      {isEdit && expenseId && (
+        <AttachmentSection
+          expenseId={expenseId}
+          pendingFiles={pendingFiles}
+          onAddFiles={(files) => setPendingFiles(prev => [...prev, ...files])}
+          onRemovePending={(id) => setPendingFiles(prev => prev.filter(p => p.id !== id))}
+        />
+      )}
 
       {/* Numpad */}
       <div className="border-t px-2 pt-3 pb-2" style={{ borderColor: 'var(--border-subtle)' }}>

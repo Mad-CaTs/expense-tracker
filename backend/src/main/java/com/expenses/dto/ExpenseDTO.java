@@ -23,6 +23,9 @@ public class ExpenseDTO {
     @NotNull(message = "La categoría es obligatoria")
     private Long categoryId;
 
+    @Size(max = 1000)
+    private String notes;
+
     private String categoryName;
     private String categoryColor;
     private String categoryIcon;

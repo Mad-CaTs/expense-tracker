@@ -56,6 +56,7 @@ public class ExpenseService {
         expense.setAmount(dto.getAmount());
         expense.setDate(dto.getDate());
         expense.setDescription(dto.getDescription());
+        expense.setNotes(dto.getNotes());
         expense.setCategory(category);
         expense.setUser(user);
         return toDTO(expenseRepository.save(expense));
@@ -70,6 +71,7 @@ public class ExpenseService {
         expense.setAmount(dto.getAmount());
         expense.setDate(dto.getDate());
         expense.setDescription(dto.getDescription());
+        expense.setNotes(dto.getNotes());
         expense.setCategory(category);
         return toDTO(expenseRepository.save(expense));
     }
@@ -87,6 +89,7 @@ public class ExpenseService {
         dto.setAmount(e.getAmount());
         dto.setDate(e.getDate());
         dto.setDescription(e.getDescription());
+        dto.setNotes(e.getNotes());
         dto.setCategoryId(e.getCategory().getId());
         dto.setCategoryName(e.getCategory().getName());
         dto.setCategoryColor(e.getCategory().getColor());

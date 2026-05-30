@@ -30,6 +30,7 @@ export default function ExpensesPage() {
   })
   const deleteExpense = useDeleteExpense()
   const [deleteId, setDeleteId] = useState<number | null>(null)
+  const [expandedId, setExpandedId] = useState<number | null>(null)
 
   function confirmDelete() {
     if (deleteId != null) deleteExpense.mutate(deleteId)
@@ -65,24 +66,34 @@ export default function ExpensesPage() {
 
         <ExpenseFilters />
 
-        <div className="mt-3 flex flex-col gap-3 px-4">
+        <div className="mt-5 px-4">
           {isLoading ? (
-            Array.from({ length: 5 }).map((_, i) => <ExpenseRowSkeleton key={i} />)
+            <div className="overflow-hidden rounded-[18px] border" style={{ borderColor: 'var(--border-subtle)' }}>
+              {Array.from({ length: 5 }).map((_, i) => <ExpenseRowSkeleton key={i} />)}
+            </div>
           ) : !data?.content.length ? (
             <EmptyState
               title="Sin gastos en este período"
               description="Registra tu primer gasto para comenzar."
             />
           ) : (
-            data.content.map((expense, i) => (
-              <ExpenseRow
-                key={expense.id}
-                expense={expense}
-                index={i}
-                onEdit={(id) => router.push(`/expenses/${id}/edit`)}
-                onDelete={(id) => setDeleteId(id)}
-              />
-            ))
+            <div
+              className="overflow-hidden rounded-[18px] border divide-y divide-[var(--border-subtle)]"
+              style={{ borderColor: 'var(--border-subtle)', background: 'var(--bg-card-inner)' }}
+            >
+              {data.content.map((expense, i) => (
+                <div key={expense.id}>
+                  <ExpenseRow
+                    expense={expense}
+                    index={i}
+                    expanded={expandedId === expense.id}
+                    onToggle={() => setExpandedId(prev => prev === expense.id ? null : expense.id)}
+                    onEdit={(id) => router.push(`/expenses/${id}/edit`)}
+                    onDelete={(id) => setDeleteId(id)}
+                  />
+                </div>
+              ))}
+            </div>
           )}
         </div>
 

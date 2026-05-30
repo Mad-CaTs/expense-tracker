@@ -9,7 +9,7 @@ export default async function EditExpensePage({ params }: EditExpensePageProps) 
   const expenseId = Number(id)
 
   return (
-    <div className="flex min-h-[calc(100dvh-4rem)] items-center justify-center px-4 py-8">
+    <div className="flex min-h-[calc(100dvh-4rem)] items-center justify-center px-4 py-8 pb-28 md:pb-8">
       <div className="w-full max-w-md rounded-[20px] border p-[1px]" style={{ borderColor: 'var(--border-subtle)', background: 'var(--bg-subtle)' }}>
         <div className="rounded-[19px]" style={{ background: 'var(--bg-card-inner)', boxShadow: 'var(--inset-highlight)' }}>
           <div className="border-b px-4 py-5" style={{ borderColor: 'var(--border-subtle)' }}>

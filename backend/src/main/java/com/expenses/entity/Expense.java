@@ -42,6 +42,9 @@ public class Expense {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt = LocalDateTime.now();
 
+    @Column(length = 1000)
+    private String notes;
+
     @OneToMany(mappedBy = "expense", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ExpenseAttachment> attachments = new ArrayList<>();
 
