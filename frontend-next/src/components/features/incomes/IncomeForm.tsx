@@ -4,48 +4,20 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
 import { motion } from 'framer-motion'
-import {
-  CalendarDays,
-  Car,
-  CheckCircle,
-  Ellipsis,
-  Film,
-  HeartPulse,
-  Home,
-  type LucideIcon,
-  ShoppingCart,
-  Utensils,
-  Wallet,
-  Zap,
-} from 'lucide-react'
+import { CalendarDays, CheckCircle } from 'lucide-react'
 
-import { AttachmentSection, type PendingFile } from '@/components/features/expenses/AttachmentSection'
 import { DateWheelPicker } from '@/components/ui/DateWheelPicker'
-import { uploadAttachment } from '@/lib/api/attachments'
-import { useCategories } from '@/lib/hooks/useCategories'
-import { useCreateExpense, useExpense, useUpdateExpense } from '@/lib/hooks/useExpenses'
+import { useCreateIncome, useIncome, useUpdateIncome } from '@/lib/hooks/useIncomes'
 import { useWallets } from '@/lib/hooks/useWallets'
-import { Expense } from '@/types'
+import type { Income } from '@/types'
 
-const ICON_MAP: Record<string, LucideIcon> = {
-  utensils: Utensils,
-  car: Car,
-  'heart-pulse': HeartPulse,
-  film: Film,
-  home: Home,
-  ellipsis: Ellipsis,
-  'shopping-cart': ShoppingCart,
-  wallet: Wallet,
-  zap: Zap,
-}
-
-interface ExpenseFormProps {
-  expenseId?: number
+interface IncomeFormProps {
+  incomeId?: number
 }
 
 interface FormInnerProps {
-  expense?: Expense
-  expenseId?: number
+  income?: Income
+  incomeId?: number
 }
 
 function formatDisplay(val: string): string {
@@ -55,26 +27,23 @@ function formatDisplay(val: string): string {
   return n.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
-function ExpenseFormInner({ expense, expenseId }: FormInnerProps) {
+function IncomeFormInner({ income, incomeId }: FormInnerProps) {
   const router = useRouter()
-  const isEdit = expenseId != null && expenseId > 0
+  const isEdit = incomeId != null && incomeId > 0
 
-  const { data: categories } = useCategories()
   const { data: wallets } = useWallets()
-  const createExpense = useCreateExpense()
-  const updateExpense = useUpdateExpense()
+  const createIncome = useCreateIncome()
+  const updateIncome = useUpdateIncome()
 
-  const [description, setDescription] = useState(expense?.description ?? '')
-  const [rawAmount, setRawAmount] = useState(expense ? expense.amount.toString() : '')
+  const [description, setDescription] = useState(income?.description ?? '')
+  const [rawAmount, setRawAmount] = useState(income ? income.amount.toString() : '')
   const [date, setDate] = useState(
-    expense ? expense.date.split('T')[0] : (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}` })()
+    income ? income.date.split('T')[0] : (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}` })()
   )
-  const [categoryId, setCategoryId] = useState(expense ? expense.categoryId.toString() : '')
-  const [walletId, setWalletId] = useState(expense?.walletId?.toString() ?? '')
-  const [notes, setNotes] = useState(expense?.notes ?? '')
+  const [walletId, setWalletId] = useState(income?.walletId?.toString() ?? '')
+  const [notes, setNotes] = useState(income?.notes ?? '')
   const [showDatePicker, setShowDatePicker] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
-  const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([])
 
   const dateObj = new Date(date + 'T12:00:00')
   const MAX_AMOUNT = 999999.99
@@ -87,10 +56,8 @@ function ExpenseFormInner({ expense, expenseId }: FormInnerProps) {
 
   function validate() {
     const errs: Record<string, string> = {}
-    if (!description.trim()) errs.description = 'Requerido'
     if (!rawAmount || isNaN(Number(rawAmount)) || Number(rawAmount) <= 0) errs.amount = 'Monto inválido'
     if (!date) errs.date = 'Requerido'
-    if (!categoryId) errs.categoryId = 'Selecciona una categoría'
     if (wallets && wallets.length > 0 && !walletId) errs.walletId = 'Selecciona un wallet'
     return errs
   }
@@ -99,44 +66,33 @@ function ExpenseFormInner({ expense, expenseId }: FormInnerProps) {
     const errs = validate()
     if (Object.keys(errs).length) { setErrors(errs); return }
     const payload = {
-      description: description.trim(),
       amount: Number(rawAmount),
+      description: description.trim() || undefined,
       date,
       notes: notes.trim() || undefined,
-      categoryId: Number(categoryId),
       walletId: walletId ? Number(walletId) : undefined,
     }
-    if (isEdit && expenseId) {
-      await updateExpense.mutateAsync({ id: expenseId, data: payload })
-      await Promise.all(pendingFiles.map(p => uploadAttachment(expenseId, p.file)))
+    if (isEdit && incomeId) {
+      await updateIncome.mutateAsync({ id: incomeId, data: payload as Omit<Income, 'id'> })
     } else {
-      await createExpense.mutateAsync(payload)
+      await createIncome.mutateAsync(payload)
     }
-    setPendingFiles([])
     router.push('/expenses')
   }
 
-  const isSubmitting = createExpense.isPending || updateExpense.isPending
+  const isSubmitting = createIncome.isPending || updateIncome.isPending
   const amountNum = parseFloat(rawAmount) || 0
 
   return (
     <div className="relative flex flex-col pb-28">
 
       {/* Description */}
-      <div className="px-4 pt-4 pb-2">
-        <div className="mb-2 flex items-center justify-between">
-          <p className="text-[10px] font-semibold tracking-[0.2em] uppercase" style={{ color: 'var(--text-placeholder)' }}>
-            Descripción
-          </p>
-          {errors.description && (
-            <p className="text-[11px]" style={{ color: 'var(--danger)' }}>{errors.description}</p>
-          )}
-        </div>
+      <div className="px-4 py-3">
         <input
           type="text"
           value={description}
-          onChange={(e) => { setDescription(e.target.value); setErrors(e => ({ ...e, description: '' })) }}
-          placeholder="¿En qué gastaste?"
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="Descripción del ingreso (opcional)"
           className="w-full rounded-xl px-3 py-2.5 text-[14px] font-medium outline-none"
           style={{ color: 'var(--text-primary)', background: 'var(--bg-input)' }}
         />
@@ -146,15 +102,15 @@ function ExpenseFormInner({ expense, expenseId }: FormInnerProps) {
       <div className="flex flex-col items-center py-8">
         <div className="mb-1 flex items-center gap-3">
           <p className="text-[10px] font-semibold tracking-[0.2em] uppercase" style={{ color: 'var(--text-placeholder)' }}>
-            Monto del gasto
+            Monto del ingreso
           </p>
           {errors.amount && (
             <p className="text-[11px]" style={{ color: 'var(--danger)' }}>{errors.amount}</p>
           )}
         </div>
-        <div className="relative" onClick={() => document.getElementById('amount-keyboard-input')?.focus()}>
+        <div className="relative" onClick={() => document.getElementById('income-amount-input')?.focus()}>
           <input
-            id="amount-keyboard-input"
+            id="income-amount-input"
             inputMode="decimal"
             type="number"
             min="0"
@@ -176,58 +132,10 @@ function ExpenseFormInner({ expense, expenseId }: FormInnerProps) {
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.08 }}
             className="mono-amount text-[52px] font-extrabold leading-none tracking-[-0.03em]"
-            style={{ color: amountNum > 0 ? 'var(--danger)' : 'var(--border-strong)' }}
+            style={{ color: amountNum > 0 ? 'var(--success)' : 'var(--border-strong)' }}
           >
             S/ {formatDisplay(rawAmount)}
           </motion.p>
-        </div>
-      </div>
-
-      {/* Category grid */}
-      <div className="pt-5 pb-2">
-        <div className="mb-3 flex items-center justify-between px-4">
-          <p className="text-[10px] font-semibold tracking-[0.2em] uppercase" style={{ color: 'var(--text-placeholder)' }}>
-            Categoría
-          </p>
-          {errors.categoryId && (
-            <p className="text-[11px]" style={{ color: 'var(--danger)' }}>{errors.categoryId}</p>
-          )}
-        </div>
-        <div className="flex gap-2 overflow-x-auto py-1" style={{ scrollbarWidth: 'none' }}>
-          <div className="shrink-0 pl-4" />
-          {categories?.map((cat) => {
-            const Icon = cat.icon ? (ICON_MAP[cat.icon] ?? Wallet) : Wallet
-            const color = cat.color ?? '#d4af37'
-            const selected = categoryId === cat.id.toString()
-            return (
-              <motion.button
-                key={cat.id}
-                type="button"
-                onClick={() => { setCategoryId(cat.id.toString()); setErrors(e => ({ ...e, categoryId: '' })) }}
-                whileTap={{ scale: 0.92 }}
-                transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                className="flex shrink-0 flex-col items-center gap-1.5 rounded-2xl px-3 py-3 transition-colors"
-                style={{
-                  background: selected ? `${color}18` : 'var(--bg-input)',
-                  boxShadow: selected ? `0 0 0 1.5px ${color}60` : 'none',
-                }}
-              >
-                <div
-                  className="flex h-10 w-10 items-center justify-center rounded-xl"
-                  style={{ background: selected ? `${color}25` : `${color}12` }}
-                >
-                  <Icon size={18} style={{ color }} strokeWidth={1.7} />
-                </div>
-                <span
-                  className="text-center text-[10px] font-semibold leading-tight"
-                  style={{ color: selected ? color : 'var(--text-muted)' }}
-                >
-                  {cat.name}
-                </span>
-              </motion.button>
-            )
-          })}
-          <div className="shrink-0 pr-4" />
         </div>
       </div>
 
@@ -299,22 +207,12 @@ function ExpenseFormInner({ expense, expenseId }: FormInnerProps) {
         <textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          placeholder="Comercio, referencia... (opcional)"
+          placeholder="Referencia adicional (opcional)"
           rows={3}
           className="w-full resize-none rounded-xl px-3 py-3 text-[13px] outline-none"
           style={{ color: 'var(--text-secondary)', background: 'var(--bg-input)' }}
         />
       </div>
-
-      {/* Attachments — solo en edición */}
-      {isEdit && expenseId && (
-        <AttachmentSection
-          expenseId={expenseId}
-          pendingFiles={pendingFiles}
-          onAddFiles={(files) => setPendingFiles(prev => [...prev, ...files])}
-          onRemovePending={(id) => setPendingFiles(prev => prev.filter(p => p.id !== id))}
-        />
-      )}
 
       {/* Fixed action button */}
       <div
@@ -338,18 +236,12 @@ function ExpenseFormInner({ expense, expenseId }: FormInnerProps) {
       {/* Date wheel picker */}
       {showDatePicker && (
         <>
-          <div
-            className="absolute inset-0 z-10 bg-black/60"
-            onClick={() => setShowDatePicker(false)}
-          />
+          <div className="absolute inset-0 z-10 bg-black/60" onClick={() => setShowDatePicker(false)} />
           <div
             className="absolute inset-x-0 top-1/2 z-20 mx-4 -translate-y-1/2 rounded-[20px] border p-[1px]"
             style={{ borderColor: 'var(--border-subtle)', background: 'var(--bg-subtle)' }}
           >
-            <div
-              className="rounded-[19px] px-4 pb-5 pt-4"
-              style={{ background: 'var(--bg-card-inner)', boxShadow: 'var(--inset-highlight)' }}
-            >
+            <div className="rounded-[19px] px-4 pb-5 pt-4" style={{ background: 'var(--bg-card-inner)', boxShadow: 'var(--inset-highlight)' }}>
               <div className="mb-4 flex items-center justify-between">
                 <p className="text-[11px] font-semibold tracking-[0.16em] uppercase" style={{ color: 'var(--text-placeholder)' }}>Fecha</p>
                 <button
@@ -378,13 +270,13 @@ function ExpenseFormInner({ expense, expenseId }: FormInnerProps) {
   )
 }
 
-export function ExpenseForm({ expenseId }: ExpenseFormProps) {
-  const isEdit = expenseId != null && expenseId > 0
-  const { data: expense, isLoading: loadingExpense } = useExpense(expenseId ?? 0)
+export function IncomeForm({ incomeId }: IncomeFormProps) {
+  const isEdit = incomeId != null && incomeId > 0
+  const { data: income, isLoading } = useIncome(incomeId ?? 0)
 
-  if (isEdit && loadingExpense) {
+  if (isEdit && isLoading) {
     return <div className="px-4 py-8 text-sm" style={{ color: 'var(--text-muted)' }}>Cargando...</div>
   }
 
-  return <ExpenseFormInner key={expense?.id ?? 'new'} expense={expense} expenseId={expenseId} />
+  return <IncomeFormInner key={income?.id ?? 'new'} income={income} incomeId={incomeId} />
 }

@@ -1,124 +1,202 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
+import { Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useState } from 'react'
 
 import { motion } from 'framer-motion'
-import { Plus } from 'lucide-react'
 
-import { ExpenseFilters } from '@/components/features/expenses/ExpenseFilters'
+import { WalletCarousel } from '@/components/features/expenses/WalletCarousel'
+import { BudgetCarousel } from '@/components/features/expenses/BudgetCarousel'
 import { ExpenseRow } from '@/components/features/expenses/ExpenseRow'
+import { IncomeRow } from '@/components/features/incomes/IncomeRow'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { ExpenseRowSkeleton } from '@/components/ui/Skeleton'
+import { FinanceFilters, FinanceFilterType, DatePreset, TxType, applyFinanceFilters, type FinanceFilter } from '@/components/ui/finance-filters'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { useDeleteExpense, useExpenses } from '@/lib/hooks/useExpenses'
+import { useDeleteIncome, useIncomes } from '@/lib/hooks/useIncomes'
+import { useCategories } from '@/lib/hooks/useCategories'
 import { useFilterStore } from '@/stores/filterStore'
 
-export default function ExpensesPage() {
+function ExpensesPageInner() {
   const router = useRouter()
-  const filters = useFilterStore()
-  const { data, isLoading } = useExpenses({
-    period: filters.period,
-    categoryId: filters.categoryId,
-    startDate: filters.startDate,
-    endDate: filters.endDate,
-    minAmount: filters.minAmount,
-    maxAmount: filters.maxAmount,
-    page: filters.currentPage,
+  useSearchParams()
+  const storeFilters = useFilterStore()
+  const [deleteExpenseId, setDeleteExpenseId] = useState<number | null>(null)
+  const [deleteIncomeId, setDeleteIncomeId] = useState<number | null>(null)
+  const [expandedKey, setExpandedKey] = useState<string | null>(null)
+  const [activeFilters, setActiveFilters] = useState<FinanceFilter[]>([
+    { id: 'default-date', type: FinanceFilterType.FECHA, value: [DatePreset.THIS_MONTH] },
+    { id: 'default-tipo', type: FinanceFilterType.TIPO, value: [TxType.ALL] },
+  ])
+
+  const { data: categories } = useCategories()
+
+  const { startDate, endDate, categoryIds, txType } = applyFinanceFilters(activeFilters)
+
+  const now = new Date()
+  const pad = (n: number) => String(n).padStart(2, '0')
+  const defaultFrom = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-01`
+  const defaultTo = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate())}`
+
+  const { data: expenseData, isLoading: expenseLoading } = useExpenses({
+    period: 'MONTHLY',
+    categoryId: categoryIds?.[0],
+    walletId: storeFilters.walletId,
+    startDate: startDate ?? defaultFrom,
+    endDate: endDate ?? defaultTo,
+    page: storeFilters.currentPage,
     size: 20,
   })
   const deleteExpense = useDeleteExpense()
-  const [deleteId, setDeleteId] = useState<number | null>(null)
-  const [expandedId, setExpandedId] = useState<number | null>(null)
 
-  function confirmDelete() {
-    if (deleteId != null) deleteExpense.mutate(deleteId)
-    setDeleteId(null)
+  const { data: incomeData, isLoading: incomeLoading } = useIncomes({
+    from: startDate ?? defaultFrom,
+    to: endDate ?? defaultTo,
+    walletId: storeFilters.walletId,
+    page: storeFilters.currentPage,
+    size: 20,
+  })
+  const deleteIncome = useDeleteIncome()
+
+  function handleWalletSelect(id: number | undefined) {
+    storeFilters.setWalletId(id)
+    storeFilters.setPage(0)
+    setExpandedKey(null)
   }
+
+  const isLoading = expenseLoading || incomeLoading
+
+  // Merge and sort by date desc
+  type MixedItem =
+    | { kind: 'expense'; id: number; date: string; index: number }
+    | { kind: 'income'; id: number; date: string; index: number }
+
+  const expenses = expenseData?.content ?? []
+  const incomes = incomeData?.content ?? []
+
+  const mixed: MixedItem[] = [
+    ...(txType !== 'income' ? expenses.map((e, i) => ({ kind: 'expense' as const, id: e.id, date: e.date, index: i })) : []),
+    ...(txType !== 'expense' ? incomes.map((e, i) => ({ kind: 'income' as const, id: e.id, date: e.date, index: i })) : []),
+  ].sort((a, b) => b.date.localeCompare(a.date))
+
+  const totalExpensePages = expenseData?.totalPages ?? 0
+  const totalIncomePages = incomeData?.totalPages ?? 0
+  const totalPages = Math.max(totalExpensePages, totalIncomePages)
+
+  const expenseMap = Object.fromEntries(expenses.map(e => [e.id, e]))
+  const incomeMap = Object.fromEntries(incomes.map(e => [e.id, e]))
 
   return (
     <>
       <ConfirmDialog
-        open={deleteId != null}
+        open={deleteExpenseId != null}
         title="¿Eliminar este gasto?"
         description="Esta acción no se puede deshacer."
         confirmLabel="Eliminar"
-        onConfirm={confirmDelete}
-        onCancel={() => setDeleteId(null)}
+        onConfirm={() => { if (deleteExpenseId != null) deleteExpense.mutate(deleteExpenseId); setDeleteExpenseId(null) }}
+        onCancel={() => setDeleteExpenseId(null)}
       />
+      <ConfirmDialog
+        open={deleteIncomeId != null}
+        title="¿Eliminar este ingreso?"
+        description="Esta acción no se puede deshacer."
+        confirmLabel="Eliminar"
+        onConfirm={() => { if (deleteIncomeId != null) deleteIncome.mutate(deleteIncomeId); setDeleteIncomeId(null) }}
+        onCancel={() => setDeleteIncomeId(null)}
+      />
+
       <div className="mx-auto max-w-3xl">
-        <PageHeader
-          title="Mis Gastos"
-          action={
-            <motion.button
-              onClick={() => router.push('/expenses/new')}
-              whileTap={{ scale: 0.95 }}
-              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-              className="flex h-7 items-center gap-1.5 rounded-full px-3 text-[11px] font-bold"
-              style={{ background: 'var(--accent-light)', color: 'var(--bg-base)' }}
-            >
-              <Plus size={12} />
-              Nuevo
-            </motion.button>
-          }
+        <PageHeader title="Mis Finanzas" />
+
+        <WalletCarousel selectedWalletId={storeFilters.walletId} onSelect={handleWalletSelect} />
+        <BudgetCarousel />
+
+        <div className="mx-4 my-2 border-t" style={{ borderColor: 'var(--border-subtle)' }} />
+
+        <div className="px-4 mt-4 mb-2">
+          <p className="text-[16px] font-extrabold tracking-[-0.02em]" style={{ color: 'var(--text-secondary)' }}>
+            Historial
+          </p>
+        </div>
+
+        <FinanceFilters
+          filters={activeFilters}
+          setFilters={setActiveFilters}
+          categories={categories}
         />
 
-        <ExpenseFilters />
-
-        <div className="mt-5 px-4">
+        <div className="mt-2 px-4">
           {isLoading ? (
             <div className="overflow-hidden rounded-[18px] border" style={{ borderColor: 'var(--border-subtle)' }}>
               {Array.from({ length: 5 }).map((_, i) => <ExpenseRowSkeleton key={i} />)}
             </div>
-          ) : !data?.content.length ? (
+          ) : mixed.length === 0 ? (
             <EmptyState
-              title="Sin gastos en este período"
-              description="Registra tu primer gasto para comenzar."
+              title={storeFilters.walletId ? 'Sin registros en este wallet' : 'Sin registros en este período'}
+              description="Registra tu primer gasto o ingreso para comenzar."
             />
           ) : (
             <div
               className="overflow-hidden rounded-[18px] border divide-y divide-[var(--border-subtle)]"
               style={{ borderColor: 'var(--border-subtle)', background: 'var(--bg-card-inner)' }}
             >
-              {data.content.map((expense, i) => (
-                <div key={expense.id}>
-                  <ExpenseRow
-                    expense={expense}
-                    index={i}
-                    expanded={expandedId === expense.id}
-                    onToggle={() => setExpandedId(prev => prev === expense.id ? null : expense.id)}
-                    onEdit={(id) => router.push(`/expenses/${id}/edit`)}
-                    onDelete={(id) => setDeleteId(id)}
-                  />
-                </div>
-              ))}
+              {mixed.map((item) => {
+                const key = `${item.kind}-${item.id}`
+                if (item.kind === 'expense') {
+                  const expense = expenseMap[item.id]
+                  if (!expense) return null
+                  return (
+                    <ExpenseRow
+                      key={key}
+                      expense={expense}
+                      index={item.index}
+                      expanded={expandedKey === key}
+                      onToggle={() => setExpandedKey(prev => prev === key ? null : key)}
+                      onEdit={(id) => router.push(`/expenses/${id}/edit`)}
+                      onDelete={(id) => setDeleteExpenseId(id)}
+                    />
+                  )
+                } else {
+                  const income = incomeMap[item.id]
+                  if (!income) return null
+                  return (
+                    <IncomeRow
+                      key={key}
+                      income={income}
+                      index={item.index}
+                      expanded={expandedKey === key}
+                      onToggle={() => setExpandedKey(prev => prev === key ? null : key)}
+                      onEdit={(id) => router.push(`/incomes/${id}/edit`)}
+                      onDelete={(id) => setDeleteIncomeId(id)}
+                    />
+                  )
+                }
+              })}
             </div>
           )}
         </div>
 
-        {data && data.totalPages > 1 && (
+        {totalPages > 1 && (
           <div className="flex items-center justify-center gap-3 p-4">
             <button
-              className="h-8 rounded-full border px-4 text-[11px] font-semibold transition-colors disabled:opacity-30"
+              className="h-8 rounded-full border px-4 text-[11px] font-semibold disabled:opacity-30"
               style={{ borderColor: 'var(--border-default)', color: 'var(--text-muted)' }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--border-strong)'; e.currentTarget.style.color = 'var(--text-primary)' }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-default)'; e.currentTarget.style.color = 'var(--text-muted)' }}
-              disabled={filters.currentPage === 0}
-              onClick={() => filters.setPage(filters.currentPage - 1)}
+              disabled={storeFilters.currentPage === 0}
+              onClick={() => storeFilters.setPage(storeFilters.currentPage - 1)}
             >
               ← Anterior
             </button>
             <span className="text-[11px] tabular-nums" style={{ color: 'var(--text-muted)' }}>
-              {filters.currentPage + 1} / {data.totalPages}
+              {storeFilters.currentPage + 1} / {totalPages}
             </span>
             <button
-              className="h-8 rounded-full border px-4 text-[11px] font-semibold transition-colors disabled:opacity-30"
+              className="h-8 rounded-full border px-4 text-[11px] font-semibold disabled:opacity-30"
               style={{ borderColor: 'var(--border-default)', color: 'var(--text-muted)' }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--border-strong)'; e.currentTarget.style.color = 'var(--text-primary)' }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-default)'; e.currentTarget.style.color = 'var(--text-muted)' }}
-              disabled={filters.currentPage >= data.totalPages - 1}
-              onClick={() => filters.setPage(filters.currentPage + 1)}
+              disabled={storeFilters.currentPage >= totalPages - 1}
+              onClick={() => storeFilters.setPage(storeFilters.currentPage + 1)}
             >
               Siguiente →
             </button>
@@ -126,5 +204,13 @@ export default function ExpensesPage() {
         )}
       </div>
     </>
+  )
+}
+
+export default function ExpensesPage() {
+  return (
+    <Suspense>
+      <ExpensesPageInner />
+    </Suspense>
   )
 }
