@@ -6,6 +6,7 @@ import { motion } from 'framer-motion'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 import { CategoryBreakdown } from '@/components/features/reports/CategoryBreakdown'
+import { DonutChart } from '@/components/features/reports/DonutChart'
 import { ReportSummaryCards } from '@/components/features/reports/ReportSummaryCards'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { PageHeader } from '@/components/layout/PageHeader'
@@ -13,6 +14,7 @@ import { Skeleton } from '@/components/ui/Skeleton'
 import { useCategoryBreakdown, useReportSummary } from '@/lib/hooks/useReports'
 
 type Granularity = 'WEEKLY' | 'MONTHLY'
+type TransactionType = 'EXPENSE' | 'INCOME'
 
 const MONTHS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
 
@@ -60,6 +62,7 @@ function navigate(granularity: Granularity, date: Date, delta: number): Date {
 export default function ReportsPage() {
   const [granularity, setGranularity] = useState<Granularity>('MONTHLY')
   const [periodDate, setPeriodDate] = useState(new Date())
+  const [txType, setTxType] = useState<TransactionType>('EXPENSE')
   const { from, to } = getRange(granularity, periodDate)
   const filters = { period: 'CUSTOM' as const, from, to }
 
@@ -77,24 +80,47 @@ export default function ReportsPage() {
       <PageHeader title="Reportes" />
       <div className="px-4">
 
-        {/* Granularity toggles — mismo estilo que /expenses */}
-        <div className="mb-4 flex gap-1.5">
-          {(['MONTHLY', 'WEEKLY'] as Granularity[]).map((g) => (
-            <motion.button
-              key={g}
-              onClick={() => { setGranularity(g); setPeriodDate(new Date()) }}
-              whileTap={{ scale: 0.95 }}
-              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-              className="rounded-full px-3.5 py-1.5 text-[11px] font-semibold transition-colors"
-              style={
-                granularity === g
-                  ? { background: 'var(--accent-light)', color: 'var(--bg-base)' }
-                  : { background: 'var(--bg-input)', color: 'var(--text-muted)' }
-              }
-            >
-              {g === 'MONTHLY' ? 'Mensual' : 'Semanal'}
-            </motion.button>
-          ))}
+        {/* Top controls row */}
+        <div className="mb-4 flex items-center justify-between gap-3">
+          {/* Granularity toggles */}
+          <div className="flex gap-1.5">
+            {(['MONTHLY', 'WEEKLY'] as Granularity[]).map((g) => (
+              <motion.button
+                key={g}
+                onClick={() => { setGranularity(g); setPeriodDate(new Date()) }}
+                whileTap={{ scale: 0.95 }}
+                transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                className="rounded-full px-3.5 py-1.5 text-[11px] font-semibold transition-colors"
+                style={
+                  granularity === g
+                    ? { background: 'var(--accent-light)', color: 'var(--bg-base)' }
+                    : { background: 'var(--bg-input)', color: 'var(--text-muted)' }
+                }
+              >
+                {g === 'MONTHLY' ? 'Mensual' : 'Semanal'}
+              </motion.button>
+            ))}
+          </div>
+
+          {/* Segmented control Gasto / Ingreso */}
+          <div className="flex gap-1.5">
+            {(['EXPENSE', 'INCOME'] as TransactionType[]).map((t) => (
+              <motion.button
+                key={t}
+                onClick={() => setTxType(t)}
+                whileTap={{ scale: 0.95 }}
+                transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                className="rounded-full px-3.5 py-1.5 text-[11px] font-semibold transition-colors"
+                style={
+                  txType === t
+                    ? { background: 'var(--accent-light)', color: 'var(--bg-base)' }
+                    : { background: 'var(--bg-input)', color: 'var(--text-muted)' }
+                }
+              >
+                {t === 'EXPENSE' ? 'Gasto' : 'Ingreso'}
+              </motion.button>
+            ))}
+          </div>
         </div>
 
         {/* Period navigator */}
@@ -153,7 +179,20 @@ export default function ReportsPage() {
         ) : (
           <>
             <ReportSummaryCards summary={data} />
-            <CategoryBreakdown breakdown={breakdown ?? []} />
+            {txType === 'EXPENSE' && (
+              <>
+                <DonutChart breakdown={breakdown ?? []} />
+                <CategoryBreakdown breakdown={breakdown ?? []} />
+              </>
+            )}
+            {txType === 'INCOME' && (
+              <div
+                className="rounded-[18px] border p-5 text-center"
+                style={{ borderColor: 'var(--border-subtle)', background: 'var(--bg-card-inner)', color: 'var(--text-tertiary)' }}
+              >
+                <p className="text-sm">Los ingresos aún no están disponibles</p>
+              </div>
+            )}
           </>
         )}
       </div>

@@ -6,6 +6,7 @@ import type { Period } from '@/types'
 interface FilterState {
   period: Period
   categoryId?: number
+  walletId?: number
   startDate?: string
   endDate?: string
   minAmount?: number
@@ -17,6 +18,7 @@ interface FilterState {
 interface FilterActions {
   setPeriod: (period: Period) => void
   setCategoryId: (id?: number) => void
+  setWalletId: (id?: number) => void
   setDateRange: (start?: string, end?: string) => void
   setAmountRange: (min?: number, max?: number) => void
   setPage: (page: number) => void
@@ -27,6 +29,7 @@ interface FilterActions {
 const DEFAULT_STATE: FilterState = {
   period: 'MONTHLY',
   categoryId: undefined,
+  walletId: undefined,
   startDate: undefined,
   endDate: undefined,
   minAmount: undefined,
@@ -41,6 +44,7 @@ export const useFilterStore = create<FilterState & FilterActions>()(
       ...DEFAULT_STATE,
       setPeriod: (period) => set({ period, currentPage: 0 }),
       setCategoryId: (categoryId) => set({ categoryId, currentPage: 0 }),
+      setWalletId: (walletId) => set({ walletId, currentPage: 0 }),
       setDateRange: (startDate, endDate) => set({ startDate, endDate, currentPage: 0 }),
       setAmountRange: (minAmount, maxAmount) => set({ minAmount, maxAmount, currentPage: 0 }),
       setPage: (currentPage) => set({ currentPage }),

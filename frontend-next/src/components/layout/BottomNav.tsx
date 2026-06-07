@@ -6,7 +6,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { BarChart2, Plus, Receipt, RefreshCw, Wallet } from 'lucide-react'
 
 const NAV_ITEMS = [
-  { href: '/expenses',  label: 'Gastos',      Icon: Receipt   },
+  { href: '/expenses',  label: 'Finanzas',     Icon: Receipt   },
   { href: '/budgets',   label: 'Presupuestos', Icon: Wallet    },
   null,
   { href: '/reports',   label: 'Reportes',     Icon: BarChart2 },

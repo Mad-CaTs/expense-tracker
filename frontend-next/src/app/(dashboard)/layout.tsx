@@ -13,6 +13,24 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname = usePathname()
   const [, setShowExpenseModal] = useState(false)
 
+  // Form routes (new / edit) render fullscreen — no chrome
+  const isFormRoute = /\/(new|edit)$/.test(pathname)
+
+  if (isFormRoute) {
+    return (
+      <div className="min-h-screen" style={{ background: 'var(--bg-base)' }}>
+        <motion.div
+          key={pathname}
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.18, ease: 'easeOut' }}
+        >
+          {children}
+        </motion.div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen" style={{ background: 'var(--bg-base)' }}>
       <Sidebar />

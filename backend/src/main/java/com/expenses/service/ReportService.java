@@ -3,6 +3,7 @@ package com.expenses.service;
 import com.expenses.dto.CategoryBreakdownDTO;
 import com.expenses.dto.ReportSummaryDTO;
 import com.expenses.repository.ExpenseRepository;
+import com.expenses.repository.IncomeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +18,7 @@ import java.util.List;
 public class ReportService {
 
     private final ExpenseRepository expenseRepository;
+    private final IncomeRepository incomeRepository;
 
     public ReportSummaryDTO getSummary(String period, LocalDate from, LocalDate to, Long userId, Long categoryId) {
         LocalDate[] prev = previousPeriod(period, from, to);
@@ -29,6 +31,9 @@ public class ReportService {
         BigDecimal previous = categoryId != null
                 ? expenseRepository.sumAmountByUserIdAndDateBetweenAndCategoryId(userId, prevFrom, prevTo, categoryId)
                 : expenseRepository.sumAmountByUserIdAndDateBetween(userId, prevFrom, prevTo);
+
+        BigDecimal currentIncome = incomeRepository.sumAmountByUserIdAndDateBetween(userId, from, to);
+        BigDecimal previousIncome = incomeRepository.sumAmountByUserIdAndDateBetween(userId, prevFrom, prevTo);
 
         long days = ChronoUnit.DAYS.between(from, to) + 1;
         BigDecimal dailyAverage = days > 0
@@ -53,6 +58,9 @@ public class ReportService {
         dto.setCurrentTo(to.toString());
         dto.setPreviousFrom(prevFrom.toString());
         dto.setPreviousTo(prevTo.toString());
+        dto.setCurrentIncome(currentIncome);
+        dto.setPreviousIncome(previousIncome);
+        dto.setNetBalance(currentIncome.subtract(current));
         return dto;
     }
 
@@ -68,10 +76,12 @@ public class ReportService {
             String name = (String) r[0];
             BigDecimal amount = (BigDecimal) r[1];
             Long count = (Long) r[2];
+            String color = (String) r[3];
+            String icon = (String) r[4];
             double pct = total.compareTo(BigDecimal.ZERO) != 0
                     ? amount.divide(total, 4, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100)).doubleValue()
                     : 0.0;
-            return new CategoryBreakdownDTO(name, amount, pct, count);
+            return new CategoryBreakdownDTO(name, amount, pct, count, color, icon, "EXPENSE");
         }).toList();
     }
 

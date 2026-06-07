@@ -6,7 +6,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Data
-public class ExpenseDTO {
+public class TransferDTO {
     private Long id;
 
     @NotNull(message = "El monto es obligatorio")
@@ -20,17 +20,14 @@ public class ExpenseDTO {
     @PastOrPresent(message = "La fecha no puede ser futura")
     private LocalDate date;
 
-    @NotNull(message = "La categoría es obligatoria")
-    private Long categoryId;
+    @NotNull(message = "La wallet origen es obligatoria")
+    private Long fromWalletId;
 
-    @Size(max = 1000)
-    private String notes;
+    @NotNull(message = "La wallet destino es obligatoria")
+    private Long toWalletId;
 
-    private String categoryName;
-    private String categoryColor;
-    private String categoryIcon;
-    private int attachmentCount;
-
-    private Long walletId;
-    private String walletName;
+    // Response only
+    private String fromWalletName;
+    private String toWalletName;
+    private String createdAt;
 }

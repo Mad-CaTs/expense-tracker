@@ -59,7 +59,7 @@ class ExpenseControllerTest {
         Page<Expense> page = new PageImpl<>(List.of(expense));
         when(expenseRepository.findByUserIdAndDateBetween(eq(1L), any(), any(), any())).thenReturn(page);
 
-        Page<ExpenseDTO> result = expenseService.findAll(null, null, null, 1L, PageRequest.of(0, 10));
+        Page<ExpenseDTO> result = expenseService.findAll(null, null, null, null, 1L, PageRequest.of(0, 10));
 
         assertThat(result.getContent()).hasSize(1);
         assertThat(result.getContent().get(0).getAmount()).isEqualByComparingTo("25.50");
@@ -71,7 +71,7 @@ class ExpenseControllerTest {
         when(expenseRepository.findByUserIdAndDateBetweenAndCategoryId(eq(1L), any(), any(), eq(1L), any()))
                 .thenReturn(page);
 
-        Page<ExpenseDTO> result = expenseService.findAll(null, null, 1L, 1L, PageRequest.of(0, 10));
+        Page<ExpenseDTO> result = expenseService.findAll(null, null, 1L, null, 1L, PageRequest.of(0, 10));
 
         assertThat(result.getContent()).hasSize(1);
         verify(expenseRepository).findByUserIdAndDateBetweenAndCategoryId(eq(1L), any(), any(), eq(1L), any());
@@ -82,7 +82,7 @@ class ExpenseControllerTest {
         Page<Expense> page = new PageImpl<>(List.of());
         when(expenseRepository.findByUserIdAndDateBetween(eq(1L), any(), any(), any())).thenReturn(page);
 
-        Page<ExpenseDTO> result = expenseService.findAll(null, null, null, 1L, PageRequest.of(0, 10));
+        Page<ExpenseDTO> result = expenseService.findAll(null, null, null, null, 1L, PageRequest.of(0, 10));
 
         assertThat(result.getContent()).isEmpty();
     }

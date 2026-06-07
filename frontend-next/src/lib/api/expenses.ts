@@ -28,13 +28,14 @@ function periodToRange(period: string): { from: string; to: string } {
 }
 
 export async function getExpenses(filters: ExpenseFilters): Promise<ExpensePage> {
-  const { page, size, period, categoryId, startDate, endDate, minAmount, maxAmount } = filters
+  const { page, size, period, categoryId, walletId, startDate, endDate, minAmount, maxAmount } = filters
   const { from, to } = startDate && endDate
     ? { from: startDate, to: endDate }
     : periodToRange(period)
 
   const params: Record<string, string | number> = { page, size, from, to }
   if (categoryId) params.categoryId = categoryId
+  if (walletId) params.walletId = walletId
   if (minAmount != null) params.minAmount = minAmount
   if (maxAmount != null) params.maxAmount = maxAmount
   const res = await apiClient.get<ExpensePage>('/expenses', { params })

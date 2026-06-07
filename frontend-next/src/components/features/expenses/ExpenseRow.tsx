@@ -102,8 +102,8 @@ export function ExpenseRow({ expense, onEdit, onDelete, index, expanded, onToggl
             {shortDate}
           </time>
 
-          <span className="mono-amount flex-shrink-0 text-[13px] font-bold tracking-tight" style={{ color: 'var(--text-secondary)' }}>
-            S/ {(expense.amount ?? 0).toFixed(2)}
+          <span className="mono-amount flex-shrink-0 text-[13px] font-bold tracking-tight" style={{ color: 'var(--danger)' }}>
+            - S/ {(expense.amount ?? 0).toFixed(2)}
           </span>
         </div>
       </motion.button>

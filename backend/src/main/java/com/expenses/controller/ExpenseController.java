@@ -33,10 +33,11 @@ public class ExpenseController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
             @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) Long walletId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         Long userId = userResolver.getCurrentUserId();
-        return expenseService.findAll(from, to, categoryId, userId,
+        return expenseService.findAll(from, to, categoryId, walletId, userId,
                 PageRequest.of(page, size, Sort.by("date").descending()));
     }
 

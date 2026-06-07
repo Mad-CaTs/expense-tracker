@@ -62,7 +62,7 @@ class ExpenseServiceTest {
     void findAll_returnsPaginatedResults() {
         Page<Expense> page = new PageImpl<>(List.of(expense));
         when(expenseRepository.findByUserIdAndDateBetween(eq(1L), any(), any(), any())).thenReturn(page);
-        var result = expenseService.findAll(null, null, null, 1L, PageRequest.of(0, 10));
+        var result = expenseService.findAll(null, null, null, null, 1L, PageRequest.of(0, 10));
         assertThat(result.getContent()).hasSize(1);
         assertThat(result.getContent().get(0).getAmount()).isEqualByComparingTo("25.50");
     }

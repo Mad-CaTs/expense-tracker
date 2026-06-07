@@ -30,6 +30,19 @@
   --success: #4ade80;
   --warning: #f97316;
 
+  /* shadcn compat tokens */
+  --background: var(--bg-base);
+  --foreground: var(--text-primary);
+  --popover: #161616;
+  --popover-foreground: var(--text-primary);
+  --muted: #161616;
+  --muted-foreground: var(--text-muted);
+  --primary: var(--accent-light);
+  --primary-foreground: var(--bg-base);
+  --accent-foreground: var(--text-primary);
+  --border: var(--border-subtle);
+  --ring: var(--accent-ring);
+
   --skeleton-from: #161616;
   --skeleton-to: #1e1e1e;
   --inset-highlight: inset 0 1px 1px rgba(255,255,255,0.06), inset 0 -1px 0 rgba(0,0,0,0.4);
@@ -68,6 +81,19 @@
   --danger:  #dc2626;
   --success: #16a34a;
   --warning: #c2560c;
+
+  /* shadcn compat tokens */
+  --background: var(--bg-base);
+  --foreground: var(--text-primary);
+  --popover: #ffffff;
+  --popover-foreground: var(--text-primary);
+  --muted: var(--bg-input);
+  --muted-foreground: var(--text-muted);
+  --primary: var(--accent-light);
+  --primary-foreground: var(--bg-base);
+  --accent-foreground: var(--text-primary);
+  --border: var(--border-subtle);
+  --ring: var(--accent-ring);
 
   --skeleton-from: #e8e4da;
   --skeleton-to:   #dedad0;

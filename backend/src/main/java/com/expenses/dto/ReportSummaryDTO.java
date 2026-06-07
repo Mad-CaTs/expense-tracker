@@ -14,4 +14,9 @@ public class ReportSummaryDTO {
     private String currentTo;
     private String previousFrom;
     private String previousTo;
+
+    // Income & net balance
+    private BigDecimal currentIncome;
+    private BigDecimal previousIncome;
+    private BigDecimal netBalance; // income - expenses
 }

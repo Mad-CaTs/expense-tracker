@@ -359,7 +359,7 @@ export default function SettingsPage() {
         </Section>
 
         {/* Categories */}
-        <Section label="Categorías">
+        <Section label="Categorías de gasto">
           {/* Add button row */}
           <div className="flex items-center justify-between border-b py-3" style={{ borderColor: 'var(--border-subtle)' }}>
             <p className="text-[13px]" style={{ color: 'var(--text-muted)' }}>

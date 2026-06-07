@@ -11,4 +11,7 @@ public class CategoryBreakdownDTO {
     private BigDecimal total;
     private Double percentage;
     private Long count;
+    private String color;
+    private String icon;
+    private String type; // EXPENSE or INCOME
 }

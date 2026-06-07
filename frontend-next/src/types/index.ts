@@ -11,6 +11,53 @@ export interface Category {
   color?: string
 }
 
+export interface Wallet {
+  id: number
+  name: string
+  initialBalance: number
+  balance: number
+  color?: string
+  icon?: string
+}
+
+export interface Income {
+  id: number
+  amount: number
+  description?: string
+  date: string
+  notes?: string
+  walletId?: number
+  walletName?: string
+}
+
+export interface IncomePage {
+  content: Income[]
+  totalElements: number
+  totalPages: number
+  number: number
+  size: number
+}
+
+export interface Transfer {
+  id: number
+  amount: number
+  description?: string
+  date: string
+  fromWalletId: number
+  fromWalletName: string
+  toWalletId: number
+  toWalletName: string
+  createdAt: string
+}
+
+export interface TransferPage {
+  content: Transfer[]
+  totalElements: number
+  totalPages: number
+  number: number
+  size: number
+}
+
 export interface Expense {
   id: number
   description: string
@@ -22,6 +69,8 @@ export interface Expense {
   categoryIcon?: string
   notes?: string
   attachmentCount?: number
+  walletId?: number
+  walletName?: string
 }
 
 export interface ExpensePage {
@@ -37,6 +86,7 @@ export type Period = 'MONTHLY' | 'LAST_MONTH' | 'YEARLY' | 'WEEKLY' | 'CUSTOM'
 export interface ExpenseFilters {
   period: Period
   categoryId?: number
+  walletId?: number
   startDate?: string
   endDate?: string
   minAmount?: number
@@ -68,6 +118,9 @@ export interface ReportSummary {
   currentTo: string
   previousFrom: string
   previousTo: string
+  currentIncome?: number
+  previousIncome?: number
+  netBalance?: number
 }
 
 export interface CategoryBreakdown {
@@ -75,6 +128,8 @@ export interface CategoryBreakdown {
   total: number
   percentage: number
   count: number
+  color?: string
+  icon?: string
 }
 
 export type RecurringFrequency = 'MONTHLY' | 'WEEKLY' | 'YEARLY'
