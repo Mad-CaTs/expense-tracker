@@ -125,7 +125,7 @@ function ExpenseFormInner({ expense, expenseId }: FormInnerProps) {
       {/* Description */}
       <div className="px-4 pt-4 pb-2">
         <div className="mb-2 flex items-center justify-between">
-          <p className="text-[10px] font-semibold tracking-[0.2em] uppercase" style={{ color: 'var(--text-placeholder)' }}>
+          <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
             Descripción
           </p>
           {errors.description && (
@@ -137,15 +137,15 @@ function ExpenseFormInner({ expense, expenseId }: FormInnerProps) {
           value={description}
           onChange={(e) => { setDescription(e.target.value); setErrors(e => ({ ...e, description: '' })) }}
           placeholder="¿En qué gastaste?"
-          className="w-full rounded-xl px-3 py-2.5 text-[14px] font-medium outline-none"
-          style={{ color: 'var(--text-primary)', background: 'var(--bg-input)' }}
+          className="input-borderless w-full px-3 py-2.5 text-[14px] font-medium outline-none"
+          style={{ color: 'var(--text-primary)' }}
         />
       </div>
 
       {/* Amount display */}
       <div className="flex flex-col items-center py-8">
         <div className="mb-1 flex items-center gap-3">
-          <p className="text-[10px] font-semibold tracking-[0.2em] uppercase" style={{ color: 'var(--text-placeholder)' }}>
+          <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
             Monto del gasto
           </p>
           {errors.amount && (
@@ -184,9 +184,10 @@ function ExpenseFormInner({ expense, expenseId }: FormInnerProps) {
       </div>
 
       {/* Category grid */}
-      <div className="pt-5 pb-2">
+      <div className="pt-2 pb-2">
+        <div className="mx-4 mb-3 border-t pt-4" style={{ borderColor: 'var(--border-subtle)' }} />
         <div className="mb-3 flex items-center justify-between px-4">
-          <p className="text-[10px] font-semibold tracking-[0.2em] uppercase" style={{ color: 'var(--text-placeholder)' }}>
+          <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
             Categoría
           </p>
           {errors.categoryId && (
@@ -232,15 +233,16 @@ function ExpenseFormInner({ expense, expenseId }: FormInnerProps) {
       </div>
 
       {/* Date */}
-      <div className="px-4 pt-5 pb-3">
-        <p className="mb-3 text-[10px] font-semibold tracking-[0.2em] uppercase" style={{ color: 'var(--text-placeholder)' }}>
+      <div className="px-4 pt-2 pb-3">
+        <div className="mb-3 border-t pt-4" style={{ borderColor: 'var(--border-subtle)' }} />
+        <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
           Fecha
         </p>
         <button
           type="button"
           onClick={() => setShowDatePicker(true)}
-          className="flex h-10 w-full items-center gap-2 rounded-xl px-3 text-sm outline-none"
-          style={{ color: 'var(--text-primary)', background: 'var(--bg-input)' }}
+          className="input-borderless flex h-10 w-full items-center gap-2 px-3 text-sm outline-none"
+          style={{ color: 'var(--text-primary)' }}
         >
           <CalendarDays size={14} className="shrink-0" style={{ color: 'var(--text-muted)' }} />
           <span className="font-medium tabular-nums">{formatDateLabel(date)}</span>
@@ -249,9 +251,10 @@ function ExpenseFormInner({ expense, expenseId }: FormInnerProps) {
 
       {/* Wallet cards */}
       {wallets && wallets.length > 0 && (
-        <div className="pt-5 pb-2">
+        <div className="pt-2 pb-2">
+          <div className="mx-4 mb-3 border-t pt-4" style={{ borderColor: 'var(--border-subtle)' }} />
           <div className="mb-3 flex items-center justify-between px-4">
-            <p className="text-[10px] font-semibold tracking-[0.2em] uppercase" style={{ color: 'var(--text-placeholder)' }}>
+            <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
               Wallet
             </p>
             {errors.walletId && (
@@ -292,8 +295,9 @@ function ExpenseFormInner({ expense, expenseId }: FormInnerProps) {
       )}
 
       {/* Notes */}
-      <div className="px-4 pt-5 pb-3">
-        <p className="mb-3 text-[10px] font-semibold tracking-[0.2em] uppercase" style={{ color: 'var(--text-placeholder)' }}>
+      <div className="px-4 pt-2 pb-3">
+        <div className="mb-3 border-t pt-4" style={{ borderColor: 'var(--border-subtle)' }} />
+        <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
           Nota
         </p>
         <textarea
@@ -301,8 +305,8 @@ function ExpenseFormInner({ expense, expenseId }: FormInnerProps) {
           onChange={(e) => setNotes(e.target.value)}
           placeholder="Comercio, referencia... (opcional)"
           rows={3}
-          className="w-full resize-none rounded-xl px-3 py-3 text-[13px] outline-none"
-          style={{ color: 'var(--text-secondary)', background: 'var(--bg-input)' }}
+          className="input-borderless w-full resize-none px-3 py-3 text-[13px] outline-none"
+          style={{ color: 'var(--text-secondary)' }}
         />
       </div>
 
@@ -351,7 +355,7 @@ function ExpenseFormInner({ expense, expenseId }: FormInnerProps) {
               style={{ background: 'var(--bg-card-inner)', boxShadow: 'var(--inset-highlight)' }}
             >
               <div className="mb-4 flex items-center justify-between">
-                <p className="text-[11px] font-semibold tracking-[0.16em] uppercase" style={{ color: 'var(--text-placeholder)' }}>Fecha</p>
+                <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Fecha</p>
                 <button
                   onClick={() => setShowDatePicker(false)}
                   className="rounded-full px-4 py-1.5 text-[12px] font-semibold cursor-pointer"

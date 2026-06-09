@@ -30,7 +30,7 @@ export default function NewRecordPage() {
         >
           <ChevronLeft size={26} strokeWidth={2} />
         </button>
-        <h1 className="text-[17px] font-bold tracking-[-0.01em]" style={{ color: 'var(--text-primary)' }}>
+        <h1 className="text-[22px] font-extrabold tracking-[-0.04em]" style={{ color: 'var(--text-primary)' }}>
           Nuevo Registro
         </h1>
       </div>
