@@ -39,6 +39,13 @@ function WheelColumn({ items, selectedIndex, onSelectIndex, itemHeight, disabled
   const isDragging = useRef(false)
   const startY = useRef(0)
   const startIndex = useRef(selectedIndex)
+  const selectedIndexRef = useRef(selectedIndex)
+  const itemsLenRef = useRef(items.length)
+  const onSelectIndexRef = useRef(onSelectIndex)
+
+  useEffect(() => { selectedIndexRef.current = selectedIndex }, [selectedIndex])
+  useEffect(() => { itemsLenRef.current = items.length }, [items.length])
+  useEffect(() => { onSelectIndexRef.current = onSelectIndex }, [onSelectIndex])
 
   const visibleHeight = VISIBLE_ITEMS * itemHeight
   const centerOffset = Math.floor(VISIBLE_ITEMS / 2) * itemHeight
@@ -51,18 +58,26 @@ function WheelColumn({ items, selectedIndex, onSelectIndex, itemHeight, disabled
     })
   }, [selectedIndex, itemHeight, y])
 
+  // Register non-passive wheel listener so preventDefault actually stops page scroll
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    const onWheel = (e: WheelEvent) => {
+      if (disabled) return
+      e.preventDefault()
+      e.stopPropagation()
+      const delta = e.deltaY > 0 ? 1 : -1
+      const next = clamp(selectedIndexRef.current + delta, 0, itemsLenRef.current - 1)
+      onSelectIndexRef.current(next)
+    }
+    el.addEventListener('wheel', onWheel, { passive: false })
+    return () => el.removeEventListener('wheel', onWheel)
+  }, [disabled])
+
   function snapToIndex(rawY: number) {
     const idx = clamp(Math.round(-rawY / itemHeight), 0, items.length - 1)
     onSelectIndex(idx)
     animate(y, -idx * itemHeight, { type: 'spring', stiffness: 300, damping: 30 })
-  }
-
-  function handleWheel(e: React.WheelEvent) {
-    if (disabled) return
-    e.preventDefault()
-    const delta = e.deltaY > 0 ? 1 : -1
-    const next = clamp(selectedIndex + delta, 0, items.length - 1)
-    onSelectIndex(next)
   }
 
   function handlePointerDown(e: React.PointerEvent) {
@@ -100,8 +115,7 @@ function WheelColumn({ items, selectedIndex, onSelectIndex, itemHeight, disabled
     <div
       ref={containerRef}
       className="relative select-none overflow-hidden focus:outline-none"
-      style={{ height: visibleHeight, width: '100%' }}
-      onWheel={handleWheel}
+      style={{ height: visibleHeight, width: '100%', touchAction: 'none' }}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}

@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
-import { motion } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import {
   CalendarDays,
   Car,
@@ -241,11 +241,11 @@ function ExpenseFormInner({ expense, expenseId }: FormInnerProps) {
         <button
           type="button"
           onClick={() => setShowDatePicker(true)}
-          className="input-borderless flex h-10 w-full items-center gap-2 px-3 text-sm outline-none"
-          style={{ color: 'var(--text-primary)' }}
+          className="flex h-10 w-full items-center gap-2 rounded-xl px-3 text-sm outline-none cursor-pointer"
+          style={{ background: 'var(--bg-input)', color: 'var(--text-primary)' }}
         >
           <CalendarDays size={14} className="shrink-0" style={{ color: 'var(--text-muted)' }} />
-          <span className="font-medium tabular-nums">{formatDateLabel(date)}</span>
+          <span className="font-mono">{formatDateLabel(date)}</span>
         </button>
       </div>
 
@@ -340,44 +340,54 @@ function ExpenseFormInner({ expense, expenseId }: FormInnerProps) {
       </div>
 
       {/* Date wheel picker */}
-      {showDatePicker && (
-        <>
-          <div
-            className="absolute inset-0 z-10 bg-black/60"
-            onClick={() => setShowDatePicker(false)}
-          />
-          <div
-            className="absolute inset-x-0 top-1/2 z-20 mx-4 -translate-y-1/2 rounded-[20px] border p-[1px]"
-            style={{ borderColor: 'var(--border-subtle)', background: 'var(--bg-subtle)' }}
-          >
-            <div
-              className="rounded-[19px] px-4 pb-5 pt-4"
-              style={{ background: 'var(--bg-card-inner)', boxShadow: 'var(--inset-highlight)' }}
+      <AnimatePresence>
+        {showDatePicker && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              className="fixed inset-0 z-40 bg-black/60"
+              onClick={() => setShowDatePicker(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, y: 24, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 24, scale: 0.97 }}
+              transition={{ duration: 0.22, ease: [0.32, 0.72, 0, 1] }}
+              className="fixed inset-x-0 top-1/2 z-50 mx-4 -translate-y-1/2 rounded-[20px] border p-[1px]"
+              style={{ borderColor: 'var(--border-subtle)', background: 'var(--bg-subtle)' }}
             >
-              <div className="mb-4 flex items-center justify-between">
-                <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Fecha</p>
-                <button
-                  onClick={() => setShowDatePicker(false)}
-                  className="rounded-full px-4 py-1.5 text-[12px] font-semibold cursor-pointer"
-                  style={{ background: 'var(--bg-hover)', color: 'var(--accent-light)' }}
-                >
-                  Listo
-                </button>
+              <div
+                className="rounded-[19px] px-4 pb-5 pt-4"
+                style={{ background: 'var(--bg-card-inner)', boxShadow: 'var(--inset-highlight)' }}
+              >
+                <div className="mb-4 flex items-center justify-between">
+                  <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Fecha</p>
+                  <button
+                    onClick={() => setShowDatePicker(false)}
+                    className="rounded-full px-4 py-1.5 text-[12px] font-semibold cursor-pointer"
+                    style={{ background: 'var(--bg-hover)', color: 'var(--accent-light)' }}
+                  >
+                    Listo
+                  </button>
+                </div>
+                <DateWheelPicker
+                  value={dateObj}
+                  onChange={(d) => {
+                    const y = d.getFullYear()
+                    const m = String(d.getMonth() + 1).padStart(2, '0')
+                    const day = String(d.getDate()).padStart(2, '0')
+                    setDate(`${y}-${m}-${day}`)
+                  }}
+                  size="md"
+                />
               </div>
-              <DateWheelPicker
-                value={dateObj}
-                onChange={(d) => {
-                  const y = d.getFullYear()
-                  const m = String(d.getMonth() + 1).padStart(2, '0')
-                  const day = String(d.getDate()).padStart(2, '0')
-                  setDate(`${y}-${m}-${day}`)
-                }}
-                size="md"
-              />
-            </div>
-          </div>
-        </>
-      )}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
