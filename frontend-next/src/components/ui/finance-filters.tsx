@@ -284,12 +284,12 @@ export function FinanceFilters({ filters, setFilters, categories = [] }: Finance
   const inputRef = useRef<HTMLInputElement>(null)
 
   const activeTxType = filters.find(f => f.type === FinanceFilterType.TIPO)?.value[0]
-  const isIncomesOnly = activeTxType === TxType.INCOME
+  const isExpensesOnly = activeTxType === TxType.EXPENSE
 
-  // Hide categoría chip when filtering by ingresos
-  const activeFilters = isIncomesOnly
-    ? filters.filter(f => f.type !== FinanceFilterType.CATEGORIA)
-    : filters
+  // Only show Categoría chip when filtering by Gastos
+  const activeFilters = isExpensesOnly
+    ? filters
+    : filters.filter(f => f.type !== FinanceFilterType.CATEGORIA)
 
   return (
     <div className="flex flex-wrap items-center gap-1.5 px-4 py-2">
@@ -366,12 +366,12 @@ export function FinanceFilters({ filters, setFilters, categories = [] }: Finance
                   {FILTER_OPTIONS.map(opt => {
                     const alreadyActive = filters.some(f => f.type === opt.type)
                     if (alreadyActive) return null
-                    if (opt.type === FinanceFilterType.CATEGORIA && isIncomesOnly) return null
+                    if (opt.type === FinanceFilterType.CATEGORIA && !isExpensesOnly) return null
                     return (
                       <CommandItem
                         key={opt.type}
                         value={opt.type}
-                        className="text-[12px] cursor-pointer gap-2"
+                        className="text-[12px] cursor-pointer gap-2 data-[selected=true]:bg-[var(--bg-hover)] data-[selected=true]:text-[var(--text-primary)]"
                         style={{ color: 'var(--text-secondary)' }}
                         onSelect={() => {
                           setFilters(prev => [...prev, {

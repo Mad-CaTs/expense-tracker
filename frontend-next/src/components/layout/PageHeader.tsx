@@ -45,7 +45,7 @@ export function PageHeader({ title, action }: { title?: string; action?: React.R
     <div className="flex items-center justify-between px-4 pt-7 pb-4 md:pt-9">
       {/* Left: title + date */}
       <div>
-        <h1 className="text-[22px] font-extrabold tracking-[-0.02em]" style={{ color: 'var(--text-primary)' }}>
+        <h1 className="text-[22px] font-extrabold tracking-[-0.04em]" style={{ color: 'var(--text-primary)' }}>
           {title ?? 'Inicio'}
         </h1>
         <p className="text-[11px] font-medium" style={{ color: 'var(--text-tertiary)' }}>

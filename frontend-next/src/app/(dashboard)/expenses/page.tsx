@@ -114,10 +114,10 @@ function ExpensesPageInner() {
         <WalletCarousel selectedWalletId={storeFilters.walletId} onSelect={handleWalletSelect} />
         <BudgetCarousel />
 
-        <div className="mx-4 my-2 border-t" style={{ borderColor: 'var(--border-subtle)' }} />
+        <div className="mx-4 mt-2 mb-3 border-t pt-4" style={{ borderColor: 'var(--border-subtle)' }} />
 
-        <div className="px-4 mt-4 mb-2">
-          <p className="text-[16px] font-extrabold tracking-[-0.02em]" style={{ color: 'var(--text-secondary)' }}>
+        <div className="px-4 mb-3">
+          <p className="text-[16px] font-bold tracking-[-0.04em]" style={{ color: 'var(--text-tertiary)' }}>
             Historial
           </p>
         </div>
@@ -140,38 +140,40 @@ function ExpensesPageInner() {
             />
           ) : (
             <div
-              className="overflow-hidden rounded-[18px] border divide-y divide-[var(--border-subtle)]"
+              className="overflow-hidden rounded-[18px] border"
               style={{ borderColor: 'var(--border-subtle)', background: 'var(--bg-card-inner)' }}
             >
-              {mixed.map((item) => {
+              {mixed.map((item, listIndex) => {
                 const key = `${item.kind}-${item.id}`
                 if (item.kind === 'expense') {
                   const expense = expenseMap[item.id]
                   if (!expense) return null
                   return (
-                    <ExpenseRow
-                      key={key}
-                      expense={expense}
-                      index={item.index}
-                      expanded={expandedKey === key}
-                      onToggle={() => setExpandedKey(prev => prev === key ? null : key)}
-                      onEdit={(id) => router.push(`/expenses/${id}/edit`)}
-                      onDelete={(id) => setDeleteExpenseId(id)}
-                    />
+                    <div key={key} style={listIndex > 0 ? { borderTop: '1px solid var(--border-subtle)' } : undefined}>
+                      <ExpenseRow
+                        expense={expense}
+                        index={item.index}
+                        expanded={expandedKey === key}
+                        onToggle={() => setExpandedKey(prev => prev === key ? null : key)}
+                        onEdit={(id) => router.push(`/expenses/${id}/edit`)}
+                        onDelete={(id) => setDeleteExpenseId(id)}
+                      />
+                    </div>
                   )
                 } else {
                   const income = incomeMap[item.id]
                   if (!income) return null
                   return (
-                    <IncomeRow
-                      key={key}
-                      income={income}
-                      index={item.index}
-                      expanded={expandedKey === key}
-                      onToggle={() => setExpandedKey(prev => prev === key ? null : key)}
-                      onEdit={(id) => router.push(`/incomes/${id}/edit`)}
-                      onDelete={(id) => setDeleteIncomeId(id)}
-                    />
+                    <div key={key} style={listIndex > 0 ? { borderTop: '1px solid var(--border-subtle)' } : undefined}>
+                      <IncomeRow
+                        income={income}
+                        index={item.index}
+                        expanded={expandedKey === key}
+                        onToggle={() => setExpandedKey(prev => prev === key ? null : key)}
+                        onEdit={(id) => router.push(`/incomes/${id}/edit`)}
+                        onDelete={(id) => setDeleteIncomeId(id)}
+                      />
+                    </div>
                   )
                 }
               })}

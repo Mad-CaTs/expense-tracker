@@ -125,12 +125,6 @@ export function WalletCarousel({ selectedWalletId, onSelect }: WalletCarouselPro
   return (
     <>
     <div className="pt-2 pb-1">
-      <div className="mx-4 mb-3 border-t pt-4" style={{ borderColor: 'var(--border-subtle)' }} />
-      <div className="px-4 mb-3">
-        <p className="text-[16px] font-extrabold tracking-[-0.02em]" style={{ color: 'var(--text-secondary)' }}>
-          Wallets
-        </p>
-      </div>
       <div
         className="flex gap-3 overflow-x-auto px-4 pb-2"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}

@@ -116,8 +116,8 @@ export function ExpenseRow({ expense, onEdit, onDelete, index, expanded, onToggl
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2, ease: [0.32, 0.72, 0, 1] }}
-            className="overflow-hidden border-t"
-            style={{ borderColor: 'var(--border-subtle)', background: 'var(--bg-subtle)' }}
+            className="overflow-hidden"
+            style={{ borderTop: '1px solid var(--border-subtle)', background: 'var(--bg-subtle)' }}
           >
             <div className="space-y-3 px-4 py-3.5">
               {expense.notes && (
