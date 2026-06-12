@@ -2,6 +2,7 @@ package com.expenses.service;
 
 import com.expenses.dto.RecurringExpenseDTO;
 import com.expenses.entity.Category;
+import com.expenses.entity.CategoryType;
 import com.expenses.entity.Expense;
 import com.expenses.entity.RecurringExpense;
 import com.expenses.entity.User;
@@ -37,6 +38,9 @@ public class RecurringExpenseService {
     public RecurringExpenseDTO create(RecurringExpenseDTO dto, Long userId, User user) {
         Category category = categoryRepository.findByIdAndUserId(dto.getCategoryId(), userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Categoría no encontrada"));
+        if (category.getType() != CategoryType.EXPENSE) {
+            throw new IllegalArgumentException("Los gastos recurrentes solo aplican a categorías de gasto");
+        }
 
         RecurringExpense r = new RecurringExpense();
         r.setUser(user);

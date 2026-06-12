@@ -1,6 +1,7 @@
 package com.expenses.controller;
 
 import com.expenses.dto.CategoryDTO;
+import com.expenses.entity.CategoryType;
 import com.expenses.security.AuthenticatedUserResolver;
 import com.expenses.service.CategoryService;
 import jakarta.validation.Valid;
@@ -19,8 +20,8 @@ public class CategoryController {
     private final AuthenticatedUserResolver userResolver;
 
     @GetMapping
-    public List<CategoryDTO> findAll() {
-        return categoryService.findAll(userResolver.getCurrentUserId());
+    public List<CategoryDTO> findAll(@RequestParam(required = false) CategoryType type) {
+        return categoryService.findAll(userResolver.getCurrentUserId(), type);
     }
 
     @GetMapping("/{id}")

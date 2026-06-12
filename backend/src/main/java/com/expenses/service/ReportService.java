@@ -64,7 +64,10 @@ public class ReportService {
         return dto;
     }
 
-    public List<CategoryBreakdownDTO> getCategoryBreakdown(LocalDate from, LocalDate to, Long userId, Long categoryId) {
+    public List<CategoryBreakdownDTO> getCategoryBreakdown(LocalDate from, LocalDate to, Long userId, Long categoryId, String txType) {
+        if ("INCOME".equalsIgnoreCase(txType)) {
+            return getIncomeBreakdown(from, to, userId);
+        }
         List<Object[]> raw = categoryId != null
                 ? expenseRepository.findCategoryBreakdownByUserIdAndCategoryId(userId, from, to, categoryId)
                 : expenseRepository.findCategoryBreakdownByUserId(userId, from, to);
@@ -72,17 +75,44 @@ public class ReportService {
                 .map(r -> (BigDecimal) r[1])
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        return raw.stream().map(r -> {
-            String name = (String) r[0];
-            BigDecimal amount = (BigDecimal) r[1];
-            Long count = (Long) r[2];
-            String color = (String) r[3];
-            String icon = (String) r[4];
+        return raw.stream()
+                .map(r -> toBreakdownDTO(r, total, "EXPENSE"))
+                .toList();
+    }
+
+    private List<CategoryBreakdownDTO> getIncomeBreakdown(LocalDate from, LocalDate to, Long userId) {
+        List<Object[]> raw = incomeRepository.findCategoryBreakdownByUserId(userId, from, to);
+        Object[] uncategorized = incomeRepository.findUncategorizedTotals(userId, from, to).get(0);
+        BigDecimal uncategorizedTotal = (BigDecimal) uncategorized[0];
+        Long uncategorizedCount = (Long) uncategorized[1];
+
+        BigDecimal total = raw.stream()
+                .map(r -> (BigDecimal) r[1])
+                .reduce(uncategorizedTotal, BigDecimal::add);
+
+        List<CategoryBreakdownDTO> result = new java.util.ArrayList<>(
+                raw.stream().map(r -> toBreakdownDTO(r, total, "INCOME")).toList()
+        );
+
+        if (uncategorizedTotal.compareTo(BigDecimal.ZERO) > 0) {
             double pct = total.compareTo(BigDecimal.ZERO) != 0
-                    ? amount.divide(total, 4, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100)).doubleValue()
+                    ? uncategorizedTotal.divide(total, 4, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100)).doubleValue()
                     : 0.0;
-            return new CategoryBreakdownDTO(name, amount, pct, count, color, icon, "EXPENSE");
-        }).toList();
+            result.add(new CategoryBreakdownDTO("Sin categoría", uncategorizedTotal, pct, uncategorizedCount, "#6B7280", "ellipsis", "INCOME"));
+        }
+        return result;
+    }
+
+    private CategoryBreakdownDTO toBreakdownDTO(Object[] r, BigDecimal total, String type) {
+        String name = (String) r[0];
+        BigDecimal amount = (BigDecimal) r[1];
+        Long count = (Long) r[2];
+        String color = (String) r[3];
+        String icon = (String) r[4];
+        double pct = total.compareTo(BigDecimal.ZERO) != 0
+                ? amount.divide(total, 4, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100)).doubleValue()
+                : 0.0;
+        return new CategoryBreakdownDTO(name, amount, pct, count, color, icon, type);
     }
 
     private LocalDate[] previousPeriod(String period, LocalDate from, LocalDate to) {

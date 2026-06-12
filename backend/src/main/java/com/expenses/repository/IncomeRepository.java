@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 public interface IncomeRepository extends JpaRepository<Income, Long> {
@@ -21,4 +22,16 @@ public interface IncomeRepository extends JpaRepository<Income, Long> {
 
     @Query("SELECT COALESCE(SUM(i.amount), 0) FROM Income i WHERE i.user.id = :userId AND i.date BETWEEN :from AND :to")
     BigDecimal sumAmountByUserIdAndDateBetween(@Param("userId") Long userId, @Param("from") LocalDate from, @Param("to") LocalDate to);
+
+    @Query("""
+        SELECT i.category.name, SUM(i.amount), COUNT(i), i.category.color, i.category.icon
+        FROM Income i
+        WHERE i.user.id = :userId AND i.date BETWEEN :from AND :to AND i.category IS NOT NULL
+        GROUP BY i.category.name, i.category.color, i.category.icon
+        ORDER BY SUM(i.amount) DESC
+        """)
+    List<Object[]> findCategoryBreakdownByUserId(@Param("userId") Long userId, @Param("from") LocalDate from, @Param("to") LocalDate to);
+
+    @Query("SELECT COALESCE(SUM(i.amount), 0), COUNT(i) FROM Income i WHERE i.user.id = :userId AND i.date BETWEEN :from AND :to AND i.category IS NULL")
+    List<Object[]> findUncategorizedTotals(@Param("userId") Long userId, @Param("from") LocalDate from, @Param("to") LocalDate to);
 }

@@ -24,6 +24,10 @@ public class Category {
     @Column(nullable = false, length = 50)
     private String icon;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 10)
+    private CategoryType type = CategoryType.EXPENSE;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;

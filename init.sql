@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS categories (
   name       VARCHAR(100) NOT NULL,
   color      VARCHAR(7)   NOT NULL,
   icon       VARCHAR(50)  NOT NULL,
+  type       VARCHAR(10)  NOT NULL DEFAULT 'EXPENSE' CHECK (type IN ('EXPENSE','INCOME')),
   user_id    BIGINT       NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   created_at TIMESTAMP    DEFAULT NOW()
 );

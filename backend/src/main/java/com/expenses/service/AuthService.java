@@ -2,6 +2,7 @@ package com.expenses.service;
 
 import com.expenses.dto.*;
 import com.expenses.entity.Category;
+import com.expenses.entity.CategoryType;
 import com.expenses.entity.RefreshToken;
 import com.expenses.entity.User;
 import com.expenses.exception.ResourceNotFoundException;
@@ -42,8 +43,11 @@ public class AuthService {
             throw new BadCredentialsException("Credenciales inválidas");
         }
 
-        if (!categoryRepository.existsByUserId(user.getId())) {
-            seedDefaultCategories(user);
+        if (!categoryRepository.existsByUserIdAndType(user.getId(), CategoryType.EXPENSE)) {
+            seedDefaultExpenseCategories(user);
+        }
+        if (!categoryRepository.existsByUserIdAndType(user.getId(), CategoryType.INCOME)) {
+            seedDefaultIncomeCategories(user);
         }
 
         String scope = user.isMustChangePassword() ? "password_change" : "full_access";
@@ -115,23 +119,34 @@ public class AuthService {
         return raw;
     }
 
-    private void seedDefaultCategories(User user) {
+    private void seedDefaultExpenseCategories(User user) {
         List<Category> defaults = List.of(
-            category("Comida",          "#EF4444", "utensils",      user),
-            category("Transporte",      "#3B82F6", "car",           user),
-            category("Salud",           "#10B981", "heart-pulse",   user),
-            category("Entretenimiento", "#8B5CF6", "film",          user),
-            category("Hogar",           "#F59E0B", "home",          user),
-            category("Otros",           "#6B7280", "ellipsis",      user)
+            category("Comida",          "#EF4444", "utensils",      CategoryType.EXPENSE, user),
+            category("Transporte",      "#3B82F6", "car",           CategoryType.EXPENSE, user),
+            category("Salud",           "#10B981", "heart-pulse",   CategoryType.EXPENSE, user),
+            category("Entretenimiento", "#8B5CF6", "film",          CategoryType.EXPENSE, user),
+            category("Hogar",           "#F59E0B", "home",          CategoryType.EXPENSE, user),
+            category("Otros",           "#6B7280", "ellipsis",      CategoryType.EXPENSE, user)
         );
         categoryRepository.saveAll(defaults);
     }
 
-    private Category category(String name, String color, String icon, User user) {
+    private void seedDefaultIncomeCategories(User user) {
+        List<Category> defaults = List.of(
+            category("Salario",     "#10B981", "banknote",    CategoryType.INCOME, user),
+            category("Freelance",   "#3B82F6", "laptop",      CategoryType.INCOME, user),
+            category("Inversiones", "#8B5CF6", "trending-up", CategoryType.INCOME, user),
+            category("Otros",       "#6B7280", "ellipsis",    CategoryType.INCOME, user)
+        );
+        categoryRepository.saveAll(defaults);
+    }
+
+    private Category category(String name, String color, String icon, CategoryType type, User user) {
         Category c = new Category();
         c.setName(name);
         c.setColor(color);
         c.setIcon(icon);
+        c.setType(type);
         c.setUser(user);
         return c;
     }

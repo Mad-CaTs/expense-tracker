@@ -1,10 +1,13 @@
 package com.expenses.service;
 
 import com.expenses.dto.IncomeDTO;
+import com.expenses.entity.Category;
+import com.expenses.entity.CategoryType;
 import com.expenses.entity.Income;
 import com.expenses.entity.User;
 import com.expenses.entity.Wallet;
 import com.expenses.exception.ResourceNotFoundException;
+import com.expenses.repository.CategoryRepository;
 import com.expenses.repository.IncomeRepository;
 import com.expenses.repository.WalletRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +24,7 @@ public class IncomeService {
 
     private final IncomeRepository incomeRepository;
     private final WalletRepository walletRepository;
+    private final CategoryRepository categoryRepository;
 
     public Page<IncomeDTO> findAll(LocalDate from, LocalDate to, Long walletId, Long userId, Pageable pageable) {
         LocalDate dateFrom = from != null ? from : LocalDate.now().withDayOfMonth(1);
@@ -49,6 +53,7 @@ public class IncomeService {
         income.setDescription(dto.getDescription());
         income.setNotes(dto.getNotes());
         income.setUser(user);
+        income.setCategory(resolveIncomeCategory(dto.getCategoryId(), userId));
 
         if (dto.getWalletId() != null) {
             Wallet wallet = walletRepository.findByIdAndUserId(dto.getWalletId(), userId)
@@ -76,6 +81,7 @@ public class IncomeService {
         income.setDate(dto.getDate());
         income.setDescription(dto.getDescription());
         income.setNotes(dto.getNotes());
+        income.setCategory(resolveIncomeCategory(dto.getCategoryId(), userId));
 
         if (dto.getWalletId() != null) {
             Wallet newWallet = walletRepository.findByIdAndUserId(dto.getWalletId(), userId)
@@ -104,6 +110,16 @@ public class IncomeService {
         incomeRepository.delete(income);
     }
 
+    private Category resolveIncomeCategory(Long categoryId, Long userId) {
+        if (categoryId == null) return null;
+        Category category = categoryRepository.findByIdAndUserId(categoryId, userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Categoría no encontrada: " + categoryId));
+        if (category.getType() != CategoryType.INCOME) {
+            throw new IllegalArgumentException("La categoría no es válida para ingresos: " + categoryId);
+        }
+        return category;
+    }
+
     private IncomeDTO toDTO(Income i) {
         IncomeDTO dto = new IncomeDTO();
         dto.setId(i.getId());
@@ -114,6 +130,12 @@ public class IncomeService {
         if (i.getWallet() != null) {
             dto.setWalletId(i.getWallet().getId());
             dto.setWalletName(i.getWallet().getName());
+        }
+        if (i.getCategory() != null) {
+            dto.setCategoryId(i.getCategory().getId());
+            dto.setCategoryName(i.getCategory().getName());
+            dto.setCategoryColor(i.getCategory().getColor());
+            dto.setCategoryIcon(i.getCategory().getIcon());
         }
         return dto;
     }

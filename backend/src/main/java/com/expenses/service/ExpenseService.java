@@ -2,6 +2,7 @@ package com.expenses.service;
 
 import com.expenses.dto.ExpenseDTO;
 import com.expenses.entity.Category;
+import com.expenses.entity.CategoryType;
 import com.expenses.entity.Expense;
 import com.expenses.entity.User;
 import com.expenses.entity.Wallet;
@@ -59,6 +60,7 @@ public class ExpenseService {
     public ExpenseDTO create(ExpenseDTO dto, Long userId, User user) {
         Category category = categoryRepository.findByIdAndUserId(dto.getCategoryId(), userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Categoría no encontrada: " + dto.getCategoryId()));
+        requireExpenseCategory(category);
         Expense expense = new Expense();
         expense.setAmount(dto.getAmount());
         expense.setDate(dto.getDate());
@@ -84,6 +86,7 @@ public class ExpenseService {
                 .orElseThrow(() -> new ResourceNotFoundException("Gasto no encontrado: " + id));
         Category category = categoryRepository.findByIdAndUserId(dto.getCategoryId(), userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Categoría no encontrada: " + dto.getCategoryId()));
+        requireExpenseCategory(category);
 
         // Revert old wallet balance
         if (expense.getWallet() != null) {
@@ -125,6 +128,12 @@ public class ExpenseService {
         }
 
         expenseRepository.deleteById(id);
+    }
+
+    private void requireExpenseCategory(Category category) {
+        if (category.getType() != CategoryType.EXPENSE) {
+            throw new IllegalArgumentException("La categoría no es válida para gastos: " + category.getId());
+        }
     }
 
     private ExpenseDTO toDTO(Expense e) {

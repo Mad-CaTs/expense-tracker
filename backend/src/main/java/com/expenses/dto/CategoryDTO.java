@@ -20,4 +20,7 @@ public class CategoryDTO {
     @NotBlank(message = "El ícono es obligatorio")
     @Size(max = 50)
     private String icon;
+
+    @Pattern(regexp = "EXPENSE|INCOME", message = "Tipo debe ser EXPENSE o INCOME")
+    private String type;
 }

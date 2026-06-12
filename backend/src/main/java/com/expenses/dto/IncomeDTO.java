@@ -25,4 +25,9 @@ public class IncomeDTO {
 
     private Long walletId;
     private String walletName;
+
+    private Long categoryId;
+    private String categoryName;
+    private String categoryColor;
+    private String categoryIcon;
 }

@@ -3,6 +3,7 @@ package com.expenses.service;
 import com.expenses.dto.BudgetDTO;
 import com.expenses.entity.Budget;
 import com.expenses.entity.Category;
+import com.expenses.entity.CategoryType;
 import com.expenses.entity.User;
 import com.expenses.exception.ResourceNotFoundException;
 import com.expenses.repository.BudgetRepository;
@@ -33,6 +34,9 @@ public class BudgetService {
     public BudgetDTO save(BudgetDTO dto, Long userId, User user) {
         Category category = categoryRepository.findByIdAndUserId(dto.getCategoryId(), userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Categoría no encontrada"));
+        if (category.getType() != CategoryType.EXPENSE) {
+            throw new IllegalArgumentException("Los presupuestos solo aplican a categorías de gasto");
+        }
 
         // Upsert: si ya existe para ese mes/año/categoría, actualiza
         Budget budget = budgetRepository

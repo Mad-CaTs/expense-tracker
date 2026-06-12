@@ -2,6 +2,7 @@ package com.expenses.service;
 
 import com.expenses.dto.CategoryDTO;
 import com.expenses.entity.Category;
+import com.expenses.entity.CategoryType;
 import com.expenses.entity.User;
 import com.expenses.exception.ResourceNotFoundException;
 import com.expenses.repository.CategoryRepository;
@@ -17,8 +18,11 @@ public class CategoryService {
 
     private final CategoryRepository categoryRepository;
 
-    public List<CategoryDTO> findAll(Long userId) {
-        return categoryRepository.findByUserId(userId).stream().map(this::toDTO).toList();
+    public List<CategoryDTO> findAll(Long userId, CategoryType type) {
+        List<Category> categories = type != null
+                ? categoryRepository.findByUserIdAndType(userId, type)
+                : categoryRepository.findByUserId(userId);
+        return categories.stream().map(this::toDTO).toList();
     }
 
     public CategoryDTO findById(Long id, Long userId) {
@@ -33,6 +37,7 @@ public class CategoryService {
         category.setName(dto.getName());
         category.setColor(dto.getColor());
         category.setIcon(dto.getIcon());
+        category.setType(dto.getType() != null ? CategoryType.valueOf(dto.getType()) : CategoryType.EXPENSE);
         category.setUser(user);
         return toDTO(categoryRepository.save(category));
     }
@@ -60,6 +65,7 @@ public class CategoryService {
         dto.setName(c.getName());
         dto.setColor(c.getColor());
         dto.setIcon(c.getIcon());
+        dto.setType(c.getType().name());
         return dto;
     }
 }

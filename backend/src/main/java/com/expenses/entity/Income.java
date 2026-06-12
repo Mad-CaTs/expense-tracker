@@ -30,6 +30,10 @@ public class Income {
     private String notes;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    private Category category;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "wallet_id")
     private Wallet wallet;
 

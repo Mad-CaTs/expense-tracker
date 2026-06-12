@@ -2,6 +2,7 @@ package com.expenses.service;
 
 import com.expenses.dto.CategoryDTO;
 import com.expenses.entity.Category;
+import com.expenses.entity.CategoryType;
 import com.expenses.entity.User;
 import com.expenses.exception.ResourceNotFoundException;
 import com.expenses.repository.CategoryRepository;
@@ -44,9 +45,17 @@ class CategoryServiceTest {
     @Test
     void findAll_returnsUserCategories() {
         when(categoryRepository.findByUserId(1L)).thenReturn(List.of(category));
-        List<CategoryDTO> result = categoryService.findAll(1L);
+        List<CategoryDTO> result = categoryService.findAll(1L, null);
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getName()).isEqualTo("Comida");
+    }
+
+    @Test
+    void findAll_withType_filtersByType() {
+        when(categoryRepository.findByUserIdAndType(1L, CategoryType.INCOME)).thenReturn(List.of());
+        List<CategoryDTO> result = categoryService.findAll(1L, CategoryType.INCOME);
+        assertThat(result).isEmpty();
+        verify(categoryRepository, never()).findByUserId(anyLong());
     }
 
     @Test
