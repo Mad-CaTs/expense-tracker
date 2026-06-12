@@ -273,6 +273,8 @@ interface FinanceFiltersProps {
   setFilters: Dispatch<SetStateAction<FinanceFilter[]>>
   categories?: Category[]
   excludeTxTypes?: TxType[]
+  excludeFilterTypes?: FinanceFilterType[]
+  hideControls?: boolean
 }
 
 const FILTER_OPTIONS = [
@@ -281,7 +283,7 @@ const FILTER_OPTIONS = [
   { type: FinanceFilterType.CATEGORIA, icon: <Tag size={13} />, defaultValue: ['__open__'] },
 ]
 
-export function FinanceFilters({ filters, setFilters, categories = [], excludeTxTypes = [] }: FinanceFiltersProps) {
+export function FinanceFilters({ filters, setFilters, categories = [], excludeTxTypes = [], excludeFilterTypes = [], hideControls = false }: FinanceFiltersProps) {
   const [open, setOpen] = useState(false)
   const [commandInput, setCommandInput] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
@@ -289,10 +291,9 @@ export function FinanceFilters({ filters, setFilters, categories = [], excludeTx
   const activeTxType = filters.find(f => f.type === FinanceFilterType.TIPO)?.value[0]
   const isExpensesOnly = activeTxType === TxType.EXPENSE
 
-  // Only show Categoría chip when filtering by Gastos
-  const activeFilters = isExpensesOnly
-    ? filters
-    : filters.filter(f => f.type !== FinanceFilterType.CATEGORIA)
+  // Only show Categoría chip when filtering by Gastos; also hide excluded filter types
+  const activeFilters = (isExpensesOnly ? filters : filters.filter(f => f.type !== FinanceFilterType.CATEGORIA))
+    .filter(f => !excludeFilterTypes.includes(f.type))
 
   return (
     <div className="flex flex-wrap items-center gap-1.5 px-4 py-2">
@@ -319,7 +320,7 @@ export function FinanceFilters({ filters, setFilters, categories = [], excludeTx
       </AnimatePresence>
 
       {/* Clear all */}
-      {filters.some(f => f.value.filter(v => v !== '__open__').length > 0) && (
+      {!hideControls && filters.some(f => f.value.filter(v => v !== '__open__').length > 0) && (
         <motion.button
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -333,7 +334,7 @@ export function FinanceFilters({ filters, setFilters, categories = [], excludeTx
       )}
 
       {/* Add filter button */}
-      <Popover open={open} onOpenChange={(v) => { setOpen(v); if (!v) setTimeout(() => setCommandInput(''), 150) }}>
+      {!hideControls && <Popover open={open} onOpenChange={(v) => { setOpen(v); if (!v) setTimeout(() => setCommandInput(''), 150) }}>
         <PopoverTrigger asChild>
           <motion.button
             whileTap={{ scale: 0.95 }}
@@ -370,6 +371,7 @@ export function FinanceFilters({ filters, setFilters, categories = [], excludeTx
                   {FILTER_OPTIONS.map(opt => {
                     const alreadyActive = filters.some(f => f.type === opt.type)
                     if (alreadyActive) return null
+                    if (excludeFilterTypes.includes(opt.type)) return null
                     if (opt.type === FinanceFilterType.CATEGORIA && !isExpensesOnly) return null
                     return (
                       <CommandItem
@@ -397,7 +399,7 @@ export function FinanceFilters({ filters, setFilters, categories = [], excludeTx
             </Command>
           </AnimateChangeInHeight>
         </PopoverContent>
-      </Popover>
+      </Popover>}
     </div>
   )
 }
