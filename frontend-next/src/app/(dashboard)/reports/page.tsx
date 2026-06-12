@@ -11,10 +11,11 @@ import { ReportSummaryCards } from '@/components/features/reports/ReportSummaryC
 import { EmptyState } from '@/components/ui/EmptyState'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Skeleton } from '@/components/ui/Skeleton'
+import { FinanceFilters, FinanceFilterType, DatePreset, TxType, applyFinanceFilters, type FinanceFilter } from '@/components/ui/finance-filters'
+import { useCategories } from '@/lib/hooks/useCategories'
 import { useCategoryBreakdown, useReportSummary } from '@/lib/hooks/useReports'
 
 type Granularity = 'WEEKLY' | 'MONTHLY'
-type TransactionType = 'EXPENSE' | 'INCOME'
 
 const MONTHS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
 
@@ -22,7 +23,6 @@ function formatPeriodLabel(granularity: Granularity, date: Date): string {
   if (granularity === 'MONTHLY') {
     return `${MONTHS[date.getMonth()]} ${date.getFullYear()}`
   }
-  // For weekly show the week's monday–sunday
   const monday = new Date(date)
   monday.setDate(date.getDate() - ((date.getDay() + 6) % 7))
   const sunday = new Date(monday)
@@ -40,7 +40,6 @@ function getRange(granularity: Granularity, date: Date): { from: string; to: str
     const to = new Date(date.getFullYear(), date.getMonth() + 1, 0)
     return { from: iso(from), to: iso(to) }
   }
-  // Weekly: monday to sunday of week containing `date`
   const monday = new Date(date)
   monday.setDate(date.getDate() - ((date.getDay() + 6) % 7))
   const sunday = new Date(monday)
@@ -62,7 +61,13 @@ function navigate(granularity: Granularity, date: Date, delta: number): Date {
 export default function ReportsPage() {
   const [granularity, setGranularity] = useState<Granularity>('MONTHLY')
   const [periodDate, setPeriodDate] = useState(new Date())
-  const [txType, setTxType] = useState<TransactionType>('EXPENSE')
+  const [activeFilters, setActiveFilters] = useState<FinanceFilter[]>([
+    { id: 'default-tipo', type: FinanceFilterType.TIPO, value: [TxType.EXPENSE] },
+  ])
+
+  const { data: categories } = useCategories()
+  const { txType } = applyFinanceFilters(activeFilters)
+
   const { from, to } = getRange(granularity, periodDate)
   const filters = { period: 'CUSTOM' as const, from, to }
 
@@ -78,10 +83,18 @@ export default function ReportsPage() {
   return (
     <div className="mx-auto max-w-3xl">
       <PageHeader title="Reportes" />
-      <div className="px-4">
 
-        {/* Top controls row */}
-        <div className="mb-4 flex items-center justify-between gap-3">
+      {/* Filters — same pattern as /expenses */}
+      <FinanceFilters
+        filters={activeFilters}
+        setFilters={setActiveFilters}
+        categories={categories ?? []}
+        excludeTxTypes={[TxType.ALL]}
+      />
+
+      <div className="px-4 pt-2">
+        {/* Granularity + period navigator */}
+        <div className="mb-4 flex items-center gap-2">
           {/* Granularity toggles */}
           <div className="flex gap-1.5">
             {(['MONTHLY', 'WEEKLY'] as Granularity[]).map((g) => (
@@ -102,52 +115,30 @@ export default function ReportsPage() {
             ))}
           </div>
 
-          {/* Segmented control Gasto / Ingreso */}
-          <div className="flex gap-1.5">
-            {(['EXPENSE', 'INCOME'] as TransactionType[]).map((t) => (
-              <motion.button
-                key={t}
-                onClick={() => setTxType(t)}
-                whileTap={{ scale: 0.95 }}
-                transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                className="rounded-full px-3.5 py-1.5 text-[11px] font-semibold transition-colors"
-                style={
-                  txType === t
-                    ? { background: 'var(--accent-light)', color: 'var(--bg-base)' }
-                    : { background: 'var(--bg-input)', color: 'var(--text-muted)' }
-                }
-              >
-                {t === 'EXPENSE' ? 'Gasto' : 'Ingreso'}
-              </motion.button>
-            ))}
-          </div>
-        </div>
-
-        {/* Period navigator */}
-        <div className="relative mb-5">
+          {/* Period navigator */}
           <div
-            className="flex items-center justify-between rounded-[14px] border px-3 py-2.5"
+            className="flex flex-1 items-center justify-between rounded-full border px-2 py-1"
             style={{ borderColor: 'var(--border-subtle)', background: 'var(--bg-card-inner)' }}
           >
             <motion.button
               onClick={() => setPeriodDate(d => navigate(granularity, d, -1))}
               whileTap={{ scale: 0.9 }}
-              className="flex h-7 w-7 items-center justify-center rounded-full cursor-pointer transition-colors"
+              className="flex h-6 w-6 items-center justify-center rounded-full cursor-pointer transition-colors"
               style={{ color: 'var(--text-muted)' }}
               onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-hover)'; e.currentTarget.style.color = 'var(--text-primary)' }}
               onMouseLeave={e => { e.currentTarget.style.background = ''; e.currentTarget.style.color = 'var(--text-muted)' }}
             >
-              <ChevronLeft size={15} />
+              <ChevronLeft size={13} />
             </motion.button>
 
-            <span className="text-[13px] font-semibold" style={{ color: 'var(--text-primary)' }}>
+            <span className="text-[12px] font-semibold" style={{ color: 'var(--text-primary)' }}>
               {formatPeriodLabel(granularity, periodDate)}
             </span>
 
             <motion.button
               onClick={() => !isCurrentPeriod && setPeriodDate(d => navigate(granularity, d, 1))}
               whileTap={{ scale: 0.9 }}
-              className="flex h-7 w-7 items-center justify-center rounded-full transition-colors"
+              className="flex h-6 w-6 items-center justify-center rounded-full transition-colors"
               style={{
                 color: isCurrentPeriod ? 'var(--border-subtle)' : 'var(--text-muted)',
                 cursor: isCurrentPeriod ? 'default' : 'pointer',
@@ -160,17 +151,16 @@ export default function ReportsPage() {
                 e.currentTarget.style.color = isCurrentPeriod ? 'var(--border-subtle)' : 'var(--text-muted)'
               }}
             >
-              <ChevronRight size={15} />
+              <ChevronRight size={13} />
             </motion.button>
           </div>
-
         </div>
 
         {/* Content */}
         {isLoading ? (
           <div className="flex flex-col gap-3">
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-              {[0, 1, 2].map(i => <Skeleton key={i} className="h-24 rounded-[18px]" />)}
+            <div className="grid grid-cols-3 gap-2">
+              {[0, 1, 2].map(i => <Skeleton key={i} className="h-20 rounded-[14px]" />)}
             </div>
             <Skeleton className="h-48 w-full rounded-2xl" />
           </div>
@@ -178,24 +168,30 @@ export default function ReportsPage() {
           <EmptyState title="Sin datos para este período" />
         ) : (
           <>
-            <ReportSummaryCards summary={data} />
-            {txType === 'EXPENSE' && (
-              <>
-                <DonutChart breakdown={breakdown ?? []} />
-                <CategoryBreakdown breakdown={breakdown ?? []} />
-              </>
-            )}
-            {txType === 'INCOME' && (
-              <div
-                className="rounded-[18px] border p-5 text-center"
-                style={{ borderColor: 'var(--border-subtle)', background: 'var(--bg-card-inner)', color: 'var(--text-tertiary)' }}
-              >
-                <p className="text-sm">Los ingresos aún no están disponibles</p>
-              </div>
-            )}
+            <ReportSummaryCards summary={data} txType={txType} />
           </>
         )}
       </div>
+
+      {/* Charts — own px-4 so titles align with page title */}
+      {!isLoading && data && (
+        <>
+          {txType === 'expense' && (
+            <>
+              <DonutChart breakdown={breakdown ?? []} />
+              <CategoryBreakdown breakdown={breakdown ?? []} />
+            </>
+          )}
+          {txType === 'income' && (
+            <div
+              className="mx-4 rounded-[18px] border p-5 text-center"
+              style={{ borderColor: 'var(--border-subtle)', background: 'var(--bg-card-inner)', color: 'var(--text-tertiary)' }}
+            >
+              <p className="text-sm">Los ingresos aún no están disponibles</p>
+            </div>
+          )}
+        </>
+      )}
     </div>
   )
 }

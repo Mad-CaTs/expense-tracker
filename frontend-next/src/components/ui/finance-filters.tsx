@@ -130,12 +130,14 @@ function FilterChip({
   filter,
   categories,
   defaultOpen = false,
+  excludeTxTypes = [],
   onRemove,
   onChangeValue,
 }: {
   filter: FinanceFilter
   categories: Category[]
   defaultOpen?: boolean
+  excludeTxTypes?: TxType[]
   onRemove: () => void
   onChangeValue: (value: string[]) => void
 }) {
@@ -190,7 +192,7 @@ function FilterChip({
         >
           <div onMouseDown={(e) => e.preventDefault()}>
             {filter.type === FinanceFilterType.TIPO
-              ? Object.values(TxType).map(opt => (
+              ? Object.values(TxType).filter(opt => !excludeTxTypes.includes(opt)).map(opt => (
                   <button
                     key={opt}
                     onMouseDown={(e) => { e.preventDefault(); onChangeValue([opt]); setOpen(false) }}
@@ -270,15 +272,16 @@ interface FinanceFiltersProps {
   filters: FinanceFilter[]
   setFilters: Dispatch<SetStateAction<FinanceFilter[]>>
   categories?: Category[]
+  excludeTxTypes?: TxType[]
 }
 
 const FILTER_OPTIONS = [
   { type: FinanceFilterType.FECHA, icon: <Calendar size={13} />, defaultValue: [DatePreset.THIS_MONTH] },
-  { type: FinanceFilterType.TIPO, icon: <Layers size={13} />, defaultValue: [TxType.ALL] },
+  { type: FinanceFilterType.TIPO, icon: <Layers size={13} />, defaultValue: [TxType.EXPENSE] },
   { type: FinanceFilterType.CATEGORIA, icon: <Tag size={13} />, defaultValue: ['__open__'] },
 ]
 
-export function FinanceFilters({ filters, setFilters, categories = [] }: FinanceFiltersProps) {
+export function FinanceFilters({ filters, setFilters, categories = [], excludeTxTypes = [] }: FinanceFiltersProps) {
   const [open, setOpen] = useState(false)
   const [commandInput, setCommandInput] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
@@ -307,6 +310,7 @@ export function FinanceFilters({ filters, setFilters, categories = [] }: Finance
               filter={filter}
               categories={categories}
               defaultOpen={filter.type === FinanceFilterType.CATEGORIA && filter.value.includes('__open__')}
+              excludeTxTypes={excludeTxTypes}
               onRemove={() => setFilters(prev => prev.filter(f => f.id !== filter.id))}
               onChangeValue={(value) => setFilters(prev => prev.map(f => f.id === filter.id ? { ...f, value } : f))}
             />

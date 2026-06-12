@@ -110,7 +110,7 @@ export function BudgetCarousel() {
       <div className="pt-2 pb-1">
         <div className="mx-4 mb-3 border-t pt-4" style={{ borderColor: 'var(--border-subtle)' }} />
         <div className="mb-2 flex items-center justify-between px-4">
-          <p className="text-[16px] font-bold tracking-[-0.04em]" style={{ color: 'var(--text-tertiary)' }}>
+          <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
             Presupuestos
           </p>
           {budgets.length > 0 && (
