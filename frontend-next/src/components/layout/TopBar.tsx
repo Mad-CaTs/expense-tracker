@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 
 import { AnimatePresence, motion } from 'framer-motion'
+import { Tag } from 'lucide-react'
 
 export function TopBar() {
   const router = useRouter()
@@ -56,6 +57,16 @@ export function TopBar() {
 
       {/* Right actions */}
       <div className="flex items-center gap-2">
+        <button
+          onClick={() => router.push('/categories')}
+          className="flex h-8 w-8 items-center justify-center rounded-full transition-colors cursor-pointer"
+          style={{ color: 'var(--text-secondary)' }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-hover)' }}
+          onMouseLeave={e => { e.currentTarget.style.background = '' }}
+          aria-label="Categorías"
+        >
+          <Tag size={15} strokeWidth={1.8} />
+        </button>
         <button
           onClick={() => router.push('/settings')}
           className="flex h-8 w-8 items-center justify-center rounded-full transition-colors cursor-pointer"

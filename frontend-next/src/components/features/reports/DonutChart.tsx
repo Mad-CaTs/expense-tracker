@@ -1,48 +1,43 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo } from 'react'
 
-import { Pie, PieChart } from 'recharts'
+import { Pie, PieChart, Sector } from 'recharts'
+import type { PieSectorShapeProps } from 'recharts/types/polar/Pie'
 
+import type { LinkedHighlightProps } from '@/components/features/reports/DistributionSection'
 import { ChartContainer, type ChartConfig } from '@/components/ui/pie-chart'
-import type { CategoryBreakdown } from '@/types'
+import { getCategoryColor } from '@/lib/utils/categoryColors'
 
-const FALLBACK_COLORS = [
-  '#d4af37', '#c8965a', '#b87333', '#e8c547',
-  '#a0845c', '#f0c060', '#8b6914', '#daa520',
-  '#cd9b1d', '#e6b800',
-]
+const ACTIVE_RADIUS_GROWTH = 4
+const DIMMED_OPACITY = 0.35
 
-function getCategoryColor(item: CategoryBreakdown, index: number): string {
-  if (item.color && item.color !== '#000000' && item.color !== '') return item.color
-  return FALLBACK_COLORS[index % FALLBACK_COLORS.length]
-}
+export function DonutChart({ breakdown, activeIndex, onHover, onSelect }: LinkedHighlightProps) {
+  const chartData = useMemo(
+    () =>
+      breakdown.map((item, i) => {
+        const key = `cat${i}`
+        return {
+          ...item,
+          key,
+          fill: `var(--color-${key})`,
+          rawColor: getCategoryColor(item, i),
+        }
+      }),
+    [breakdown]
+  )
 
-interface DonutChartProps {
-  breakdown: CategoryBreakdown[]
-}
-
-export function DonutChart({ breakdown }: DonutChartProps) {
-  const [activeIndex, setActiveIndex] = useState<number | null>(null)
+  const chartConfig: ChartConfig = useMemo(
+    () => ({
+      total: { label: 'Total' },
+      ...Object.fromEntries(
+        chartData.map((d) => [d.key, { label: d.categoryName, color: d.rawColor }])
+      ),
+    }),
+    [chartData]
+  )
 
   if (!breakdown.length) return null
-
-  const chartData = breakdown.map((item, i) => {
-    const key = `cat${i}`
-    return {
-      ...item,
-      key,
-      fill: `var(--color-${key})`,
-      rawColor: getCategoryColor(item, i),
-    }
-  })
-
-  const chartConfig: ChartConfig = {
-    total: { label: 'Total' },
-    ...Object.fromEntries(
-      chartData.map((d) => [d.key, { label: d.categoryName, color: d.rawColor }])
-    ),
-  }
 
   const grandTotal = breakdown.reduce((s, b) => s + (b.total ?? 0), 0)
   const activeItem = activeIndex !== null ? chartData[activeIndex] : null
@@ -70,8 +65,28 @@ export function DonutChart({ breakdown }: DonutChartProps) {
               outerRadius={100}
               cornerRadius={8}
               paddingAngle={4}
-              onMouseEnter={(_, index) => setActiveIndex(index)}
-              onMouseLeave={() => setActiveIndex(null)}
+              onMouseEnter={(_, index) => onHover(index)}
+              onMouseLeave={() => onHover(null)}
+              onClick={(_, index) => onSelect(index)}
+              shape={(props: PieSectorShapeProps) => {
+                const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, cornerRadius, fill, index } = props
+                const isActive = activeIndex === index
+                const isDimmed = activeIndex !== null && !isActive
+                return (
+                  <Sector
+                    cx={cx}
+                    cy={cy}
+                    innerRadius={innerRadius}
+                    outerRadius={isActive ? (outerRadius ?? 0) + ACTIVE_RADIUS_GROWTH : outerRadius}
+                    startAngle={startAngle}
+                    endAngle={endAngle}
+                    cornerRadius={cornerRadius}
+                    fill={fill}
+                    fillOpacity={isDimmed ? DIMMED_OPACITY : 1}
+                    style={{ transition: 'fill-opacity 180ms ease', cursor: 'pointer', outline: 'none' }}
+                  />
+                )
+              }}
             />
           </PieChart>
         </ChartContainer>

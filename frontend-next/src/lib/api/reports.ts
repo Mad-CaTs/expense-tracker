@@ -6,6 +6,7 @@ interface ReportParams {
   period: Period
   from?: string
   to?: string
+  txType?: 'EXPENSE' | 'INCOME'
 }
 
 export async function getReportSummary({ period, from, to }: ReportParams): Promise<ReportSummary> {
@@ -15,9 +16,9 @@ export async function getReportSummary({ period, from, to }: ReportParams): Prom
   return res.data
 }
 
-export async function getCategoryBreakdown({ period, from, to }: ReportParams): Promise<CategoryBreakdown[]> {
+export async function getCategoryBreakdown({ period, from, to, txType }: ReportParams): Promise<CategoryBreakdown[]> {
   const res = await apiClient.get<CategoryBreakdown[]>('/reports/by-category', {
-    params: { period, from, to },
+    params: { period, from, to, txType },
   })
   return res.data
 }

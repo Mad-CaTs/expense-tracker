@@ -32,7 +32,7 @@ function ExpensesPageInner() {
     { id: 'default-tipo', type: FinanceFilterType.TIPO, value: [TxType.ALL] },
   ])
 
-  const { data: categories } = useCategories()
+  const { data: categories } = useCategories('EXPENSE')
 
   const { startDate, endDate, categoryIds, txType } = applyFinanceFilters(activeFilters)
 

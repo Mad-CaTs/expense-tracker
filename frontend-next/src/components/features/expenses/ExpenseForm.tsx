@@ -13,6 +13,7 @@ import {
   HeartPulse,
   Home,
   type LucideIcon,
+  Plus,
   ShoppingCart,
   Utensils,
   Wallet,
@@ -20,6 +21,7 @@ import {
 } from 'lucide-react'
 
 import { AttachmentSection, type PendingFile } from '@/components/features/expenses/AttachmentSection'
+import { CategorySheet } from '@/components/features/categories/CategorySheet'
 import { DateWheelPicker } from '@/components/ui/DateWheelPicker'
 import { uploadAttachment } from '@/lib/api/attachments'
 import { useCategories } from '@/lib/hooks/useCategories'
@@ -59,7 +61,7 @@ function ExpenseFormInner({ expense, expenseId }: FormInnerProps) {
   const router = useRouter()
   const isEdit = expenseId != null && expenseId > 0
 
-  const { data: categories } = useCategories()
+  const { data: categories } = useCategories('EXPENSE')
   const { data: wallets } = useWallets()
   const createExpense = useCreateExpense()
   const updateExpense = useUpdateExpense()
@@ -73,6 +75,7 @@ function ExpenseFormInner({ expense, expenseId }: FormInnerProps) {
   const [walletId, setWalletId] = useState(expense?.walletId?.toString() ?? '')
   const [notes, setNotes] = useState(expense?.notes ?? '')
   const [showDatePicker, setShowDatePicker] = useState(false)
+  const [showCategorySheet, setShowCategorySheet] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([])
 
@@ -183,6 +186,23 @@ function ExpenseFormInner({ expense, expenseId }: FormInnerProps) {
         </div>
       </div>
 
+      {/* Date */}
+      <div className="px-4 pt-2 pb-3">
+        <div className="mb-3 border-t pt-4" style={{ borderColor: 'var(--border-subtle)' }} />
+        <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
+          Fecha
+        </p>
+        <button
+          type="button"
+          onClick={() => setShowDatePicker(true)}
+          className="flex h-10 w-full items-center gap-2 rounded-xl px-3 text-sm outline-none cursor-pointer"
+          style={{ background: 'var(--bg-input)', color: 'var(--text-primary)' }}
+        >
+          <CalendarDays size={14} className="shrink-0" style={{ color: 'var(--text-muted)' }} />
+          <span className="font-mono">{formatDateLabel(date)}</span>
+        </button>
+      </div>
+
       {/* Category grid */}
       <div className="pt-2 pb-2">
         <div className="mx-4 mb-3 border-t pt-4" style={{ borderColor: 'var(--border-subtle)' }} />
@@ -228,25 +248,24 @@ function ExpenseFormInner({ expense, expenseId }: FormInnerProps) {
               </motion.button>
             )
           })}
+          {/* + Nueva categoría */}
+          <motion.button
+            type="button"
+            onClick={() => setShowCategorySheet(true)}
+            whileTap={{ scale: 0.92 }}
+            transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+            className="flex shrink-0 flex-col items-center justify-center gap-1.5 rounded-2xl px-3 py-3 transition-colors"
+            style={{ border: '1px dashed var(--border-strong)' }}
+          >
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl" style={{ background: 'var(--bg-input)' }}>
+              <Plus size={18} style={{ color: 'var(--text-muted)' }} strokeWidth={1.7} />
+            </div>
+            <span className="text-center text-[10px] font-semibold leading-tight" style={{ color: 'var(--text-muted)' }}>
+              Nueva
+            </span>
+          </motion.button>
           <div className="shrink-0 pr-4" />
         </div>
-      </div>
-
-      {/* Date */}
-      <div className="px-4 pt-2 pb-3">
-        <div className="mb-3 border-t pt-4" style={{ borderColor: 'var(--border-subtle)' }} />
-        <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
-          Fecha
-        </p>
-        <button
-          type="button"
-          onClick={() => setShowDatePicker(true)}
-          className="flex h-10 w-full items-center gap-2 rounded-xl px-3 text-sm outline-none cursor-pointer"
-          style={{ background: 'var(--bg-input)', color: 'var(--text-primary)' }}
-        >
-          <CalendarDays size={14} className="shrink-0" style={{ color: 'var(--text-muted)' }} />
-          <span className="font-mono">{formatDateLabel(date)}</span>
-        </button>
       </div>
 
       {/* Wallet cards */}
@@ -386,6 +405,17 @@ function ExpenseFormInner({ expense, expenseId }: FormInnerProps) {
               </div>
             </motion.div>
           </>
+        )}
+      </AnimatePresence>
+
+      {/* Category sheet — quick create */}
+      <AnimatePresence>
+        {showCategorySheet && (
+          <CategorySheet
+            type="EXPENSE"
+            onClose={() => setShowCategorySheet(false)}
+            onCreated={(cat) => { setCategoryId(cat.id.toString()); setErrors(e => ({ ...e, categoryId: '' })) }}
+          />
         )}
       </AnimatePresence>
     </div>

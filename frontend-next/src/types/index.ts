@@ -4,11 +4,14 @@ export interface User {
   name: string
 }
 
+export type CategoryType = 'EXPENSE' | 'INCOME'
+
 export interface Category {
   id: number
   name: string
   icon?: string
   color?: string
+  type?: CategoryType
 }
 
 export interface Wallet {
@@ -28,6 +31,10 @@ export interface Income {
   notes?: string
   walletId?: number
   walletName?: string
+  categoryId?: number
+  categoryName?: string
+  categoryColor?: string
+  categoryIcon?: string
 }
 
 export interface IncomePage {

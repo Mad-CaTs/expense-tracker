@@ -7,6 +7,7 @@ interface ReportFilters {
   period: Period
   from?: string
   to?: string
+  txType?: 'EXPENSE' | 'INCOME'
 }
 
 export function useReportSummary(filters: ReportFilters) {

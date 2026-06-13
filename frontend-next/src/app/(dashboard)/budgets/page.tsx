@@ -28,7 +28,7 @@ export default function BudgetsPage() {
   const { data, isLoading } = useBudgets()
   const createBudget = useCreateBudget()
   const deleteBudget = useDeleteBudget()
-  const { data: categories } = useCategories()
+  const { data: categories } = useCategories('EXPENSE')
 
   const now = new Date()
   const [showForm, setShowForm] = useState(false)

@@ -5,8 +5,7 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
-import { CategoryBreakdown } from '@/components/features/reports/CategoryBreakdown'
-import { DonutChart } from '@/components/features/reports/DonutChart'
+import { DistributionSection } from '@/components/features/reports/DistributionSection'
 import { ReportSummaryCards } from '@/components/features/reports/ReportSummaryCards'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { PageHeader } from '@/components/layout/PageHeader'
@@ -65,14 +64,17 @@ export default function ReportsPage() {
     { id: 'default-tipo', type: FinanceFilterType.TIPO, value: [TxType.EXPENSE] },
   ])
 
-  const { data: categories } = useCategories()
+  const { data: categories } = useCategories('EXPENSE')
   const { txType } = applyFinanceFilters(activeFilters)
 
   const { from, to } = getRange(granularity, periodDate)
   const filters = { period: 'CUSTOM' as const, from, to }
 
   const { data, isLoading } = useReportSummary(filters)
-  const { data: breakdown } = useCategoryBreakdown(filters)
+  const { data: breakdown } = useCategoryBreakdown({
+    ...filters,
+    txType: txType === 'income' ? 'INCOME' : 'EXPENSE',
+  })
 
   const isCurrentPeriod = (() => {
     const now = new Date()
@@ -177,22 +179,7 @@ export default function ReportsPage() {
 
       {/* Charts — own px-4 so titles align with page title */}
       {!isLoading && data && (
-        <>
-          {txType === 'expense' && (
-            <>
-              <DonutChart breakdown={breakdown ?? []} />
-              <CategoryBreakdown breakdown={breakdown ?? []} />
-            </>
-          )}
-          {txType === 'income' && (
-            <div
-              className="mx-4 rounded-[18px] border p-5 text-center"
-              style={{ borderColor: 'var(--border-subtle)', background: 'var(--bg-card-inner)', color: 'var(--text-tertiary)' }}
-            >
-              <p className="text-sm">Los ingresos aún no están disponibles</p>
-            </div>
-          )}
-        </>
+        <DistributionSection breakdown={breakdown ?? []} />
       )}
     </div>
   )

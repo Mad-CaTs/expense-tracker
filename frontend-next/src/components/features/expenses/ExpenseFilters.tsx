@@ -22,7 +22,7 @@ const PERIODS: { value: Period; label: string }[] = [
 export function ExpenseFilters({ onNew }: { onNew?: () => void }) {
   const { period, categoryId, filtersOpen, setPeriod, setCategoryId, toggleFilters } =
     useFilterStore()
-  const { data: categories } = useCategories()
+  const { data: categories } = useCategories('EXPENSE')
 
   return (
     <div className="border-b px-4 pt-3 pb-2" style={{ borderColor: 'var(--border-subtle)' }}>

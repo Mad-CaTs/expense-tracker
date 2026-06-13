@@ -3,6 +3,7 @@
 import { ChevronDown, TrendingUp } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 
+import { CATEGORY_ICON_MAP } from '@/lib/utils/categoryIcons'
 import type { Income } from '@/types'
 
 interface IncomeRowProps {
@@ -15,7 +16,8 @@ interface IncomeRowProps {
 }
 
 export function IncomeRow({ income, onEdit, onDelete, index, expanded, onToggle }: IncomeRowProps) {
-  const color = '#4ade80'
+  const color = income.categoryColor ?? '#4ade80'
+  const Icon = income.categoryIcon ? (CATEGORY_ICON_MAP[income.categoryIcon] ?? TrendingUp) : TrendingUp
 
   const formattedDate = new Date(income.date + 'T12:00:00').toLocaleDateString('es-PE', {
     day: 'numeric', month: 'short', year: 'numeric',
@@ -49,7 +51,7 @@ export function IncomeRow({ income, onEdit, onDelete, index, expanded, onToggle 
             className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl"
             style={{ backgroundColor: `${color}18`, boxShadow: `0 0 0 1px ${color}22` }}
           >
-            <TrendingUp size={14} style={{ color }} strokeWidth={1.6} />
+            <Icon size={14} style={{ color }} strokeWidth={1.6} />
           </div>
 
           <div className="flex min-w-0 flex-1">
@@ -94,6 +96,15 @@ export function IncomeRow({ income, onEdit, onDelete, index, expanded, onToggle 
                   <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.15em]" style={{ color: 'var(--text-placeholder)' }}>Fecha</p>
                   <p className="font-mono" style={{ color: 'var(--text-secondary)' }}>{formattedDate}</p>
                 </div>
+                {income.categoryName && (
+                  <div>
+                    <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.15em]" style={{ color: 'var(--text-placeholder)' }}>Categoría</p>
+                    <p className="flex items-center gap-1.5" style={{ color: 'var(--text-secondary)' }}>
+                      <span className="h-2 w-2 rounded-full" style={{ background: color }} />
+                      {income.categoryName}
+                    </p>
+                  </div>
+                )}
                 {income.walletName && (
                   <div>
                     <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.15em]" style={{ color: 'var(--text-placeholder)' }}>Wallet</p>

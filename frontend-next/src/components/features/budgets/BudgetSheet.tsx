@@ -25,7 +25,7 @@ interface BudgetSheetProps {
 }
 
 export function BudgetSheet({ onClose }: BudgetSheetProps) {
-  const { data: categories } = useCategories()
+  const { data: categories } = useCategories('EXPENSE')
   const createBudget = useCreateBudget()
 
   const now = new Date()

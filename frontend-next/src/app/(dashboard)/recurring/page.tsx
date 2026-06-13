@@ -200,7 +200,7 @@ function RecurringCard({
 
 export default function RecurringPage() {
   const { data, isLoading } = useRecurring()
-  const { data: categories } = useCategories()
+  const { data: categories } = useCategories('EXPENSE')
   const createRecurring = useCreateRecurring()
   const toggleRecurring = useToggleRecurring()
   const deleteRecurring = useDeleteRecurring()

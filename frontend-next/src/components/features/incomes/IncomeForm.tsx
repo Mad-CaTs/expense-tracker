@@ -4,11 +4,14 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
 import { AnimatePresence, motion } from 'framer-motion'
-import { CalendarDays, CheckCircle } from 'lucide-react'
+import { CalendarDays, CheckCircle, Plus, Wallet } from 'lucide-react'
 
+import { CategorySheet } from '@/components/features/categories/CategorySheet'
 import { DateWheelPicker } from '@/components/ui/DateWheelPicker'
+import { useCategories } from '@/lib/hooks/useCategories'
 import { useCreateIncome, useIncome, useUpdateIncome } from '@/lib/hooks/useIncomes'
 import { useWallets } from '@/lib/hooks/useWallets'
+import { CATEGORY_ICON_MAP } from '@/lib/utils/categoryIcons'
 import type { Income } from '@/types'
 
 interface IncomeFormProps {
@@ -32,6 +35,7 @@ function IncomeFormInner({ income, incomeId }: FormInnerProps) {
   const isEdit = incomeId != null && incomeId > 0
 
   const { data: wallets } = useWallets()
+  const { data: categories } = useCategories('INCOME')
   const createIncome = useCreateIncome()
   const updateIncome = useUpdateIncome()
 
@@ -41,6 +45,8 @@ function IncomeFormInner({ income, incomeId }: FormInnerProps) {
     income ? income.date.split('T')[0] : (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}` })()
   )
   const [walletId, setWalletId] = useState(income?.walletId?.toString() ?? '')
+  const [categoryId, setCategoryId] = useState(income?.categoryId?.toString() ?? '')
+  const [showCategorySheet, setShowCategorySheet] = useState(false)
   const [notes, setNotes] = useState(income?.notes ?? '')
   const [showDatePicker, setShowDatePicker] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -71,6 +77,7 @@ function IncomeFormInner({ income, incomeId }: FormInnerProps) {
       date,
       notes: notes.trim() || undefined,
       walletId: walletId ? Number(walletId) : undefined,
+      categoryId: categoryId ? Number(categoryId) : undefined,
     }
     if (isEdit && incomeId) {
       await updateIncome.mutateAsync({ id: incomeId, data: payload as Omit<Income, 'id'> })
@@ -158,6 +165,68 @@ function IncomeFormInner({ income, incomeId }: FormInnerProps) {
           <span className="font-mono">{formatDateLabel(date)}</span>
         </button>
       </div>
+
+      {/* Category grid (opcional) */}
+      {categories && categories.length > 0 && (
+        <div className="pt-2 pb-2">
+          <div className="mx-4 mb-3 border-t pt-4" style={{ borderColor: 'var(--border-subtle)' }} />
+          <p className="mb-3 px-4 text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
+            Categoría
+          </p>
+          <div className="flex gap-2 overflow-x-auto py-1" style={{ scrollbarWidth: 'none' }}>
+            <div className="shrink-0 pl-4" />
+            {categories.map((cat) => {
+              const Icon = cat.icon ? (CATEGORY_ICON_MAP[cat.icon] ?? Wallet) : Wallet
+              const color = cat.color ?? '#d4af37'
+              const selected = categoryId === cat.id.toString()
+              return (
+                <motion.button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => setCategoryId(selected ? '' : cat.id.toString())}
+                  whileTap={{ scale: 0.92 }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                  className="flex shrink-0 flex-col items-center gap-1.5 rounded-2xl px-3 py-3 transition-colors"
+                  style={{
+                    background: selected ? `${color}18` : 'var(--bg-input)',
+                    boxShadow: selected ? `0 0 0 1.5px ${color}60` : 'none',
+                  }}
+                >
+                  <div
+                    className="flex h-10 w-10 items-center justify-center rounded-xl"
+                    style={{ background: selected ? `${color}25` : `${color}12` }}
+                  >
+                    <Icon size={18} style={{ color }} strokeWidth={1.7} />
+                  </div>
+                  <span
+                    className="text-center text-[10px] font-semibold leading-tight"
+                    style={{ color: selected ? color : 'var(--text-muted)' }}
+                  >
+                    {cat.name}
+                  </span>
+                </motion.button>
+              )
+            })}
+            {/* + Nueva categoría */}
+            <motion.button
+              type="button"
+              onClick={() => setShowCategorySheet(true)}
+              whileTap={{ scale: 0.92 }}
+              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+              className="flex shrink-0 flex-col items-center justify-center gap-1.5 rounded-2xl px-3 py-3 transition-colors"
+              style={{ border: '1px dashed var(--border-strong)' }}
+            >
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl" style={{ background: 'var(--bg-input)' }}>
+                <Plus size={18} style={{ color: 'var(--text-muted)' }} strokeWidth={1.7} />
+              </div>
+              <span className="text-center text-[10px] font-semibold leading-tight" style={{ color: 'var(--text-muted)' }}>
+                Nueva
+              </span>
+            </motion.button>
+            <div className="shrink-0 pr-4" />
+          </div>
+        </div>
+      )}
 
       {/* Wallet cards */}
       {wallets && wallets.length > 0 && (
@@ -283,6 +352,17 @@ function IncomeFormInner({ income, incomeId }: FormInnerProps) {
               </div>
             </motion.div>
           </>
+        )}
+      </AnimatePresence>
+
+      {/* Category sheet — quick create */}
+      <AnimatePresence>
+        {showCategorySheet && (
+          <CategorySheet
+            type="INCOME"
+            onClose={() => setShowCategorySheet(false)}
+            onCreated={(cat) => setCategoryId(cat.id.toString())}
+          />
         )}
       </AnimatePresence>
     </div>

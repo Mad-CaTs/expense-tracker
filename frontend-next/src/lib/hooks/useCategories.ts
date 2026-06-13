@@ -6,12 +6,12 @@ import {
   getCategories,
   updateCategory,
 } from '@/lib/api/categories'
-import type { Category } from '@/types'
+import type { Category, CategoryType } from '@/types'
 
-export function useCategories() {
+export function useCategories(type?: CategoryType) {
   return useQuery({
-    queryKey: ['categories'],
-    queryFn: getCategories,
+    queryKey: ['categories', type ?? 'all'],
+    queryFn: () => getCategories(type),
     staleTime: 5 * 60 * 1000,
   })
 }

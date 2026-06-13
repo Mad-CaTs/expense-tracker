@@ -24,6 +24,7 @@ export async function createIncome(data: {
   date: string
   notes?: string
   walletId?: number
+  categoryId?: number
 }): Promise<Income> {
   const res = await apiClient.post<Income>('/incomes', data)
   return res.data
@@ -37,6 +38,7 @@ export async function updateIncome(
     date: string
     notes?: string
     walletId?: number
+    categoryId?: number
   }
 ): Promise<Income> {
   const res = await apiClient.put<Income>(`/incomes/${id}`, data)
