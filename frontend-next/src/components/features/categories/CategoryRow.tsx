@@ -13,12 +13,17 @@ export function CategoryRow({
   id, name, icon, color,
   isEditing, onStartEdit, onDone,
   onDelete,
+  amount, count, percentage, onNavigate,
 }: {
   id: number; name: string; icon: string; color: string
   isEditing: boolean
   onStartEdit: () => void
   onDone: () => void
   onDelete: (id: number) => void
+  amount?: number
+  count?: number
+  percentage?: number
+  onNavigate?: (id: number) => void
 }) {
   const [editName, setEditName] = useState(name)
   const [editIcon, setEditIcon] = useState(icon)
@@ -45,20 +50,51 @@ export function CategoryRow({
     onDone()
   }
 
+  const hasUsage = amount !== undefined
+  const pct = Math.min(Math.max(percentage ?? 0, 0), 100)
+  const navigable = !!onNavigate && !isEditing
+
   return (
     <div className="border-b last:border-0" style={{ borderColor: 'var(--border-subtle)' }}>
       {/* View row */}
-      <div className="flex items-center gap-3 py-3">
+      <div
+        role={navigable ? 'button' : undefined}
+        tabIndex={navigable ? 0 : undefined}
+        onClick={navigable ? () => onNavigate!(id) : undefined}
+        onKeyDown={navigable ? (e) => { if (e.key === 'Enter') onNavigate!(id) } : undefined}
+        className={`flex items-center gap-3 py-3 transition-colors ${navigable ? 'cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--accent-ring)] rounded-lg' : ''}`}
+      >
         <div
-          className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl"
+          className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl"
           style={{ background: `${color}14`, boxShadow: `inset 0 1px 1px rgba(255,255,255,0.04), 0 0 0 1px ${color}20` }}
         >
-          <CategoryIcon name={icon} size={14} color={color} />
+          <CategoryIcon name={icon} size={15} color={color} />
         </div>
-        <span className="flex-1 text-[13px] font-medium" style={{ color: 'var(--text-secondary)' }}>{name}</span>
-        <div className="flex gap-0.5">
+
+        <div className="min-w-0 flex-1">
+          <div className="flex items-baseline justify-between gap-2">
+            <span className="truncate text-[13px] font-medium" style={{ color: 'var(--text-secondary)' }}>{name}</span>
+            {hasUsage && (
+              <span className="mono-amount flex-shrink-0 text-[12px] font-bold" style={{ color: 'var(--text-primary)' }}>
+                S/ {(amount ?? 0).toFixed(2)}
+              </span>
+            )}
+          </div>
+          {hasUsage && (
+            <div className="mt-1.5 flex items-center gap-2">
+              <div className="h-1 flex-1 overflow-hidden rounded-full" style={{ background: 'var(--border-subtle)' }}>
+                <div className="h-full rounded-full" style={{ width: `${pct}%`, background: color, opacity: (amount ?? 0) > 0 ? 1 : 0.3 }} />
+              </div>
+              <span className="mono-amount flex-shrink-0 text-[10px]" style={{ color: 'var(--text-muted)' }}>
+                {count ?? 0} mov
+              </span>
+            </div>
+          )}
+        </div>
+
+        <div className="flex flex-shrink-0 gap-0.5">
           <button
-            onClick={onStartEdit}
+            onClick={(e) => { e.stopPropagation(); onStartEdit() }}
             className={`icon-btn flex h-7 w-7 items-center justify-center rounded-lg ${isEditing ? 'text-accent-light' : ''}`}
             aria-label="Editar"
           >
@@ -68,7 +104,7 @@ export function CategoryRow({
             </svg>
           </button>
           <button
-            onClick={() => onDelete(id)}
+            onClick={(e) => { e.stopPropagation(); onDelete(id) }}
             className="icon-btn icon-btn-danger flex h-7 w-7 items-center justify-center rounded-lg"
             aria-label="Eliminar"
           >

@@ -3,9 +3,10 @@
 import { useState } from 'react'
 
 import { motion } from 'framer-motion'
-import { Plus, X } from 'lucide-react'
+import { Plus, Wallet, X } from 'lucide-react'
 
 import { BudgetCard } from '@/components/features/budgets/BudgetCard'
+import { BudgetOverview } from '@/components/features/budgets/BudgetOverview'
 import { SubPageHeader } from '@/components/layout/SubPageHeader'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -19,6 +20,9 @@ import {
 } from '@/components/ui/Select'
 import { useCategories } from '@/lib/hooks/useCategories'
 import { useBudgets, useCreateBudget, useDeleteBudget } from '@/lib/hooks/useBudgets'
+import { useCategoryBreakdown } from '@/lib/hooks/useReports'
+import { CATEGORY_ICON_MAP } from '@/lib/utils/categoryIcons'
+import type { CategoryBreakdown } from '@/types'
 
 const MONTHS = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -67,6 +71,17 @@ export default function BudgetsPage() {
   const currentYear = now.getFullYear()
   const years = [currentYear - 1, currentYear, currentYear + 1]
 
+  const pad = (n: number) => String(n).padStart(2, '0')
+  const mFrom = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-01`
+  const mTo = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate())}`
+  const { data: breakdown } = useCategoryBreakdown({ period: 'CUSTOM', from: mFrom, to: mTo, txType: 'EXPENSE' })
+
+  function startSuggested(name: string) {
+    const cat = categories?.find((c) => c.name === name)
+    if (cat) setCategoryId(String(cat.id))
+    setShowForm(true)
+  }
+
   return (
     <div className="mx-auto min-h-[100dvh] max-w-3xl">
       <SubPageHeader
@@ -86,6 +101,9 @@ export default function BudgetsPage() {
       />
 
       <div className="px-4">
+      {/* Overview hero */}
+      {!isLoading && data && data.length > 0 && <BudgetOverview budgets={data} />}
+
       {/* Create form + list coordinated */}
       <div
         className="grid transition-[grid-template-rows] duration-[260ms] ease-[cubic-bezier(0.32,0.72,0,1)] mb-4"
@@ -191,10 +209,7 @@ export default function BudgetsPage() {
         {isLoading ? (
           Array.from({ length: 3 }).map((_, i) => <BudgetCardSkeleton key={i} />)
         ) : !data?.length ? (
-          <EmptyState
-            title="Sin presupuestos"
-            description="Crea un presupuesto mensual para controlar tus gastos por categoría."
-          />
+          <SmartEmptyBudgets breakdown={breakdown} onPick={startSuggested} />
         ) : (
           data.map((budget, i) => (
             <BudgetCard
@@ -216,6 +231,66 @@ export default function BudgetsPage() {
         onConfirm={() => { if (deleteId != null) deleteBudget.mutate(deleteId); setDeleteId(null) }}
         onCancel={() => setDeleteId(null)}
       />
+    </div>
+  )
+}
+
+function SmartEmptyBudgets({ breakdown, onPick }: { breakdown?: CategoryBreakdown[]; onPick: (name: string) => void }) {
+  const top = (breakdown ?? [])
+    .filter((b) => (b.total ?? 0) > 0 && b.categoryName !== 'Sin categoría')
+    .slice(0, 4)
+
+  if (!top.length) {
+    return (
+      <EmptyState
+        title="Sin presupuestos"
+        description="Crea un presupuesto mensual para controlar tus gastos por categoría."
+      />
+    )
+  }
+
+  return (
+    <div>
+      <EmptyState
+        title="Empieza con tus mayores gastos"
+        description="Ponle un límite a las categorías donde más gastaste este mes."
+      />
+      <div className="mt-4 flex flex-col gap-2">
+        <p className="px-1 text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
+          Sugerencias
+        </p>
+        {top.map((b, i) => {
+          const color = b.color ?? '#d4af37'
+          const Icon = b.icon ? (CATEGORY_ICON_MAP[b.icon] ?? Wallet) : Wallet
+          return (
+            <motion.button
+              key={b.categoryName}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.05, duration: 0.22, ease: [0.32, 0.72, 0, 1] }}
+              onClick={() => onPick(b.categoryName)}
+              className="flex items-center gap-3 rounded-[14px] border px-4 py-3 text-left transition-colors cursor-pointer"
+              style={{ borderColor: 'var(--border-subtle)', background: 'var(--bg-card-inner)' }}
+            >
+              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl" style={{ background: `${color}18` }}>
+                <Icon size={15} style={{ color }} strokeWidth={1.6} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[13px] font-semibold" style={{ color: 'var(--text-primary)' }}>{b.categoryName}</p>
+                <p className="mono-amount text-[11px]" style={{ color: 'var(--text-muted)' }}>
+                  S/ {(b.total ?? 0).toFixed(2)} gastado este mes
+                </p>
+              </div>
+              <span
+                className="flex flex-shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold"
+                style={{ background: 'var(--accent-bg)', color: 'var(--accent-light)' }}
+              >
+                <Plus size={11} /> Límite
+              </span>
+            </motion.button>
+          )
+        })}
+      </div>
     </div>
   )
 }

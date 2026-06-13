@@ -22,15 +22,24 @@ import { useFilterStore } from '@/stores/filterStore'
 
 function ExpensesPageInner() {
   const router = useRouter()
-  useSearchParams()
+  const searchParams = useSearchParams()
+  const initialCategoryId = searchParams.get('categoryId')
   const storeFilters = useFilterStore()
   const [deleteExpenseId, setDeleteExpenseId] = useState<number | null>(null)
   const [deleteIncomeId, setDeleteIncomeId] = useState<number | null>(null)
   const [expandedKey, setExpandedKey] = useState<string | null>(null)
-  const [activeFilters, setActiveFilters] = useState<FinanceFilter[]>([
-    { id: 'default-date', type: FinanceFilterType.FECHA, value: [DatePreset.THIS_MONTH] },
-    { id: 'default-tipo', type: FinanceFilterType.TIPO, value: [TxType.ALL] },
-  ])
+  const [activeFilters, setActiveFilters] = useState<FinanceFilter[]>(() => {
+    const base: FinanceFilter[] = [
+      { id: 'default-date', type: FinanceFilterType.FECHA, value: [DatePreset.THIS_MONTH] },
+    ]
+    if (initialCategoryId) {
+      base.push({ id: 'default-tipo', type: FinanceFilterType.TIPO, value: [TxType.EXPENSE] })
+      base.push({ id: 'deeplink-cat', type: FinanceFilterType.CATEGORIA, value: [initialCategoryId] })
+    } else {
+      base.push({ id: 'default-tipo', type: FinanceFilterType.TIPO, value: [TxType.ALL] })
+    }
+    return base
+  })
 
   const { data: categories } = useCategories('EXPENSE')
 

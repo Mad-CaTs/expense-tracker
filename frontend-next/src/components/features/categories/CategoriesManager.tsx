@@ -11,14 +11,22 @@ import type { Category, CategoryType } from '@/types'
 import { CategoryRow } from './CategoryRow'
 import { CreateCategoryForm } from './CreateCategoryForm'
 
+interface CategoryUsage {
+  total: number
+  count: number
+  percentage: number
+}
+
 interface CategoriesManagerProps {
   type: CategoryType
   categories: Category[]
   isLoading: boolean
   deleteDescription: string
+  usageByName?: Record<string, CategoryUsage>
+  onNavigate?: (id: number) => void
 }
 
-export function CategoriesManager({ type, categories, isLoading, deleteDescription }: CategoriesManagerProps) {
+export function CategoriesManager({ type, categories, isLoading, deleteDescription, usageByName, onNavigate }: CategoriesManagerProps) {
   const deleteCategory = useDeleteCategory()
   const [showCreate, setShowCreate] = useState(false)
   const [deleteId, setDeleteId] = useState<number | null>(null)
@@ -70,19 +78,26 @@ export function CategoriesManager({ type, categories, isLoading, deleteDescripti
         <p className="py-6 text-center text-[13px]" style={{ color: 'var(--text-muted)' }}>Sin categorías. Crea una para empezar.</p>
       ) : (
         <AnimatePresence>
-          {categories.map((cat) => (
-            <CategoryRow
-              key={cat.id}
-              id={cat.id}
-              name={cat.name}
-              icon={cat.icon ?? 'ellipsis'}
-              color={cat.color ?? '#d4af37'}
-              isEditing={editingId === cat.id}
-              onStartEdit={() => { setEditingId(cat.id); setShowCreate(false) }}
-              onDone={() => setEditingId(null)}
-              onDelete={(id) => setDeleteId(id)}
-            />
-          ))}
+          {categories.map((cat) => {
+            const usage = usageByName?.[cat.name]
+            return (
+              <CategoryRow
+                key={cat.id}
+                id={cat.id}
+                name={cat.name}
+                icon={cat.icon ?? 'ellipsis'}
+                color={cat.color ?? '#d4af37'}
+                isEditing={editingId === cat.id}
+                onStartEdit={() => { setEditingId(cat.id); setShowCreate(false) }}
+                onDone={() => setEditingId(null)}
+                onDelete={(id) => setDeleteId(id)}
+                amount={usageByName ? (usage?.total ?? 0) : undefined}
+                count={usage?.count ?? 0}
+                percentage={usage?.percentage ?? 0}
+                onNavigate={onNavigate}
+              />
+            )
+          })}
         </AnimatePresence>
       )}
 
