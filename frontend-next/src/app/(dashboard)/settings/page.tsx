@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 
 import { motion } from 'framer-motion'
-import { ChevronRight, Tag } from 'lucide-react'
+import { ChevronRight, PiggyBank, Tag } from 'lucide-react'
 
 import { PageHeader } from '@/components/layout/PageHeader'
 import { useTheme } from '@/providers/ThemeProvider'
@@ -79,11 +79,12 @@ export default function SettingsPage() {
           <ThemeSwitch />
         </Section>
 
-        {/* Categories link */}
+        {/* Management links */}
         <Section label="Gestión">
           <button
             onClick={() => router.push('/categories')}
-            className="flex w-full items-center gap-3 py-3.5 text-left transition-colors cursor-pointer"
+            className="flex w-full items-center gap-3 border-b py-3.5 text-left transition-colors cursor-pointer"
+            style={{ borderColor: 'var(--border-subtle)' }}
           >
             <div
               className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl"
@@ -94,6 +95,23 @@ export default function SettingsPage() {
             <div className="flex-1">
               <p className="text-[13px] font-medium" style={{ color: 'var(--text-secondary)' }}>Categorías</p>
               <p className="mt-0.5 text-[11px]" style={{ color: 'var(--text-dim)' }}>Gestiona tus categorías de gasto e ingreso</p>
+            </div>
+            <ChevronRight size={16} style={{ color: 'var(--text-muted)' }} />
+          </button>
+
+          <button
+            onClick={() => router.push('/budgets')}
+            className="flex w-full items-center gap-3 py-3.5 text-left transition-colors cursor-pointer"
+          >
+            <div
+              className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl"
+              style={{ background: 'var(--accent-bg)' }}
+            >
+              <PiggyBank size={15} style={{ color: 'var(--accent)' }} />
+            </div>
+            <div className="flex-1">
+              <p className="text-[13px] font-medium" style={{ color: 'var(--text-secondary)' }}>Presupuestos</p>
+              <p className="mt-0.5 text-[11px]" style={{ color: 'var(--text-dim)' }}>Controla tus límites de gasto por categoría</p>
             </div>
             <ChevronRight size={16} style={{ color: 'var(--text-muted)' }} />
           </button>

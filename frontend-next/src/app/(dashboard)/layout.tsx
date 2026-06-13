@@ -13,10 +13,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname = usePathname()
   const [, setShowExpenseModal] = useState(false)
 
-  // Form routes (new / edit) render fullscreen — no chrome
-  const isFormRoute = /\/(new|edit)$/.test(pathname)
+  // Focused routes render fullscreen — no chrome (logo/topbar, sidebar, bottom nav)
+  const isFocusedRoute =
+    /\/(new|edit)$/.test(pathname) || pathname === '/categories' || pathname === '/budgets'
 
-  if (isFormRoute) {
+  if (isFocusedRoute) {
     return (
       <div className="min-h-screen" style={{ background: 'var(--bg-base)' }}>
         <motion.div

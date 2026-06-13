@@ -8,10 +8,8 @@ import { AnimatePresence, motion } from 'framer-motion'
 
 const NAV_ITEMS = [
   { href: '/expenses', label: 'Gastos', icon: ReceiptIcon },
-  { href: '/budgets', label: 'Presupuestos', icon: WalletIcon },
   { href: '/reports', label: 'Reportes', icon: ChartIcon },
   { href: '/recurring', label: 'Recurrentes', icon: RepeatIcon },
-  { href: '/categories', label: 'Categorías', icon: TagIcon },
 ]
 
 export function Sidebar() {
@@ -197,25 +195,6 @@ function ReceiptIcon({ size = 15 }: { size?: number }) {
   )
 }
 
-function WalletIcon({ size = 15 }: { size?: number }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.7"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4" />
-      <path d="M3 5v14a2 2 0 0 0 2 2h16v-5" />
-      <path d="M18 12a2 2 0 1 0 4 0 2 2 0 0 0-4 0Z" />
-    </svg>
-  )
-}
-
 function ChartIcon({ size = 15 }: { size?: number }) {
   return (
     <svg
@@ -254,20 +233,3 @@ function RepeatIcon({ size = 15 }: { size?: number }) {
   )
 }
 
-function TagIcon({ size = 15 }: { size?: number }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.7"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z" />
-      <circle cx="7.5" cy="7.5" r="0.5" fill="currentColor" />
-    </svg>
-  )
-}

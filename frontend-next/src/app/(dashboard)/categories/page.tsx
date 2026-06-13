@@ -5,7 +5,7 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 
 import { CategoriesManager } from '@/components/features/categories/CategoriesManager'
-import { PageHeader } from '@/components/layout/PageHeader'
+import { SubPageHeader } from '@/components/layout/SubPageHeader'
 import { useCategories } from '@/lib/hooks/useCategories'
 import type { CategoryType } from '@/types'
 
@@ -23,8 +23,8 @@ export default function CategoriesPage() {
   )
 
   return (
-    <div className="mx-auto max-w-3xl">
-      <PageHeader title="Categorías" />
+    <div className="mx-auto min-h-[100dvh] max-w-3xl">
+      <SubPageHeader title="Categorías" />
 
       <div className="px-4">
         {/* Segmented Gasto | Ingreso */}

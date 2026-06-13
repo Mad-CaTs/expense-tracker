@@ -6,7 +6,8 @@ import { motion } from 'framer-motion'
 import { Plus, X } from 'lucide-react'
 
 import { BudgetCard } from '@/components/features/budgets/BudgetCard'
-import { PageHeader } from '@/components/layout/PageHeader'
+import { SubPageHeader } from '@/components/layout/SubPageHeader'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { BudgetCardSkeleton } from '@/components/ui/Skeleton'
 import {
@@ -37,6 +38,7 @@ export default function BudgetsPage() {
   const [month, setMonth] = useState(String(now.getMonth() + 1))
   const [year, setYear] = useState(String(now.getFullYear()))
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [deleteId, setDeleteId] = useState<number | null>(null)
 
   function resetForm() {
     setCategoryId('')
@@ -66,8 +68,8 @@ export default function BudgetsPage() {
   const years = [currentYear - 1, currentYear, currentYear + 1]
 
   return (
-    <div className="mx-auto max-w-3xl">
-      <PageHeader
+    <div className="mx-auto min-h-[100dvh] max-w-3xl">
+      <SubPageHeader
         title="Presupuestos"
         action={
           <motion.button
@@ -199,12 +201,21 @@ export default function BudgetsPage() {
               key={budget.id}
               budget={budget}
               index={i}
-              onDelete={(id) => deleteBudget.mutate(id)}
+              onDelete={(id) => setDeleteId(id)}
             />
           ))
         )}
       </div>
       </div>
+
+      <ConfirmDialog
+        open={deleteId != null}
+        title="¿Eliminar presupuesto?"
+        description="Esta acción no se puede deshacer."
+        confirmLabel="Eliminar"
+        onConfirm={() => { if (deleteId != null) deleteBudget.mutate(deleteId); setDeleteId(null) }}
+        onCancel={() => setDeleteId(null)}
+      />
     </div>
   )
 }
