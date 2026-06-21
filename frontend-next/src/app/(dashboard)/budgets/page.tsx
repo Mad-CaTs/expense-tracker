@@ -9,6 +9,7 @@ import { BudgetCard } from '@/components/features/budgets/BudgetCard'
 import { BudgetOverview } from '@/components/features/budgets/BudgetOverview'
 import { SubPageHeader } from '@/components/layout/SubPageHeader'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { SuccessDialog } from '@/components/ui/SuccessDialog'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { BudgetCardSkeleton } from '@/components/ui/Skeleton'
 import {
@@ -43,6 +44,7 @@ export default function BudgetsPage() {
   const [year, setYear] = useState(String(now.getFullYear()))
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [deleteId, setDeleteId] = useState<number | null>(null)
+  const [success, setSuccess] = useState<{ name: string; action: 'create' | 'edit' } | null>(null)
 
   function resetForm() {
     setCategoryId('')
@@ -59,6 +61,7 @@ export default function BudgetsPage() {
     if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) errs.amount = 'Monto inválido'
     if (Object.keys(errs).length) { setErrors(errs); return }
 
+    const catName = categories?.find((c) => c.id === Number(categoryId))?.name ?? ''
     await createBudget.mutateAsync({
       categoryId: Number(categoryId),
       amount: Number(amount),
@@ -66,6 +69,7 @@ export default function BudgetsPage() {
       year: Number(year),
     })
     resetForm()
+    setSuccess({ name: catName, action: 'create' })
   }
 
   const currentYear = now.getFullYear()
@@ -217,6 +221,7 @@ export default function BudgetsPage() {
               budget={budget}
               index={i}
               onDelete={(id) => setDeleteId(id)}
+              onSaved={(name, action) => setSuccess({ name, action })}
             />
           ))
         )}
@@ -230,6 +235,17 @@ export default function BudgetsPage() {
         confirmLabel="Eliminar"
         onConfirm={() => { if (deleteId != null) deleteBudget.mutate(deleteId); setDeleteId(null) }}
         onCancel={() => setDeleteId(null)}
+      />
+
+      <SuccessDialog
+        open={success != null}
+        title={success?.action === 'create' ? 'Presupuesto creado' : 'Presupuesto actualizado'}
+        description={success ? (
+          success.action === 'create'
+            ? `El presupuesto para "${success.name}" fue creado correctamente.`
+            : `El límite de "${success.name}" fue actualizado correctamente.`
+        ) : undefined}
+        onClose={() => setSuccess(null)}
       />
     </div>
   )

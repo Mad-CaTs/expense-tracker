@@ -22,6 +22,11 @@ export async function createBudget(data: CreateBudgetPayload): Promise<Budget> {
   return res.data
 }
 
+export async function updateBudget(id: number, amount: number): Promise<Budget> {
+  const res = await apiClient.put<Budget>(`/budgets/${id}`, { amount })
+  return res.data
+}
+
 export async function deleteBudget(id: number): Promise<void> {
   await apiClient.delete(`/budgets/${id}`)
 }

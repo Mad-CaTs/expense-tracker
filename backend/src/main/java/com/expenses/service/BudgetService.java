@@ -54,6 +54,15 @@ public class BudgetService {
     }
 
     @Transactional
+    public BudgetDTO update(Long id, BigDecimal amount, Long userId) {
+        Budget budget = budgetRepository.findByIdAndUserId(id, userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Presupuesto no encontrado"));
+        budget.setAmount(amount);
+        budget.setUpdatedAt(java.time.LocalDateTime.now());
+        return toDTO(budgetRepository.save(budget), userId);
+    }
+
+    @Transactional
     public void delete(Long id, Long userId) {
         budgetRepository.findByIdAndUserId(id, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Presupuesto no encontrado"));

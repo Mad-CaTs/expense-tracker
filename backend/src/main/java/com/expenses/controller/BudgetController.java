@@ -10,8 +10,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/budgets")
@@ -37,6 +39,12 @@ public class BudgetController {
         Long userId = userResolver.getCurrentUserId();
         User user = userRepository.findById(userId).orElseThrow();
         return budgetService.save(dto, userId, user);
+    }
+
+    @PutMapping("/{id}")
+    public BudgetDTO update(@PathVariable Long id, @RequestBody Map<String, Object> body) {
+        BigDecimal amount = new BigDecimal(body.get("amount").toString());
+        return budgetService.update(id, amount, userResolver.getCurrentUserId());
     }
 
     @DeleteMapping("/{id}")
