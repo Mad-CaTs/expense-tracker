@@ -2,10 +2,11 @@
 
 import { useState } from 'react'
 
-import { AnimatePresence, motion } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { Plus, X } from 'lucide-react'
 
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { SuccessDialog } from '@/components/ui/SuccessDialog'
 import { useDeleteCategory } from '@/lib/hooks/useCategories'
 import type { Category, CategoryType } from '@/types'
 import { CategoryRow } from './CategoryRow'
@@ -31,6 +32,7 @@ export function CategoriesManager({ type, categories, isLoading, deleteDescripti
   const [showCreate, setShowCreate] = useState(false)
   const [deleteId, setDeleteId] = useState<number | null>(null)
   const [editingId, setEditingId] = useState<number | null>(null)
+  const [success, setSuccess] = useState<{ name: string; action: 'create' | 'edit' } | null>(null)
 
   return (
     <div
@@ -60,7 +62,7 @@ export function CategoriesManager({ type, categories, isLoading, deleteDescripti
         style={{ gridTemplateRows: showCreate ? '1fr' : '0fr' }}
       >
         <div className="overflow-hidden">
-          <CreateCategoryForm type={type} onDone={() => setShowCreate(false)} />
+          <CreateCategoryForm type={type} onDone={() => setShowCreate(false)} onCreated={(n) => setSuccess({ name: n, action: 'create' })} />
         </div>
       </div>
 
@@ -77,7 +79,7 @@ export function CategoriesManager({ type, categories, isLoading, deleteDescripti
       ) : !categories.length ? (
         <p className="py-6 text-center text-[13px]" style={{ color: 'var(--text-muted)' }}>Sin categorías. Crea una para empezar.</p>
       ) : (
-        <AnimatePresence>
+        <>
           {categories.map((cat) => {
             const usage = usageByName?.[cat.name]
             return (
@@ -90,6 +92,7 @@ export function CategoriesManager({ type, categories, isLoading, deleteDescripti
                 isEditing={editingId === cat.id}
                 onStartEdit={() => { setEditingId(cat.id); setShowCreate(false) }}
                 onDone={() => setEditingId(null)}
+                onSaved={(n) => setSuccess({ name: n, action: 'edit' })}
                 onDelete={(id) => setDeleteId(id)}
                 amount={usageByName ? (usage?.total ?? 0) : undefined}
                 count={usage?.count ?? 0}
@@ -98,7 +101,7 @@ export function CategoriesManager({ type, categories, isLoading, deleteDescripti
               />
             )
           })}
-        </AnimatePresence>
+        </>
       )}
 
       <ConfirmDialog
@@ -108,6 +111,17 @@ export function CategoriesManager({ type, categories, isLoading, deleteDescripti
         confirmLabel="Eliminar"
         onConfirm={() => { if (deleteId != null) deleteCategory.mutate(deleteId); setDeleteId(null) }}
         onCancel={() => setDeleteId(null)}
+      />
+
+      <SuccessDialog
+        open={success != null}
+        title={success?.action === 'create' ? 'Categoría creada' : 'Cambios guardados'}
+        description={success ? (
+          success.action === 'create'
+            ? `"${success.name}" fue añadida correctamente.`
+            : `"${success.name}" fue actualizada correctamente.`
+        ) : undefined}
+        onClose={() => setSuccess(null)}
       />
     </div>
   )

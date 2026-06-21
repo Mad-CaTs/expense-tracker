@@ -33,9 +33,9 @@ export default function CategoriesPage() {
   const { from, to } = useMemo(monthRange, [])
   const { data: breakdown } = useCategoryBreakdown({ period: 'CUSTOM', from, to, txType: activeType })
 
-  const filtered = (categories ?? []).filter((c) =>
-    activeType === 'INCOME' ? c.type === 'INCOME' : c.type !== 'INCOME'
-  )
+  const filtered = (categories ?? [])
+    .filter((c) => activeType === 'INCOME' ? c.type === 'INCOME' : c.type !== 'INCOME')
+    .sort((a, b) => a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }))
 
   const usageByName = useMemo(() => {
     const map: Record<string, { total: number; count: number; percentage: number }> = {}

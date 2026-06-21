@@ -10,7 +10,7 @@ import type { CategoryType } from '@/types'
 import { CategoryIcon } from './CategoryIcon'
 import { COLOR_PRESETS, ICON_LABELS, ICON_OPTIONS } from './categoryConstants'
 
-export function CreateCategoryForm({ type, onDone }: { type: CategoryType; onDone: () => void }) {
+export function CreateCategoryForm({ type, onDone, onCreated }: { type: CategoryType; onDone: () => void; onCreated?: (name: string) => void }) {
   const [name, setName] = useState('')
   const [icon, setIcon] = useState('wallet')
   const [color, setColor] = useState('#d4af37')
@@ -19,8 +19,13 @@ export function CreateCategoryForm({ type, onDone }: { type: CategoryType; onDon
 
   async function handleCreate() {
     if (!name.trim()) { setError('El nombre es requerido'); return }
-    await create.mutateAsync({ name: name.trim(), icon, color, type })
+    const trimmed = name.trim()
+    await create.mutateAsync({ name: trimmed, icon, color, type })
+    setName('')
+    setIcon('wallet')
+    setColor('#d4af37')
     onDone()
+    onCreated?.(trimmed)
   }
 
   return (

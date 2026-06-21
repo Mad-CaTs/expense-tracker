@@ -14,6 +14,7 @@ export function CategoryRow({
   isEditing, onStartEdit, onDone,
   onDelete,
   amount, count, percentage, onNavigate,
+  onSaved,
 }: {
   id: number; name: string; icon: string; color: string
   isEditing: boolean
@@ -24,6 +25,7 @@ export function CategoryRow({
   count?: number
   percentage?: number
   onNavigate?: (id: number) => void
+  onSaved?: (name: string) => void
 }) {
   const [editName, setEditName] = useState(name)
   const [editIcon, setEditIcon] = useState(icon)
@@ -42,8 +44,10 @@ export function CategoryRow({
 
   async function handleSave() {
     if (!editName.trim()) { setError('El nombre es requerido'); return }
-    await updateCategory.mutateAsync({ id, data: { name: editName.trim(), icon: editIcon, color: editColor } })
+    const saved = editName.trim()
+    await updateCategory.mutateAsync({ id, data: { name: saved, icon: editIcon, color: editColor } })
     onDone()
+    onSaved?.(saved)
   }
 
   function handleCancel() {
