@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import { ArrowLeftRight, Pencil, TrendingDown, TrendingUp, Trash2, Wallet as WalletIcon } from 'lucide-react'
 
 import type { Wallet } from '@/types'
-import { cardGradient, cardNumber, walletGrowth } from '@/lib/utils/cardVisuals'
+import { cardGradient, walletGrowth } from '@/lib/utils/cardVisuals'
 
 function formatBalance(n: number) {
   return n.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -76,7 +76,7 @@ export function PhysicalWalletCard({
               </div>
             </div>
             <p className="mono-amount mt-3 text-[15px] tracking-[0.18em]" style={{ color: 'rgba(255,255,255,0.92)' }}>
-              {cardNumber(wallet.id)}
+              •••• •••• •••• ••••
             </p>
           </div>
 

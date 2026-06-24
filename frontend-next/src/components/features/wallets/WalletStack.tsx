@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 import { AnimatePresence, motion } from 'framer-motion'
@@ -23,6 +23,17 @@ export function WalletStack() {
   const setWalletId = useFilterStore((s) => s.setWalletId)
 
   const [expandedId, setExpandedId] = useState<number | null>(null)
+  const cardRefs = useRef<Map<number, HTMLDivElement>>(new Map())
+
+  function toggleExpanded(id: number) {
+    const next = expandedId === id ? null : id
+    setExpandedId(next)
+    if (next !== null) {
+      setTimeout(() => {
+        cardRefs.current.get(next)?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+      }, 120)
+    }
+  }
   const [creating, setCreating] = useState(false)
   const [editing, setEditing] = useState<Wallet | null>(null)
   const [transferFrom, setTransferFrom] = useState<number | 'global' | null>(null)
@@ -84,7 +95,12 @@ export function WalletStack() {
       ) : (
         <div className="flex flex-col">
           {list.map((w, i) => (
-            <div key={w.id} style={{ marginTop: i === 0 ? 0 : -10, zIndex: expandedId === w.id ? 50 : i }} className="relative">
+            <div
+              key={w.id}
+              ref={(el) => { if (el) cardRefs.current.set(w.id, el); else cardRefs.current.delete(w.id) }}
+              style={{ marginTop: i === 0 ? 0 : -10, zIndex: expandedId === w.id ? 20 : i }}
+              className="relative"
+            >
               {/* Editar inline */}
               {editing?.id === w.id ? (
                 <div className="mb-3">
@@ -99,7 +115,7 @@ export function WalletStack() {
                   wallet={w}
                   expanded={expandedId === w.id}
                   backgroundUrl={w.backgroundUrl}
-                  onToggle={() => setExpandedId((cur) => (cur === w.id ? null : w.id))}
+                  onToggle={() => toggleExpanded(w.id)}
                   onViewMovements={() => viewMovements(w.id)}
                   onTransfer={() => { setTransferFrom(w.id); setExpandedId(null) }}
                   onEdit={() => { setEditing(w); setExpandedId(null) }}
