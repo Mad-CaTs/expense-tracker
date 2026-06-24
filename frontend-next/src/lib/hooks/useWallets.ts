@@ -34,7 +34,7 @@ export function useCreateWallet() {
 export function useUpdateWallet() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: { name: string; color?: string; icon?: string } }) =>
+    mutationFn: ({ id, data }: { id: number; data: { name: string; color?: string; icon?: string; backgroundId?: number | null } }) =>
       updateWallet(id, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['wallets'] }),
   })

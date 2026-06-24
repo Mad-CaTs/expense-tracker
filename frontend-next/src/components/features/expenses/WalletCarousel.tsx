@@ -29,59 +29,69 @@ function WalletCard({
   const pct = initial !== 0 ? ((diff / Math.abs(initial)) * 100).toFixed(1) : null
   const positive = diff >= 0
 
+  const hasSkin = !!wallet.backgroundUrl
+  const skinStyle = hasSkin
+    ? {
+        backgroundImage: `linear-gradient(180deg, rgba(0,0,0,0.18), rgba(0,0,0,0.65)), url(${wallet.backgroundUrl})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }
+    : { background: 'var(--bg-card-inner)' }
+
+  const nameColor = hasSkin ? 'rgba(255,255,255,0.75)' : 'var(--text-placeholder)'
+  const balanceColor = hasSkin ? '#fff' : 'var(--text-primary)'
+  const pctColor = positive
+    ? hasSkin ? '#7ee0a0' : 'var(--success)'
+    : hasSkin ? '#ff9a9a' : 'var(--danger)'
+
   return (
     <motion.button
       type="button"
       onClick={onSelect}
       whileTap={{ scale: 0.98 }}
       transition={{ type: 'spring', stiffness: 400, damping: 28 }}
-      className="relative flex-shrink-0 w-full rounded-[22px] border p-[1px] text-left"
+      className="relative flex-shrink-0 w-full rounded-[22px] text-left overflow-hidden"
       style={{
-        borderColor: selected ? accent : 'var(--border-subtle)',
-        background: 'var(--bg-subtle)',
+        boxShadow: selected
+          ? `0 0 0 2px ${hasSkin ? '#fff4' : accent}`
+          : '0 0 0 1px var(--border-subtle)',
       }}
     >
       <div
-        className="rounded-[21px] px-5 py-5"
+        className="rounded-[22px] px-5 py-5"
         style={{
-          background: 'var(--bg-card-inner)',
-          boxShadow: selected
+          ...skinStyle,
+          boxShadow: !hasSkin && selected
             ? `inset 0 0 0 1px ${accent}50, var(--inset-highlight)`
-            : 'var(--inset-highlight)',
+            : hasSkin ? undefined : 'var(--inset-highlight)',
         }}
       >
         {/* Top row: name left, pct right */}
         <div className="flex items-center justify-between mb-3">
-          <p
-            className="text-[11px] font-medium tracking-[0.08em] uppercase"
-            style={{ color: 'var(--text-placeholder)' }}
-          >
+          <p className="text-[11px] font-medium tracking-[0.08em] uppercase" style={{ color: nameColor }}>
             {wallet.name}
           </p>
 
           {pct !== null && (
             <div className="flex items-center gap-1">
               {positive
-                ? <TrendingUp size={11} style={{ color: 'var(--success)' }} />
-                : <TrendingDown size={11} style={{ color: 'var(--danger)' }} />
+                ? <TrendingUp size={11} style={{ color: pctColor }} />
+                : <TrendingDown size={11} style={{ color: pctColor }} />
               }
-              <span
-                className="text-[11px] font-semibold tabular-nums"
-                style={{ color: positive ? 'var(--success)' : 'var(--danger)' }}
-              >
+              <span className="text-[11px] font-semibold tabular-nums" style={{ color: pctColor }}>
                 {positive ? '+' : ''}{pct}%
               </span>
-              <span className="text-[10px]" style={{ color: 'var(--text-placeholder)' }}>
+              <span className="text-[10px]" style={{ color: hasSkin ? 'rgba(255,255,255,0.5)' : 'var(--text-placeholder)' }}>
                 vs inicial
               </span>
             </div>
           )}
         </div>
 
-        {/* Balance alineado a la izquierda */}
+        {/* Balance */}
         <p
           className="mono-amount text-[38px] font-extrabold leading-none tracking-[-0.02em]"
-          style={{ color: 'var(--text-primary)' }}
+          style={{ color: balanceColor }}
         >
           S/ {formatBalance(balance)}
         </p>
@@ -89,7 +99,7 @@ function WalletCard({
         {/* Dot indicador seleccionado */}
         {selected && (
           <div className="mt-4 flex justify-center">
-            <span className="h-1.5 w-6 rounded-full" style={{ background: accent }} />
+            <span className="h-1.5 w-6 rounded-full" style={{ background: hasSkin ? 'rgba(255,255,255,0.6)' : accent }} />
           </div>
         )}
       </div>

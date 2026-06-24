@@ -17,6 +17,7 @@ export async function createWallet(data: {
   initialBalance: number
   color?: string
   icon?: string
+  backgroundId?: number | null
 }): Promise<Wallet> {
   const res = await apiClient.post<Wallet>('/wallets', data)
   return res.data
@@ -24,7 +25,7 @@ export async function createWallet(data: {
 
 export async function updateWallet(
   id: number,
-  data: { name: string; color?: string; icon?: string }
+  data: { name: string; color?: string; icon?: string; backgroundId?: number | null }
 ): Promise<Wallet> {
   const res = await apiClient.put<Wallet>(`/wallets/${id}`, data)
   return res.data

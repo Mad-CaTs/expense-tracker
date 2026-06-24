@@ -86,3 +86,10 @@ CREATE TABLE IF NOT EXISTS expense_attachments (
     file_size    BIGINT NOT NULL,
     created_at   TIMESTAMP DEFAULT NOW()
 );
+
+CREATE TABLE IF NOT EXISTS card_backgrounds (
+    id        BIGSERIAL PRIMARY KEY,
+    name      VARCHAR(100) NOT NULL,
+    image_url VARCHAR(500) NOT NULL UNIQUE,
+    position  INTEGER NOT NULL DEFAULT 0
+);

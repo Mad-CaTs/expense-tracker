@@ -7,9 +7,9 @@ import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 
 const NAV_ITEMS = [
-  { href: '/expenses', label: 'Gastos', icon: ReceiptIcon },
+  { href: '/expenses', label: 'Finanzas', icon: ReceiptIcon },
+  { href: '/wallets', label: 'Cuentas', icon: WalletIcon },
   { href: '/reports', label: 'Reportes', icon: ChartIcon },
-  { href: '/recurring', label: 'Recurrentes', icon: RepeatIcon },
 ]
 
 export function Sidebar() {
@@ -213,22 +213,12 @@ function ChartIcon({ size = 15 }: { size?: number }) {
   )
 }
 
-function RepeatIcon({ size = 15 }: { size?: number }) {
+function WalletIcon({ size = 15 }: { size?: number }) {
   return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.7"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M17 1l4 4-4 4" />
-      <path d="M3 11V9a4 4 0 0 1 4-4h14" />
-      <path d="M7 23l-4-4 4-4" />
-      <path d="M21 13v2a4 4 0 0 1-4 4H3" />
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 7a2 2 0 0 1 2-2h13a1 1 0 0 1 1 1v3" />
+      <path d="M3 7v10a2 2 0 0 0 2 2h14a1 1 0 0 0 1-1v-3" />
+      <path d="M21 11v4h-4a2 2 0 0 1 0-4h4Z" />
     </svg>
   )
 }

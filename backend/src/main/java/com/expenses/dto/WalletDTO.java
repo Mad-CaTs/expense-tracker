@@ -12,7 +12,6 @@ public class WalletDTO {
     @Size(max = 100)
     private String name;
 
-    @NotNull(message = "El saldo inicial es obligatorio")
     @DecimalMin(value = "0.0", inclusive = true, message = "El saldo inicial no puede ser negativo")
     private BigDecimal initialBalance;
 
@@ -23,4 +22,7 @@ public class WalletDTO {
 
     @Size(max = 50)
     private String icon;
+
+    private Long backgroundId;
+    private String backgroundUrl;
 }

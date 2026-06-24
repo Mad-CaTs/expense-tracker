@@ -3,13 +3,13 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 
-import { BarChart2, Plus, Receipt, RefreshCw } from 'lucide-react'
+import { BarChart2, Plus, Receipt, Wallet } from 'lucide-react'
 
 const NAV_ITEMS = [
-  { href: '/expenses',  label: 'Finanzas',     Icon: Receipt   },
+  { href: '/expenses', label: 'Finanzas', Icon: Receipt   },
   null,
-  { href: '/reports',   label: 'Reportes',     Icon: BarChart2 },
-  { href: '/recurring', label: 'Recurrentes',  Icon: RefreshCw },
+  { href: '/wallets',  label: 'Cuentas',  Icon: Wallet    },
+  { href: '/reports',  label: 'Reportes', Icon: BarChart2 },
 ]
 
 export function BottomNav({ onFABClick }: { onFABClick?: () => void }) {

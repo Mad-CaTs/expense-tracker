@@ -4,6 +4,8 @@ import com.expenses.dto.WalletDTO;
 import com.expenses.entity.User;
 import com.expenses.entity.Wallet;
 import com.expenses.exception.ResourceNotFoundException;
+import com.expenses.entity.CardBackground;
+import com.expenses.repository.CardBackgroundRepository;
 import com.expenses.repository.WalletRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,6 +18,7 @@ import java.util.List;
 public class WalletService {
 
     private final WalletRepository walletRepository;
+    private final CardBackgroundRepository cardBackgroundRepository;
 
     public List<WalletDTO> findAll(Long userId) {
         return walletRepository.findByUserIdOrderByCreatedAtAsc(userId)
@@ -37,6 +40,7 @@ public class WalletService {
         wallet.setColor(dto.getColor());
         wallet.setIcon(dto.getIcon());
         wallet.setUser(user);
+        applyBackground(wallet, dto.getBackgroundId());
         return toDTO(walletRepository.save(wallet));
     }
 
@@ -47,6 +51,7 @@ public class WalletService {
         wallet.setName(dto.getName());
         wallet.setColor(dto.getColor());
         wallet.setIcon(dto.getIcon());
+        applyBackground(wallet, dto.getBackgroundId());
         return toDTO(walletRepository.save(wallet));
     }
 
@@ -65,6 +70,20 @@ public class WalletService {
         dto.setBalance(w.getBalance());
         dto.setColor(w.getColor());
         dto.setIcon(w.getIcon());
+        if (w.getBackground() != null) {
+            dto.setBackgroundId(w.getBackground().getId());
+            dto.setBackgroundUrl(w.getBackground().getImageUrl());
+        }
         return dto;
+    }
+
+    private void applyBackground(Wallet wallet, Long backgroundId) {
+        if (backgroundId == null) {
+            wallet.setBackground(null);
+        } else {
+            CardBackground bg = cardBackgroundRepository.findById(backgroundId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Fondo no encontrado: " + backgroundId));
+            wallet.setBackground(bg);
+        }
     }
 }

@@ -21,6 +21,14 @@ export interface Wallet {
   balance: number
   color?: string
   icon?: string
+  backgroundId?: number | null
+  backgroundUrl?: string | null
+}
+
+export interface CardBackground {
+  id: number
+  name: string
+  imageUrl: string
 }
 
 export interface Income {

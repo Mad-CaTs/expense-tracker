@@ -32,6 +32,10 @@ public class Wallet {
     private String icon;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "background_id")
+    private CardBackground background;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
