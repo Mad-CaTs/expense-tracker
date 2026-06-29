@@ -8,7 +8,7 @@ import { ChevronDown, Plus, X } from 'lucide-react'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { BudgetCardSkeleton } from '@/components/ui/Skeleton'
-import { PageHeader } from '@/components/layout/PageHeader'
+import { SubPageHeader } from '@/components/layout/SubPageHeader'
 import {
   Select,
   SelectContent,
@@ -255,7 +255,7 @@ export default function RecurringPage() {
 
   return (
     <div className="mx-auto max-w-3xl">
-      <PageHeader
+      <SubPageHeader
         title="Recurrentes"
         action={
           <motion.button
@@ -270,7 +270,7 @@ export default function RecurringPage() {
           </motion.button>
         }
       />
-      <div className="px-4">
+      <div className="px-4 pb-8">
       <ConfirmDialog
         open={deleteId != null}
         title="¿Eliminar este recurrente?"

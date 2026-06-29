@@ -68,12 +68,8 @@ function WalletCard({
     : hasSkin ? '#ff9a9a' : 'var(--danger)'
 
   const selectionRing = selected
-    ? hasSkin
-      ? `0 0 0 2px rgba(255,255,255,0.55), 0 20px 48px -12px rgba(0,0,0,0.6)`
-      : `0 0 0 2px ${accent}, 0 16px 40px -12px ${accent}55`
-    : hasSkin
-      ? '0 8px 24px -8px rgba(0,0,0,0.4)'
-      : '0 0 0 1px var(--border-subtle)'
+    ? `0 0 0 2px var(--accent)`
+    : '0 0 0 1px var(--border-subtle)'
 
   return (
     <motion.button

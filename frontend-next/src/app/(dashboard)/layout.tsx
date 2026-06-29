@@ -15,7 +15,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   // Focused routes render fullscreen — no chrome (logo/topbar, sidebar, bottom nav)
   const isFocusedRoute =
-    /\/(new|edit)$/.test(pathname) || pathname === '/categories' || pathname === '/budgets'
+    /\/(new|edit)$/.test(pathname) || pathname === '/categories' || pathname === '/budgets' || pathname === '/recurring'
 
   if (isFocusedRoute) {
     return (
