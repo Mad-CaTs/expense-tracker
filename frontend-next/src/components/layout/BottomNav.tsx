@@ -1,9 +1,11 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 
 import { BarChart2, Plus, Receipt, Wallet } from 'lucide-react'
+
+import { useSheetStore } from '@/stores/sheetStore'
 
 const NAV_ITEMS = [
   { href: '/expenses', label: 'Finanzas', Icon: Receipt   },
@@ -14,7 +16,7 @@ const NAV_ITEMS = [
 
 export function BottomNav({ onFABClick }: { onFABClick?: () => void }) {
   const pathname = usePathname()
-  const router = useRouter()
+  const openSheet = useSheetStore((s) => s.open)
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-30 flex justify-center pb-4 md:hidden">
@@ -28,7 +30,7 @@ export function BottomNav({ onFABClick }: { onFABClick?: () => void }) {
             return (
               <button
                 key="fab"
-                onClick={() => { onFABClick?.(); router.push('/expenses/new') }}
+                onClick={() => { onFABClick?.(); openSheet({ kind: 'selector' }) }}
                 aria-label="Nuevo gasto"
                 className="mx-1 flex h-11 w-11 items-center justify-center rounded-full transition-transform active:scale-90 cursor-pointer"
                 style={{ background: 'var(--accent)', boxShadow: '0 4px 16px var(--accent-ring)' }}

@@ -16,11 +16,15 @@ import type { Income } from '@/types'
 
 interface IncomeFormProps {
   incomeId?: number
+  onDone?: () => void
+  onRequestDelete?: () => void
 }
 
 interface FormInnerProps {
   income?: Income
   incomeId?: number
+  onDone?: () => void
+  onRequestDelete?: () => void
 }
 
 function formatDisplay(val: string): string {
@@ -30,9 +34,10 @@ function formatDisplay(val: string): string {
   return n.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
-function IncomeFormInner({ income, incomeId }: FormInnerProps) {
+function IncomeFormInner({ income, incomeId, onDone, onRequestDelete }: FormInnerProps) {
   const router = useRouter()
   const isEdit = incomeId != null && incomeId > 0
+  const embedded = onDone != null
 
   const { data: wallets } = useWallets()
   const { data: categories } = useCategories('INCOME')
@@ -84,14 +89,15 @@ function IncomeFormInner({ income, incomeId }: FormInnerProps) {
     } else {
       await createIncome.mutateAsync(payload)
     }
-    router.push('/expenses')
+    if (onDone) onDone()
+    else router.push('/expenses')
   }
 
   const isSubmitting = createIncome.isPending || updateIncome.isPending
   const amountNum = parseFloat(rawAmount) || 0
 
   return (
-    <div className="relative flex flex-col pb-28">
+    <div className={`relative flex flex-col ${embedded ? 'pb-4' : 'pb-28'}`}>
 
       {/* Description */}
       <div className="px-4 pt-4 pb-2">
@@ -291,8 +297,8 @@ function IncomeFormInner({ income, incomeId }: FormInnerProps) {
 
       {/* Fixed action button */}
       <div
-        className="fixed bottom-0 left-0 right-0 z-20 px-4 pb-6 pt-3"
-        style={{ background: 'var(--bg-base)' }}
+        className={embedded ? 'px-4 pt-3 pb-4' : 'fixed bottom-0 left-0 right-0 z-20 px-4 pb-6 pt-3'}
+        style={embedded ? undefined : { background: 'var(--bg-base)' }}
       >
         <motion.button
           type="button"
@@ -306,6 +312,16 @@ function IncomeFormInner({ income, incomeId }: FormInnerProps) {
           {!isSubmitting && <CheckCircle size={18} strokeWidth={1.7} />}
           {isSubmitting ? '...' : isEdit ? 'Actualizar registro' : 'Guardar registro'}
         </motion.button>
+        {embedded && onRequestDelete && (
+          <button
+            type="button"
+            onClick={onRequestDelete}
+            className="mt-2 flex h-10 w-full items-center justify-center rounded-full text-[13px] font-semibold transition-colors cursor-pointer"
+            style={{ background: 'rgba(239,68,68,0.08)', color: 'var(--danger)' }}
+          >
+            Eliminar registro
+          </button>
+        )}
       </div>
 
       {/* Date wheel picker */}
@@ -369,7 +385,7 @@ function IncomeFormInner({ income, incomeId }: FormInnerProps) {
   )
 }
 
-export function IncomeForm({ incomeId }: IncomeFormProps) {
+export function IncomeForm({ incomeId, onDone, onRequestDelete }: IncomeFormProps) {
   const isEdit = incomeId != null && incomeId > 0
   const { data: income, isLoading } = useIncome(incomeId ?? 0)
 
@@ -377,5 +393,13 @@ export function IncomeForm({ incomeId }: IncomeFormProps) {
     return <div className="px-4 py-8 text-sm" style={{ color: 'var(--text-muted)' }}>Cargando...</div>
   }
 
-  return <IncomeFormInner key={income?.id ?? 'new'} income={income} incomeId={incomeId} />
+  return (
+    <IncomeFormInner
+      key={income?.id ?? 'new'}
+      income={income}
+      incomeId={incomeId}
+      onDone={onDone}
+      onRequestDelete={onRequestDelete}
+    />
+  )
 }

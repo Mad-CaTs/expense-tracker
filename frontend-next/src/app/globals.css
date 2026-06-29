@@ -50,6 +50,16 @@
   --sidebar-border: #161616;
   --topbar-bg: rgba(10,10,10,0.92);
   --bottomnav-bg: rgba(17,17,17,0.95);
+
+  /* ── Design system: radios ── */
+  --r-sm: 12px;
+  --r-md: 16px;
+  --r-lg: 20px;
+  --r-xl: 26px;
+
+  /* ── Design system: superficies sin borde (dark) ── */
+  --surface-raised: #101012;
+  --surface-overlay: #18181b;
 }
 
 /* ── Light mode (Warm Paper) ── */
@@ -102,6 +112,10 @@
   --sidebar-border:  #e2ddd4;
   --topbar-bg:       rgba(245,242,235,0.92);
   --bottomnav-bg:    rgba(245,242,235,0.95);
+
+  /* ── Design system: superficies sin borde (light) ── */
+  --surface-raised: #ffffff;
+  --surface-overlay: #ffffff;
 }
 
 @theme inline {
@@ -318,4 +332,33 @@ select:focus-visible,
   font-weight: 700;
   border-radius: 8px;
   z-index: 9999;
+}
+
+/* ── Design system: escala tipográfica ── */
+.t-display {
+  font-size: 40px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+.t-title {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1.1;
+}
+.t-body {
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+.t-label {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.t-caption {
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.3;
 }

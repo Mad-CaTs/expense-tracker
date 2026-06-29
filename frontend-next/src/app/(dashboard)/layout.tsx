@@ -6,6 +6,7 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 
 import { BottomNav } from '@/components/layout/BottomNav'
+import { SheetHost } from '@/components/layout/SheetHost'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { TopBar } from '@/components/layout/TopBar'
 
@@ -28,6 +29,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         >
           {children}
         </motion.div>
+        <SheetHost />
       </div>
     )
   }
@@ -48,6 +50,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </motion.div>
       </main>
 
+      <SheetHost />
       <BottomNav onFABClick={() => setShowExpenseModal(true)} />
     </div>
   )
