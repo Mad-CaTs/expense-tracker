@@ -3,20 +3,17 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
-import { BarChart2, Plus, Receipt, Wallet } from 'lucide-react'
-
-import { useSheetStore } from '@/stores/sheetStore'
+import { BarChart2, Receipt, Settings, Wallet } from 'lucide-react'
 
 const NAV_ITEMS = [
   { href: '/expenses', label: 'Finanzas', Icon: Receipt   },
-  null,
   { href: '/wallets',  label: 'Cuentas',  Icon: Wallet    },
   { href: '/reports',  label: 'Reportes', Icon: BarChart2 },
+  { href: '/account',  label: 'Cuenta',   Icon: Settings  },
 ]
 
 export function BottomNav({ onFABClick }: { onFABClick?: () => void }) {
   const pathname = usePathname()
-  const openSheet = useSheetStore((s) => s.open)
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-30 flex justify-center pb-4 md:hidden">
@@ -25,21 +22,7 @@ export function BottomNav({ onFABClick }: { onFABClick?: () => void }) {
         style={{ borderColor: 'var(--border-default)', background: 'var(--bottomnav-bg)', boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }}
         aria-label="Navegación"
       >
-        {NAV_ITEMS.map((item, i) => {
-          if (!item) {
-            return (
-              <button
-                key="fab"
-                onClick={() => { onFABClick?.(); openSheet({ kind: 'selector' }) }}
-                aria-label="Nuevo gasto"
-                className="mx-1 flex h-11 w-11 items-center justify-center rounded-full transition-transform active:scale-90 cursor-pointer"
-                style={{ background: 'var(--accent)', boxShadow: '0 4px 16px var(--accent-ring)' }}
-              >
-                <Plus size={20} strokeWidth={2.5} style={{ color: 'var(--bg-base)' }} />
-              </button>
-            )
-          }
-
+        {NAV_ITEMS.map((item) => {
           const active = pathname.startsWith(item.href)
           const { Icon } = item
 

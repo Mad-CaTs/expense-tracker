@@ -2,29 +2,32 @@
 
 /* ── Dark mode (default) ── */
 :root {
-  --bg-base: #080808;
-  --bg-elevated: #0e0e0e;
-  --bg-subtle: #0a0a0a;
-  --bg-card: #0a0a0a;
-  --bg-card-inner: #0e0e0e;
-  --bg-input: #111111;
-  --bg-hover: #161616;
+  --bg-base: #0a0b0d;
+  --bg-elevated: #16181c;
+  --bg-subtle: #0e0f12;
+  --bg-card: #131519;
+  --bg-card-inner: #16181c;
+  --bg-input: #1a1d22;
+  --bg-hover: #1e2128;
 
-  --border-subtle: #1c1c1c;
-  --border-default: #242424;
-  --border-strong: #2a2a2a;
+  --border-subtle: #1e2026;
+  --border-default: #262931;
+  --border-strong: #2e323b;
 
-  --text-primary: #e8e6db;
-  --text-secondary: #c8c6bb;
-  --text-tertiary: #606060;
-  --text-muted: #484848;
-  --text-dim: #404040;
-  --text-placeholder: #383838;
+  --text-primary: #f4f6f8;
+  --text-secondary: #c2c8d2;
+  --text-tertiary: #6b7280;
+  --text-muted: #565e6b;
 
-  --accent: #d4af37;
-  --accent-light: #f0d060;
-  --accent-bg: rgba(212, 175, 55, 0.08);
-  --accent-ring: rgba(212, 175, 55, 0.3);
+  /* Tinta del número héroe del wallet */
+  --wallet-ink: #f4f6f8;
+  --text-dim: #4a515c;
+  --text-placeholder: #3c424d;
+
+  --accent: #f4f6f8;
+  --accent-light: #ffffff;
+  --accent-bg: rgba(244, 246, 248, 0.10);
+  --accent-ring: rgba(244, 246, 248, 0.40);
 
   --danger: #ef4444;
   --success: #4ade80;
@@ -33,23 +36,23 @@
   /* shadcn compat tokens */
   --background: var(--bg-base);
   --foreground: var(--text-primary);
-  --popover: #161616;
+  --popover: #1e2127;
   --popover-foreground: var(--text-primary);
-  --muted: #161616;
+  --muted: #1e2127;
   --muted-foreground: var(--text-muted);
   --primary: var(--accent-light);
   --primary-foreground: var(--bg-base);
-  --accent-foreground: var(--text-primary);
+  --accent-foreground: var(--bg-base);
   --border: var(--border-subtle);
   --ring: var(--accent-ring);
 
-  --skeleton-from: #161616;
-  --skeleton-to: #1e1e1e;
+  --skeleton-from: #1a1d22;
+  --skeleton-to: #23262d;
   --inset-highlight: inset 0 1px 1px rgba(255,255,255,0.06), inset 0 -1px 0 rgba(0,0,0,0.4);
   --card-shadow: 0 1px 3px rgba(0,0,0,0.4);
-  --sidebar-border: #161616;
-  --topbar-bg: rgba(10,10,10,0.92);
-  --bottomnav-bg: rgba(17,17,17,0.95);
+  --sidebar-border: #1a1d22;
+  --topbar-bg: rgba(10,11,13,0.92);
+  --bottomnav-bg: rgba(16,18,22,0.95);
 
   /* ── Design system: radios ── */
   --r-sm: 12px;
@@ -58,35 +61,38 @@
   --r-xl: 26px;
 
   /* ── Design system: superficies sin borde (dark) ── */
-  --surface-raised: #101012;
-  --surface-overlay: #18181b;
+  --surface-raised: #16181c;
+  --surface-overlay: #1e2127;
 }
 
-/* ── Light mode (Warm Paper) ── */
+/* ── Light mode (Cool Gray) ── */
 .light {
-  --bg-base:       #f5f2eb;
+  --bg-base:       #f1f3f6;
   --bg-elevated:   #ffffff;
-  --bg-subtle:     #ede9e0;
+  --bg-subtle:     #e9ecf1;
   --bg-card:       #ffffff;
-  --bg-card-inner: #fafaf8;
-  --bg-input:      #eeeae0;
-  --bg-hover:      #e8e4da;
+  --bg-card-inner: #f7f8fa;
+  --bg-input:      #eceff3;
+  --bg-hover:      #e6eaf0;
 
-  --border-subtle:  #e2ddd4;
-  --border-default: #d4cfc5;
-  --border-strong:  #c4bfb5;
+  --border-subtle:  #e7eaef;
+  --border-default: #d9dde4;
+  --border-strong:  #c7ccd5;
 
-  --text-primary:     #1a1816;
-  --text-secondary:   #3a3530;
-  --text-tertiary:    #6a6560;
-  --text-muted:       #8a8580;
-  --text-dim:         #7a7570;
-  --text-placeholder: #b0ab9f;
+  --text-primary:     #1b2436;
+  --text-secondary:   #3c4658;
+  --text-tertiary:    #69727f;
+  --text-muted:       #8a93a4;
 
-  --accent:       #b8960e;
-  --accent-light: #d4af37;
-  --accent-bg:    rgba(184, 150, 14, 0.10);
-  --accent-ring:  rgba(184, 150, 14, 0.35);
+  /* Tinta del número héroe del wallet — navy del demo */
+  --wallet-ink:       #243a63;
+  --text-dim:         #79828f;
+  --text-placeholder: #aeb6c2;
+
+  --accent:       #1b2436;
+  --accent-light: #2c3850;
+  --accent-bg:    rgba(27, 36, 54, 0.07);
+  --accent-ring:  rgba(27, 36, 54, 0.28);
 
   --danger:  #dc2626;
   --success: #16a34a;
@@ -101,17 +107,17 @@
   --muted-foreground: var(--text-muted);
   --primary: var(--accent-light);
   --primary-foreground: var(--bg-base);
-  --accent-foreground: var(--text-primary);
+  --accent-foreground: var(--bg-base);
   --border: var(--border-subtle);
   --ring: var(--accent-ring);
 
-  --skeleton-from: #e8e4da;
-  --skeleton-to:   #dedad0;
-  --inset-highlight: inset 0 1px 1px rgba(255,255,255,0.9), inset 0 -1px 0 rgba(0,0,0,0.06);
-  --card-shadow:     0 1px 4px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04);
-  --sidebar-border:  #e2ddd4;
-  --topbar-bg:       rgba(245,242,235,0.92);
-  --bottomnav-bg:    rgba(245,242,235,0.95);
+  --skeleton-from: #e6eaf0;
+  --skeleton-to:   #dbe0e8;
+  --inset-highlight: inset 0 1px 1px rgba(255,255,255,0.9), inset 0 -1px 0 rgba(15,23,42,0.05);
+  --card-shadow:     0 1px 4px rgba(15,23,42,0.08), 0 0 0 1px rgba(15,23,42,0.04);
+  --sidebar-border:  #e7eaef;
+  --topbar-bg:       rgba(241,243,246,0.92);
+  --bottomnav-bg:    rgba(241,243,246,0.95);
 
   /* ── Design system: superficies sin borde (light) ── */
   --surface-raised: #ffffff;
@@ -119,7 +125,9 @@
 }
 
 @theme inline {
-  --font-sans: var(--font-geist-sans);
+  /* SF Pro Display/Text real si está instalada o en Apple (-apple-system);
+     Inter como fallback web casi idéntico; luego sistema genérico. */
+  --font-sans: 'SF Pro Display', 'SF Pro Text', -apple-system, BlinkMacSystemFont, var(--font-inter), 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   --font-mono: var(--font-geist-mono);
 
   --color-bg-base: var(--bg-base);
@@ -206,7 +214,7 @@ html {
 body {
   background-color: var(--bg-base);
   color: var(--text-primary);
-  font-family: var(--font-geist-sans), sans-serif;
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   transition: background-color 0.2s ease, color 0.2s ease;
@@ -251,14 +259,14 @@ textarea::placeholder {
   font-variant-numeric: tabular-nums;
 }
 
-/* Gold text — solid, no gradient clip (banned per DESIGN.md) */
+/* Acento sólido (sigue el token de marca) */
 .text-gold {
-  color: #d4af37;
+  color: var(--accent);
 }
 
-/* Gold gradient background */
+/* Acento en gradiente */
 .bg-gold {
-  background: linear-gradient(135deg, #d4af37, #f0d060);
+  background: linear-gradient(135deg, var(--accent), var(--accent-light));
 }
 
 /* Focus ring — solo para elementos interactivos que no son inputs ni selects */
@@ -327,8 +335,8 @@ select:focus-visible,
   width: auto;
   height: auto;
   padding: 8px 16px;
-  background: #d4af37;
-  color: #000;
+  background: var(--accent);
+  color: var(--bg-base);
   font-weight: 700;
   border-radius: 8px;
   z-index: 9999;
@@ -361,4 +369,45 @@ select:focus-visible,
   font-size: 11px;
   font-weight: 500;
   line-height: 1.3;
+}
+
+/* ── Aurora animada de los wallets (mesh gradient en movimiento, estilo skylrk) ── */
+.wallet-aura {
+  position: absolute;
+  inset: -25%;
+  z-index: 0;
+  filter: blur(38px) saturate(1.15);
+  pointer-events: none;
+}
+.wallet-blob {
+  position: absolute;
+  width: 62%;
+  height: 62%;
+  border-radius: 50%;
+  mix-blend-mode: screen;
+  will-change: transform;
+}
+.wallet-blob.b1 { animation: wb1 9s  ease-in-out infinite; }
+.wallet-blob.b2 { animation: wb2 13s ease-in-out infinite; }
+.wallet-blob.b3 { animation: wb3 17s ease-in-out infinite; }
+.wallet-blob.b4 { animation: wb4 11s ease-in-out infinite; }
+
+@keyframes wb1 { 0%,100% { transform: translate(-5%,-5%)  scale(1);    } 50% { transform: translate(45%,35%)  scale(1.35); } }
+@keyframes wb2 { 0%,100% { transform: translate(55%,-10%) scale(1.1);  } 50% { transform: translate(10%,40%)  scale(0.9);  } }
+@keyframes wb3 { 0%,100% { transform: translate(20%,55%)  scale(1);    } 50% { transform: translate(60%,5%)   scale(1.3);  } }
+@keyframes wb4 { 0%,100% { transform: translate(60%,55%)  scale(1.2);  } 50% { transform: translate(-5%,15%)  scale(1);    } }
+
+@media (prefers-reduced-motion: reduce) {
+  .wallet-blob { animation: none; }
+}
+
+/* ── Botones Soft UI (cards elevadas de acciones rápidas) ── */
+:root {
+  --soft-raised: 0 10px 24px rgba(0,0,0,0.42), 0 3px 8px rgba(0,0,0,0.30), inset 0 1px 0 rgba(255,255,255,0.06);
+}
+.light {
+  --soft-raised: 0 10px 24px rgba(15,23,42,0.06), 0 3px 8px rgba(15,23,42,0.04), inset 0 1px 0 rgba(255,255,255,0.95);
+}
+.soft-action {
+  box-shadow: var(--soft-raised);
 }

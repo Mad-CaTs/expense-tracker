@@ -1,8 +1,6 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
-import { useState } from 'react'
-
 import { motion } from 'framer-motion'
 
 import { BottomNav } from '@/components/layout/BottomNav'
@@ -12,8 +10,6 @@ import { TopBar } from '@/components/layout/TopBar'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
-  const [, setShowExpenseModal] = useState(false)
-
   // Focused routes render fullscreen — no chrome (logo/topbar, sidebar, bottom nav)
   const isFocusedRoute =
     /\/(new|edit)$/.test(pathname) || pathname === '/categories' || pathname === '/budgets' || pathname === '/recurring'
@@ -51,7 +47,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </main>
 
       <SheetHost />
-      <BottomNav onFABClick={() => setShowExpenseModal(true)} />
+      <BottomNav />
     </div>
   )
 }

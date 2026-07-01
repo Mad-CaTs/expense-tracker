@@ -4,11 +4,15 @@ import { useEffect, useRef, useState } from 'react'
 
 import { AnimatePresence, motion, useMotionValue, useSpring, useTransform } from 'framer-motion'
 // useTransform kept for rotateX/rotateY tilt
-import { Plus, TrendingDown, TrendingUp } from 'lucide-react'
+import { Eye, EyeOff, History, Plus, TrendingDown, TrendingUp } from 'lucide-react'
 
 import { WalletSheet } from '@/components/features/expenses/WalletSheet'
 import { useWallets } from '@/lib/hooks/useWallets'
+import { walletAura } from '@/lib/utils/cardVisuals'
 import type { Wallet } from '@/types'
+
+// Logo de la app (bucket público R2)
+const LOGO_URL = 'https://pub-9be4d45b1f4e4c9a869f708de0984f55.r2.dev/Logo%20negro%20sin%20fondo.png'
 
 function formatBalance(n: number) {
   return n.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -17,29 +21,36 @@ function formatBalance(n: number) {
 function WalletCard({
   wallet,
   selected,
+  hidden,
+  onToggleHidden,
   onSelect,
+  onShowMovements,
 }: {
   wallet: Wallet
   selected: boolean
+  hidden: boolean
+  onToggleHidden: () => void
   onSelect: () => void
+  onShowMovements: () => void
 }) {
-  const accent = wallet.color ?? '#d4af37'
   const balance = Number(wallet.balance)
   const initial = Number(wallet.initialBalance)
   const diff = balance - initial
   const pct = initial !== 0 ? ((diff / Math.abs(initial)) * 100).toFixed(1) : null
   const positive = diff >= 0
-  const hasSkin = !!wallet.backgroundUrl
+
+  // Aurora animada derivada del color del wallet (mesh gradient en movimiento)
+  const aura = walletAura(wallet.color ?? '#d4af37')
 
   // Spring-based tilt — only on pointer devices, decorative
-  const cardRef = useRef<HTMLButtonElement>(null)
+  const cardRef = useRef<HTMLDivElement>(null)
   const rawX = useMotionValue(0)
   const rawY = useMotionValue(0)
   const springConfig = { stiffness: 180, damping: 22 }
-  const rotateX = useSpring(useTransform(rawY, [-0.5, 0.5], [6, -6]), springConfig)
-  const rotateY = useSpring(useTransform(rawX, [-0.5, 0.5], [-8, 8]), springConfig)
+  const rotateX = useSpring(useTransform(rawY, [-0.5, 0.5], [3, -3]), springConfig)
+  const rotateY = useSpring(useTransform(rawX, [-0.5, 0.5], [-4, 4]), springConfig)
 
-  function handleMouseMove(e: React.MouseEvent<HTMLButtonElement>) {
+  function handleMouseMove(e: React.MouseEvent<HTMLDivElement>) {
     const rect = cardRef.current?.getBoundingClientRect()
     if (!rect) return
     const x = (e.clientX - rect.left) / rect.width - 0.5
@@ -53,99 +64,118 @@ function WalletCard({
     rawY.set(0)
   }
 
-  const skinStyle = hasSkin
-    ? {
-        backgroundImage: `linear-gradient(180deg, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.72) 100%), url(${wallet.backgroundUrl})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-      }
-    : { background: 'var(--bg-card-inner)' }
-
-  const nameColor = hasSkin ? 'rgba(255,255,255,0.78)' : 'var(--text-placeholder)'
-  const balanceColor = hasSkin ? '#fff' : 'var(--text-primary)'
-  const pctColor = positive
-    ? hasSkin ? '#7ee0a0' : 'var(--success)'
-    : hasSkin ? '#ff9a9a' : 'var(--danger)'
-
-  const selectionRing = selected
-    ? `0 0 0 2px var(--accent)`
-    : '0 0 0 1px var(--border-subtle)'
+  // Anillo de selección dorado; sin borde ni sombra cuando no está seleccionada
+  const boxShadow = selected ? '0 0 0 2px var(--accent)' : 'none'
 
   return (
-    <motion.button
+    <motion.div
       ref={cardRef}
-      type="button"
+      role="button"
+      tabIndex={0}
+      aria-pressed={selected}
       onClick={onSelect}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect() } }}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      whileTap={{ scale: 0.97 }}
-      animate={{
-        y: 0,
-        scale: selected ? 1.01 : 1,
-      }}
+      whileTap={{ scale: 0.985 }}
       transition={{ type: 'spring', stiffness: 380, damping: 28 }}
       style={{
         rotateX,
         rotateY,
-        transformStyle: 'preserve-3d',
-        boxShadow: selectionRing,
+        boxShadow,
       }}
-      className="relative flex-shrink-0 w-full rounded-[22px] text-left overflow-hidden"
+      className="relative flex-shrink-0 w-full rounded-[28px] text-left cursor-pointer"
     >
-      <div className="rounded-[22px] px-5 py-5" style={skinStyle}>
-
-        {/* Top row */}
-        <div className="flex items-center justify-between mb-3 relative">
-          <p className="text-[11px] font-semibold tracking-[0.1em] uppercase" style={{ color: nameColor }}>
-            {wallet.name}
-          </p>
-
-          {pct !== null && (
-            <div className="flex items-center gap-1">
-              {positive
-                ? <TrendingUp size={11} style={{ color: pctColor }} />
-                : <TrendingDown size={11} style={{ color: pctColor }} />
-              }
-              <span className="text-[11px] font-semibold tabular-nums" style={{ color: pctColor }}>
-                {positive ? '+' : ''}{pct}%
-              </span>
-              <span className="text-[10px]" style={{ color: hasSkin ? 'rgba(255,255,255,0.45)' : 'var(--text-placeholder)' }}>
-                vs inicial
-              </span>
-            </div>
-          )}
+      <div
+        className="relative rounded-[28px] overflow-hidden"
+        style={{ background: aura.base }}
+      >
+        {/* Aurora animada (blobs difuminados) */}
+        <div className="wallet-aura" aria-hidden>
+          <span className="wallet-blob b1" style={{ background: aura.blobs[0] }} />
+          <span className="wallet-blob b2" style={{ background: aura.blobs[1] }} />
+          <span className="wallet-blob b3" style={{ background: aura.blobs[2] }} />
+          <span className="wallet-blob b4" style={{ background: aura.blobs[3] }} />
         </div>
 
-        {/* Balance */}
-        <p
-          className="mono-amount text-[38px] font-extrabold leading-none tracking-[-0.02em] relative"
-          style={{ color: balanceColor }}
-        >
-          S/ {formatBalance(balance)}
-        </p>
+        {/* Contenido (texto blanco sobre el gradiente) */}
+        <div className="relative z-[1] p-[22px] flex flex-col" style={{ minHeight: '188px' }}>
+          {/* Top row: logo + growth badge */}
+          <div className="flex items-start justify-between">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={LOGO_URL}
+              alt=""
+              aria-hidden
+              style={{
+                width: '54px',
+                height: '36px',
+                objectFit: 'contain',
+                objectPosition: 'left center',
+                filter: 'invert(1)',
+                opacity: 0.92,
+              }}
+            />
 
-        {/* Selection dot — animated */}
-        <div className="mt-4 flex justify-center" style={{ minHeight: '10px' }}>
-          <AnimatePresence>
-            {selected && (
-              <motion.span
-                key="dot"
-                initial={{ scaleX: 0, opacity: 0 }}
-                animate={{ scaleX: 1, opacity: 1 }}
-                exit={{ scaleX: 0, opacity: 0 }}
-                transition={{ type: 'spring', stiffness: 500, damping: 32 }}
-                className="h-1.5 rounded-full block"
-                style={{
-                  width: '24px',
-                  background: hasSkin ? 'rgba(255,255,255,0.65)' : accent,
-                  transformOrigin: 'center',
-                }}
-              />
+            {pct !== null && (
+              <div
+                className="flex items-center gap-1 rounded-full px-2.5 py-1.5"
+                style={{ background: 'rgba(255,255,255,0.18)', backdropFilter: 'blur(6px)' }}
+              >
+                {positive
+                  ? <TrendingUp size={12} style={{ color: '#fff' }} strokeWidth={2.6} />
+                  : <TrendingDown size={12} style={{ color: '#fff' }} strokeWidth={2.6} />
+                }
+                <span className="text-[12px] font-bold tabular-nums leading-none" style={{ color: '#fff' }}>
+                  {positive ? '+' : ''}{pct}%
+                </span>
+              </div>
             )}
-          </AnimatePresence>
+          </div>
+
+          {/* Spacer empuja el contenido a la parte baja (como el demo) */}
+          <div className="flex-1 min-h-[28px]" />
+
+          {/* Label (nombre) + ojo de privacidad */}
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-[15px] font-semibold leading-none" style={{ color: 'rgba(255,255,255,0.82)' }}>
+              {wallet.name}
+            </span>
+            <button
+              type="button"
+              aria-label={hidden ? 'Mostrar saldo' : 'Ocultar saldo'}
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={(e) => { e.stopPropagation(); onToggleHidden() }}
+              className="flex h-5 w-5 items-center justify-center transition-opacity hover:opacity-70 active:scale-90 cursor-pointer"
+              style={{ color: 'rgba(255,255,255,0.7)' }}
+            >
+              {hidden ? <Eye size={17} strokeWidth={2} /> : <EyeOff size={17} strokeWidth={2} />}
+            </button>
+          </div>
+
+          {/* Balance (héroe) + botón movimientos */}
+          <div className="flex items-end justify-between gap-3">
+            <p
+              className="text-[32px] font-bold leading-none tracking-[-0.03em] tabular-nums"
+              style={{ color: '#fff', textShadow: '0 1px 18px rgba(0,0,0,0.25)' }}
+            >
+              {hidden ? 'S/ ••••••' : `S/ ${formatBalance(balance)}`}
+            </p>
+
+            <button
+              type="button"
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={(e) => { e.stopPropagation(); onShowMovements() }}
+              className="flex h-9 flex-shrink-0 items-center gap-1.5 rounded-[14px] px-3.5 transition-transform active:scale-95 cursor-pointer"
+              style={{ background: 'rgba(255,255,255,0.18)', backdropFilter: 'blur(6px)', color: '#fff' }}
+            >
+              <History size={14} strokeWidth={2} />
+              <span className="text-[13px] font-medium">Historial</span>
+            </button>
+          </div>
         </div>
       </div>
-    </motion.button>
+    </motion.div>
   )
 }
 
@@ -173,6 +203,7 @@ interface WalletCarouselProps {
 export function WalletCarousel({ selectedWalletId, onSelect }: WalletCarouselProps) {
   const { data: wallets = [] } = useWallets()
   const [showSheet, setShowSheet] = useState(false)
+  const [hidden, setHidden] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   const cardRefs = useRef<Map<number, HTMLDivElement>>(new Map())
   const scrolledRef = useRef(false)
@@ -191,7 +222,7 @@ export function WalletCarousel({ selectedWalletId, onSelect }: WalletCarouselPro
 
   return (
     <>
-    <div className="pt-2 pb-1">
+    <div className="pt-5 pb-1">
       <div
         ref={scrollRef}
         className="flex gap-3 overflow-x-auto px-4 pt-1 pb-2"
@@ -211,7 +242,10 @@ export function WalletCarousel({ selectedWalletId, onSelect }: WalletCarouselPro
             <WalletCard
               wallet={w}
               selected={selectedWalletId === w.id}
+              hidden={hidden}
+              onToggleHidden={() => setHidden((v) => !v)}
               onSelect={() => onSelect(selectedWalletId === w.id ? undefined : w.id)}
+              onShowMovements={() => onSelect(w.id)}
             />
           </div>
         ))}

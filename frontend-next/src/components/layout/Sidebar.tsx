@@ -48,8 +48,8 @@ export function Sidebar() {
           <span
             className="rounded-full px-1.5 py-0.5 text-[8px] font-bold tracking-[0.12em] uppercase"
             style={{
-              background: 'rgba(212,175,55,0.12)',
-              color: '#d4af37',
+              background: 'var(--accent-bg)',
+              color: 'var(--accent)',
             }}
           >
             beta

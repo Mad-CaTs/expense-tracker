@@ -1,7 +1,9 @@
 import axios from 'axios'
 
 export const apiClient = axios.create({
-  baseURL: `${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8080'}/api`,
+  // Vacío → '/api' relativo (mismo origen) y Next hace de proxy al backend.
+  // Funciona en desktop y en móvil/ngrok sin CORS ni problemas de loopback.
+  baseURL: `${process.env.NEXT_PUBLIC_API_URL ?? ''}/api`,
   headers: { 'Content-Type': 'application/json' },
 })
 

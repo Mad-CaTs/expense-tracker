@@ -7,7 +7,6 @@ import {
   Car, Ellipsis, Film, HeartPulse, Home,
   type LucideIcon, Plus, Utensils, Wallet, Zap,
 } from 'lucide-react'
-import { useRouter } from 'next/navigation'
 
 import { BudgetSheet } from '@/components/features/budgets/BudgetSheet'
 import { useBudgets } from '@/lib/hooks/useBudgets'
@@ -102,27 +101,11 @@ function BudgetMiniCard({ budget, index }: { budget: Budget; index: number }) {
 
 export function BudgetCarousel() {
   const { data: budgets = [] } = useBudgets()
-  const router = useRouter()
   const [showSheet, setShowSheet] = useState(false)
 
   return (
     <>
       <div className="pt-2 pb-1">
-        <div className="mx-4 mb-3 border-t pt-4" style={{ borderColor: 'var(--border-subtle)' }} />
-        <div className="mb-2 flex items-center justify-between px-4">
-          <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
-            Presupuestos
-          </p>
-          {budgets.length > 0 && (
-            <button
-              onClick={() => router.push('/budgets')}
-              className="text-[11px] font-semibold"
-              style={{ color: 'var(--accent-light)' }}
-            >
-              Ver todo
-            </button>
-          )}
-        </div>
 
         <div
           className="flex gap-2.5 overflow-x-auto px-4 pb-2"

@@ -17,7 +17,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
   ref
 ) {
   const base =
-    'inline-flex items-center justify-center font-semibold rounded-full transition-all focus-visible:outline-2 focus-visible:outline-[#d4af37] focus-visible:outline-offset-2 disabled:opacity-40 disabled:pointer-events-none'
+    'inline-flex items-center justify-center font-semibold rounded-full transition-all focus-visible:outline-2 focus-visible:outline-[color:var(--accent)] focus-visible:outline-offset-2 disabled:opacity-40 disabled:pointer-events-none'
 
   const variants = {
     primary: 'hover:opacity-88',

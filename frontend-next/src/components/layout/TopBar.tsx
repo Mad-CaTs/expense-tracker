@@ -56,20 +56,6 @@ export function TopBar() {
 
       {/* Right actions */}
       <div className="flex items-center gap-2">
-        <button
-          onClick={() => router.push('/settings')}
-          className="flex h-8 w-8 items-center justify-center rounded-full transition-colors cursor-pointer"
-          style={{ color: 'var(--text-secondary)' }}
-          onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-hover)' }}
-          onMouseLeave={e => { e.currentTarget.style.background = '' }}
-          aria-label="Configuración"
-        >
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="3" />
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-          </svg>
-        </button>
-
         <div ref={profileRef} className="relative">
           <button
             onClick={() => setProfileOpen((v) => !v)}
@@ -90,10 +76,16 @@ export function TopBar() {
                 className="absolute right-0 top-full mt-2 w-44 rounded-xl border p-1 z-50"
                 style={{ borderColor: 'var(--border-subtle)', background: 'var(--bg-elevated)', boxShadow: 'var(--card-shadow)' }}
               >
-                <div className="border-b px-3 py-2 mb-1" style={{ borderColor: 'var(--border-subtle)' }}>
+                <button
+                  onClick={() => { setProfileOpen(false); router.push('/account') }}
+                  className="w-full border-b px-3 py-2 mb-1 text-left cursor-pointer rounded-t-xl transition-colors"
+                  style={{ borderColor: 'var(--border-subtle)' }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-hover)' }}
+                  onMouseLeave={e => { e.currentTarget.style.background = '' }}
+                >
                   <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Cuenta</p>
                   <p className="truncate text-[12px] font-medium" style={{ color: 'var(--text-secondary)' }}>{username.toUpperCase()}</p>
-                </div>
+                </button>
                 <button
                   onClick={handleLogout}
                   className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-[12px] transition-colors cursor-pointer"

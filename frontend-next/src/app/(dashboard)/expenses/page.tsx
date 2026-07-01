@@ -4,9 +4,12 @@ import { Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useState } from 'react'
 
+import { AnimatePresence, motion } from 'framer-motion'
+import { ArrowDownLeft, ArrowRightLeft, ArrowUpRight, ScanLine } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+
 import { WalletCarousel } from '@/components/features/expenses/WalletCarousel'
 import { BudgetCarousel } from '@/components/features/expenses/BudgetCarousel'
-import { BalanceHero } from '@/components/features/expenses/BalanceHero'
 import { TransactionList, type MixedTx } from '@/components/features/expenses/TransactionList'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { ExpenseRowSkeleton } from '@/components/ui/Skeleton'
@@ -15,15 +18,77 @@ import { FinanceFilters, FinanceFilterType, DatePreset, TxType, applyFinanceFilt
 import { useExpenses } from '@/lib/hooks/useExpenses'
 import { useIncomes } from '@/lib/hooks/useIncomes'
 import { useCategories } from '@/lib/hooks/useCategories'
-import { useWallets } from '@/lib/hooks/useWallets'
 import { useFilterStore } from '@/stores/filterStore'
+import { useSheetStore } from '@/stores/sheetStore'
+
+const QUICK_ACTIONS = [
+  { label: 'Gasto',      Icon: ArrowUpRight,   kind: 'expense-form' as const },
+  { label: 'Ingreso',    Icon: ArrowDownLeft,  kind: 'income-form'  as const },
+  { label: 'Transferir', Icon: ArrowRightLeft, kind: 'transfer'     as const },
+  { label: 'Escanear',   Icon: ScanLine,       kind: 'scan'         as const },
+]
+
+type QuickActionKind = (typeof QUICK_ACTIONS)[number]['kind']
+
+function QuickActions() {
+  const openSheet = useSheetStore((s) => s.open)
+  const [soon, setSoon] = useState(false)
+
+  function handle(kind: QuickActionKind) {
+    if (kind === 'scan') {
+      setSoon(true)
+      window.setTimeout(() => setSoon(false), 1800)
+      return
+    }
+    openSheet({ kind })
+  }
+
+  return (
+    <div className="px-4 pt-5 pb-2">
+      <div className="grid grid-cols-4 gap-3">
+        {QUICK_ACTIONS.map(({ label, Icon, kind }, i) => (
+          <motion.button
+            key={kind}
+            type="button"
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            whileTap={{ scale: 0.98 }}
+            transition={{ type: 'spring', stiffness: 500, damping: 30, delay: i * 0.04 }}
+            onClick={() => handle(kind)}
+            className="soft-action flex flex-col items-center justify-center gap-2 rounded-[20px] py-4 cursor-pointer"
+            style={{ background: 'var(--surface-overlay)' }}
+          >
+            <Icon size={23} style={{ color: 'var(--text-primary)' }} strokeWidth={1.75} />
+            <span className="text-[12.5px] font-semibold" style={{ color: 'var(--text-secondary)' }}>
+              {label}
+            </span>
+          </motion.button>
+        ))}
+      </div>
+
+      <AnimatePresence>
+        {soon && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 8 }}
+            transition={{ type: 'spring', stiffness: 500, damping: 32 }}
+            className="fixed bottom-28 left-1/2 z-50 -translate-x-1/2 rounded-full px-4 py-2.5 text-[13px] font-medium"
+            style={{ background: 'var(--surface-overlay)', color: 'var(--text-primary)', boxShadow: 'var(--soft-raised)' }}
+          >
+            Escaneo de recibos · próximamente
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
 
 function ExpensesPageInner() {
+  const router = useRouter()
   const searchParams = useSearchParams()
   const initialCategoryId = searchParams.get('categoryId')
   const storeFilters = useFilterStore()
-  const { data: wallets = [] } = useWallets()
-
   const [activeFilters, setActiveFilters] = useState<FinanceFilter[]>(() => {
     const base: FinanceFilter[] = [
       { id: 'default-date', type: FinanceFilterType.FECHA, value: [DatePreset.THIS_MONTH] },
@@ -51,7 +116,7 @@ function ExpensesPageInner() {
     walletId: storeFilters.walletId,
     startDate: startDate ?? defaultFrom,
     endDate: endDate ?? defaultTo,
-    page: storeFilters.currentPage,
+    page: 0,
     size: 20,
   })
 
@@ -59,7 +124,7 @@ function ExpensesPageInner() {
     from: startDate ?? defaultFrom,
     to: endDate ?? defaultTo,
     walletId: storeFilters.walletId,
-    page: storeFilters.currentPage,
+    page: 0,
     size: 20,
   })
 
@@ -77,25 +142,26 @@ function ExpensesPageInner() {
     ...(txType !== 'expense' ? incomes.map((e) => ({ kind: 'income' as const, data: e })) : []),
   ].sort((a, b) => b.data.date.localeCompare(a.data.date))
 
-  const totalPages = Math.max(expenseData?.totalPages ?? 0, incomeData?.totalPages ?? 0)
+  const recent = mixed.slice(0, 5)
+  const hasMore = mixed.length > 5
 
   return (
     <div className="mx-auto max-w-3xl">
-      <div className="flex items-center justify-between px-4 pt-6">
-        <p className="t-caption" style={{ color: 'var(--text-tertiary)' }}>Hola de nuevo</p>
-      </div>
-
-      <BalanceHero wallets={wallets} selectedWalletId={storeFilters.walletId} />
-
       <WalletCarousel selectedWalletId={storeFilters.walletId} onSelect={handleWalletSelect} />
 
+      <QuickActions />
+
       <div className="px-4 pt-4">
-        <SectionHeader title="Presupuestos" />
+        <SectionHeader title="Presupuestos" onAction={() => router.push('/budgets')} actionLabel="Ver todo" />
       </div>
       <BudgetCarousel />
 
-      <div className="px-4 pt-5">
-        <SectionHeader title="Movimientos" />
+      <div className="px-4 pt-5 pb-1">
+        <SectionHeader
+          title="Movimientos recientes"
+          onAction={hasMore ? () => router.push('/transactions') : undefined}
+          actionLabel="Ver todos"
+        />
       </div>
 
       <FinanceFilters
@@ -104,44 +170,20 @@ function ExpensesPageInner() {
         categories={categories}
       />
 
-      <div className="mt-2 px-2">
+      <div className="mt-2 px-2 pb-4">
         {isLoading ? (
           <div className="overflow-hidden">
             {Array.from({ length: 5 }).map((_, i) => <ExpenseRowSkeleton key={i} />)}
           </div>
-        ) : mixed.length === 0 ? (
+        ) : recent.length === 0 ? (
           <EmptyState
             title={storeFilters.walletId ? 'Sin registros en esta cuenta' : 'Sin registros en este período'}
-            description="Toca el botón + para registrar tu primer gasto o ingreso."
+            description="Usa los botones de arriba para registrar tu primer gasto o ingreso."
           />
         ) : (
-          <TransactionList items={mixed} />
+          <TransactionList items={recent} />
         )}
       </div>
-
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-3 p-4">
-          <button
-            className="h-8 rounded-full px-4 text-[11px] font-semibold disabled:opacity-30"
-            style={{ background: 'var(--bg-hover)', color: 'var(--text-muted)' }}
-            disabled={storeFilters.currentPage === 0}
-            onClick={() => storeFilters.setPage(storeFilters.currentPage - 1)}
-          >
-            ← Anterior
-          </button>
-          <span className="text-[11px] tabular-nums" style={{ color: 'var(--text-muted)' }}>
-            {storeFilters.currentPage + 1} / {totalPages}
-          </span>
-          <button
-            className="h-8 rounded-full px-4 text-[11px] font-semibold disabled:opacity-30"
-            style={{ background: 'var(--bg-hover)', color: 'var(--text-muted)' }}
-            disabled={storeFilters.currentPage >= totalPages - 1}
-            onClick={() => storeFilters.setPage(storeFilters.currentPage + 1)}
-          >
-            Siguiente →
-          </button>
-        </div>
-      )}
     </div>
   )
 }
