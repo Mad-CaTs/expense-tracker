@@ -401,6 +401,57 @@ select:focus-visible,
   .wallet-blob { animation: none; }
 }
 
+/* ── Aurora del bottom nav (mini-tarjeta wallet derivada del --bg-base del tema) ── */
+:root {
+  /* Oscuro: base casi-negra + blobs gris-azulados que suben de luminosidad, blend screen */
+  --nav-aura-base: hsl(220 18% 7%);
+  --nav-aura-b1: hsl(220 24% 20%);
+  --nav-aura-b2: hsl(220 26% 30%);
+  --nav-aura-b3: hsl(220 20% 42%);
+  --nav-aura-b4: hsl(220 22% 16%);
+  --nav-aura-blend: screen;
+  /* Color de iconos/label sobre la aurora */
+  --nav-ink: #ffffff;
+  --nav-ink-muted: rgba(255,255,255,0.72);
+  --nav-active-bg: rgba(255,255,255,0.14);
+}
+.light {
+  /* Claro: base clara + blobs grises algo más oscuros, blend multiply → aurora plateada suave */
+  --nav-aura-base: hsl(222 20% 92%);
+  --nav-aura-b1: hsl(222 24% 80%);
+  --nav-aura-b2: hsl(222 26% 72%);
+  --nav-aura-b3: hsl(222 22% 84%);
+  --nav-aura-b4: hsl(222 24% 68%);
+  --nav-aura-blend: multiply;
+  --nav-ink: #1b2436;
+  --nav-ink-muted: rgba(27,36,54,0.55);
+  --nav-active-bg: rgba(27,36,54,0.10);
+}
+.nav-aura {
+  position: absolute;
+  inset: -30%;
+  z-index: 0;
+  filter: blur(16px) saturate(1.05);
+  pointer-events: none;
+  background: var(--nav-aura-base);
+}
+.nav-blob {
+  position: absolute;
+  width: 70%;
+  height: 130%;
+  border-radius: 50%;
+  mix-blend-mode: var(--nav-aura-blend);
+  will-change: transform;
+}
+.nav-blob.nb1 { background: var(--nav-aura-b1); animation: wb1 9s  ease-in-out infinite; }
+.nav-blob.nb2 { background: var(--nav-aura-b2); animation: wb2 13s ease-in-out infinite; }
+.nav-blob.nb3 { background: var(--nav-aura-b3); animation: wb3 17s ease-in-out infinite; }
+.nav-blob.nb4 { background: var(--nav-aura-b4); animation: wb4 11s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-blob { animation: none; }
+}
+
 /* ── Botones Soft UI (cards elevadas de acciones rápidas) ── */
 :root {
   --soft-raised: 0 10px 24px rgba(0,0,0,0.42), 0 3px 8px rgba(0,0,0,0.30), inset 0 1px 0 rgba(255,255,255,0.06);
