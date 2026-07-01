@@ -109,6 +109,7 @@ public class RecurringExpenseService {
         dto.setCategoryId(r.getCategory().getId());
         dto.setCategoryName(r.getCategory().getName());
         dto.setCategoryColor(r.getCategory().getColor());
+        dto.setCategoryIcon(r.getCategory().getIcon());
         dto.setAmount(r.getAmount());
         dto.setDescription(r.getDescription());
         dto.setFrequency(r.getFrequency());

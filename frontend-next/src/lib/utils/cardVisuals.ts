@@ -47,6 +47,21 @@ export function walletAura(color: string): { base: string; blobs: [string, strin
   return { base, blobs }
 }
 
+// Hue + saturación de un color de categoría, para la aurora animada de los segmentos
+// del gráfico de MOVIMIENTOS (mismo lenguaje visual monocromático que walletAura).
+export function categoryHueSat(color: string): { h: number; s: number } {
+  let hsl: { h: number; s: number; l: number }
+  try {
+    hsl = hexToHsl(color)
+  } catch {
+    hsl = { h: 45, s: 65, l: 50 }
+  }
+  return {
+    h: Math.round(hsl.h),
+    s: Math.max(45, Math.min(Math.round(hsl.s), 82)),
+  }
+}
+
 // Crecimiento vs saldo inicial (mismo cálculo que WalletCarousel). null si initial === 0.
 export function walletGrowth(
   balance: number,

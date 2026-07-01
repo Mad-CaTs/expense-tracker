@@ -47,6 +47,7 @@ function BudgetMiniCard({ budget, index }: { budget: Budget; index: number }) {
         minWidth: '140px',
         borderColor: 'var(--border-subtle)',
         background: 'var(--bg-subtle)',
+        boxShadow: 'var(--soft-raised-sm)',
       }}
     >
       <div

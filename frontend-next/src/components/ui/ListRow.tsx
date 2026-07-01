@@ -6,7 +6,9 @@ import { motion } from 'framer-motion'
 import type { LucideIcon } from 'lucide-react'
 
 interface ListRowProps {
-  Icon: LucideIcon
+  Icon?: LucideIcon
+  /** Ícono custom (ej. SVG inline Solar); si viene, reemplaza a `Icon`. Debe usar currentColor. */
+  renderIcon?: ReactNode
   /** Color de la categoría/contexto para el contenedor del ícono. */
   color: string
   title: string
@@ -18,7 +20,7 @@ interface ListRowProps {
 }
 
 /** Fila canónica: [ícono coloreado] título + subtítulo tenue · trailing. Sin bordes. */
-export function ListRow({ Icon, color, title, subtitle, trailing, onClick, index = 0 }: ListRowProps) {
+export function ListRow({ Icon, renderIcon, color, title, subtitle, trailing, onClick, index = 0 }: ListRowProps) {
   return (
     <motion.button
       type="button"
@@ -33,9 +35,9 @@ export function ListRow({ Icon, color, title, subtitle, trailing, onClick, index
     >
       <div
         className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-[var(--r-sm)]"
-        style={{ background: `${color}14` }}
+        style={{ background: `${color}14`, color }}
       >
-        <Icon size={16} style={{ color }} strokeWidth={1.7} />
+        {renderIcon ?? (Icon ? <Icon size={16} style={{ color }} strokeWidth={1.7} /> : null)}
       </div>
 
       <div className="min-w-0 flex-1">

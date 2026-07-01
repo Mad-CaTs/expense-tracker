@@ -8,6 +8,7 @@ interface ReportFilters {
   from?: string
   to?: string
   txType?: 'EXPENSE' | 'INCOME'
+  walletId?: number
 }
 
 export function useReportSummary(filters: ReportFilters) {

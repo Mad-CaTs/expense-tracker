@@ -64,13 +64,13 @@ public class ReportService {
         return dto;
     }
 
-    public List<CategoryBreakdownDTO> getCategoryBreakdown(LocalDate from, LocalDate to, Long userId, Long categoryId, String txType) {
+    public List<CategoryBreakdownDTO> getCategoryBreakdown(LocalDate from, LocalDate to, Long userId, Long categoryId, String txType, Long walletId) {
         if ("INCOME".equalsIgnoreCase(txType)) {
-            return getIncomeBreakdown(from, to, userId);
+            return getIncomeBreakdown(from, to, userId, walletId);
         }
         List<Object[]> raw = categoryId != null
-                ? expenseRepository.findCategoryBreakdownByUserIdAndCategoryId(userId, from, to, categoryId)
-                : expenseRepository.findCategoryBreakdownByUserId(userId, from, to);
+                ? expenseRepository.findCategoryBreakdownByUserIdAndCategoryId(userId, from, to, categoryId, walletId)
+                : expenseRepository.findCategoryBreakdownByUserId(userId, from, to, walletId);
         BigDecimal total = raw.stream()
                 .map(r -> (BigDecimal) r[1])
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -80,9 +80,9 @@ public class ReportService {
                 .toList();
     }
 
-    private List<CategoryBreakdownDTO> getIncomeBreakdown(LocalDate from, LocalDate to, Long userId) {
-        List<Object[]> raw = incomeRepository.findCategoryBreakdownByUserId(userId, from, to);
-        Object[] uncategorized = incomeRepository.findUncategorizedTotals(userId, from, to).get(0);
+    private List<CategoryBreakdownDTO> getIncomeBreakdown(LocalDate from, LocalDate to, Long userId, Long walletId) {
+        List<Object[]> raw = incomeRepository.findCategoryBreakdownByUserId(userId, from, to, walletId);
+        Object[] uncategorized = incomeRepository.findUncategorizedTotals(userId, from, to, walletId).get(0);
         BigDecimal uncategorizedTotal = (BigDecimal) uncategorized[0];
         Long uncategorizedCount = (Long) uncategorized[1];
 

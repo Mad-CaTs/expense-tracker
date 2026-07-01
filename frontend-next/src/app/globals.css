@@ -404,10 +404,48 @@ select:focus-visible,
 /* ── Botones Soft UI (cards elevadas de acciones rápidas) ── */
 :root {
   --soft-raised: 0 10px 24px rgba(0,0,0,0.42), 0 3px 8px rgba(0,0,0,0.30), inset 0 1px 0 rgba(255,255,255,0.06);
+  /* Variante más suave para cards grandes (MOVIMIENTOS/RECURRENTES/Presupuestos) */
+  --soft-raised-sm: 0 6px 16px rgba(0,0,0,0.28), 0 2px 5px rgba(0,0,0,0.20), inset 0 1px 0 rgba(255,255,255,0.05);
 }
 .light {
   --soft-raised: 0 10px 24px rgba(15,23,42,0.06), 0 3px 8px rgba(15,23,42,0.04), inset 0 1px 0 rgba(255,255,255,0.95);
+  --soft-raised-sm: 0 5px 14px rgba(15,23,42,0.04), 0 2px 4px rgba(15,23,42,0.03), inset 0 1px 0 rgba(255,255,255,0.9);
 }
 .soft-action {
   box-shadow: var(--soft-raised);
+}
+
+/* ── Aurora animada de los segmentos del gráfico de MOVIMIENTOS ──
+   Mismo lenguaje que los wallets (base casi-negra + blobs monocromáticos del hue
+   de la categoría), miniaturizado para segmentos de 14px. Balance oscuro:
+   los negros prevalecen sobre los claros. Parametrizado por --h (hue) y --s (sat). */
+.mov-seg {
+  position: relative;
+  overflow: hidden;
+  background: hsl(var(--h) calc(var(--s) * 0.7) 10%);
+}
+.mov-seg-aura {
+  position: absolute;
+  inset: -40%;
+  filter: blur(9px) saturate(1.15);
+  pointer-events: none;
+}
+.mov-seg-blob {
+  position: absolute;
+  width: 70%;
+  height: 180%;
+  border-radius: 50%;
+  mix-blend-mode: screen;
+  will-change: transform;
+}
+.mov-seg-blob.mb1 { background: hsl(var(--h) var(--s) 40%); animation: msb1 6s   ease-in-out infinite; }
+.mov-seg-blob.mb2 { background: hsl(var(--h) var(--s) 56%); animation: msb2 9s   ease-in-out infinite; }
+.mov-seg-blob.mb3 { background: hsl(var(--h) calc(var(--s) - 18%) 72%); animation: msb3 7.5s ease-in-out infinite; }
+
+@keyframes msb1 { 0%,100% { transform: translate(-10%,-10%) scale(1);   } 50% { transform: translate(60%,10%) scale(1.3);  } }
+@keyframes msb2 { 0%,100% { transform: translate(70%,-10%) scale(1.1);  } 50% { transform: translate(0%,10%)  scale(0.9);  } }
+@keyframes msb3 { 0%,100% { transform: translate(20%,0%)   scale(1);    } 50% { transform: translate(80%,5%)  scale(1.25); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .mov-seg-blob { animation: none; }
 }

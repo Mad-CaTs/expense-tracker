@@ -27,11 +27,12 @@ public interface IncomeRepository extends JpaRepository<Income, Long> {
         SELECT i.category.name, SUM(i.amount), COUNT(i), i.category.color, i.category.icon
         FROM Income i
         WHERE i.user.id = :userId AND i.date BETWEEN :from AND :to AND i.category IS NOT NULL
+          AND (:walletId IS NULL OR i.wallet.id = :walletId)
         GROUP BY i.category.name, i.category.color, i.category.icon
         ORDER BY SUM(i.amount) DESC
         """)
-    List<Object[]> findCategoryBreakdownByUserId(@Param("userId") Long userId, @Param("from") LocalDate from, @Param("to") LocalDate to);
+    List<Object[]> findCategoryBreakdownByUserId(@Param("userId") Long userId, @Param("from") LocalDate from, @Param("to") LocalDate to, @Param("walletId") Long walletId);
 
-    @Query("SELECT COALESCE(SUM(i.amount), 0), COUNT(i) FROM Income i WHERE i.user.id = :userId AND i.date BETWEEN :from AND :to AND i.category IS NULL")
-    List<Object[]> findUncategorizedTotals(@Param("userId") Long userId, @Param("from") LocalDate from, @Param("to") LocalDate to);
+    @Query("SELECT COALESCE(SUM(i.amount), 0), COUNT(i) FROM Income i WHERE i.user.id = :userId AND i.date BETWEEN :from AND :to AND i.category IS NULL AND (:walletId IS NULL OR i.wallet.id = :walletId)")
+    List<Object[]> findUncategorizedTotals(@Param("userId") Long userId, @Param("from") LocalDate from, @Param("to") LocalDate to, @Param("walletId") Long walletId);
 }

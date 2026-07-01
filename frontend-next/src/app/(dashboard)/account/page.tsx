@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 import { motion } from 'framer-motion'
-import { ChevronRight, LogOut, Moon, PiggyBank, RefreshCw, Sun, Tag } from 'lucide-react'
 
+import { AccountIcon } from '@/components/features/account/AccountIcon'
 import { SectionHeader } from '@/components/ui/SectionHeader'
 import { ListRow } from '@/components/ui/ListRow'
 import { useTheme } from '@/providers/ThemeProvider'
@@ -23,12 +23,9 @@ function ThemeToggleRow() {
     >
       <div
         className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-[var(--r-sm)]"
-        style={{ background: 'var(--accent-bg)' }}
+        style={{ background: 'var(--accent-bg)', color: 'var(--accent)' }}
       >
-        {isDark
-          ? <Moon size={16} style={{ color: 'var(--accent)' }} strokeWidth={1.7} />
-          : <Sun size={16} style={{ color: 'var(--accent)' }} strokeWidth={1.7} />
-        }
+        <AccountIcon name={isDark ? 'moon' : 'sun'} size={18} />
       </div>
 
       <div className="min-w-0 flex-1">
@@ -100,29 +97,29 @@ export default function AccountPage() {
       </div>
       <div className="px-2 mb-6">
         <ListRow
-          Icon={Tag}
+          renderIcon={<AccountIcon name="tag" size={18} />}
           color="var(--accent)"
           title="Categorías"
           subtitle="Gestiona tus categorías de gasto e ingreso"
-          trailing={<ChevronRight size={16} style={{ color: 'var(--text-muted)' }} />}
+          trailing={<span style={{ color: 'var(--text-muted)' }}><AccountIcon name="chevron" size={16} /></span>}
           onClick={() => router.push('/categories')}
           index={0}
         />
         <ListRow
-          Icon={PiggyBank}
+          renderIcon={<AccountIcon name="chart-square" size={18} />}
           color="var(--accent)"
           title="Presupuestos"
           subtitle="Controla tus límites de gasto por categoría"
-          trailing={<ChevronRight size={16} style={{ color: 'var(--text-muted)' }} />}
+          trailing={<span style={{ color: 'var(--text-muted)' }}><AccountIcon name="chevron" size={16} /></span>}
           onClick={() => router.push('/budgets')}
           index={1}
         />
         <ListRow
-          Icon={RefreshCw}
+          renderIcon={<AccountIcon name="calendar-mark" size={18} />}
           color="var(--accent)"
           title="Recurrentes"
           subtitle="Gastos que se repiten cada mes"
-          trailing={<ChevronRight size={16} style={{ color: 'var(--text-muted)' }} />}
+          trailing={<span style={{ color: 'var(--text-muted)' }}><AccountIcon name="chevron" size={16} /></span>}
           onClick={() => router.push('/recurring')}
           index={2}
         />
@@ -134,7 +131,7 @@ export default function AccountPage() {
       </div>
       <div className="px-2">
         <ListRow
-          Icon={LogOut}
+          renderIcon={<AccountIcon name="exit" size={18} />}
           color="#ef4444"
           title="Cerrar sesión"
           onClick={handleLogout}

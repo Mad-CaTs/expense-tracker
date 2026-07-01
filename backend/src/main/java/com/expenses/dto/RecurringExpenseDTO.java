@@ -13,6 +13,7 @@ public class RecurringExpenseDTO {
     private Long categoryId;
     private String categoryName;
     private String categoryColor;
+    private String categoryIcon;
 
     @NotNull @DecimalMin("0.01")
     private BigDecimal amount;

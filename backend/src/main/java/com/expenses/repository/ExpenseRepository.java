@@ -36,17 +36,19 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
         SELECT e.category.name, SUM(e.amount), COUNT(e), e.category.color, e.category.icon
         FROM Expense e
         WHERE e.user.id = :userId AND e.date BETWEEN :from AND :to AND e.category.id = :categoryId
+          AND (:walletId IS NULL OR e.wallet.id = :walletId)
         GROUP BY e.category.name, e.category.color, e.category.icon
         ORDER BY SUM(e.amount) DESC
         """)
-    List<Object[]> findCategoryBreakdownByUserIdAndCategoryId(@Param("userId") Long userId, @Param("from") LocalDate from, @Param("to") LocalDate to, @Param("categoryId") Long categoryId);
+    List<Object[]> findCategoryBreakdownByUserIdAndCategoryId(@Param("userId") Long userId, @Param("from") LocalDate from, @Param("to") LocalDate to, @Param("categoryId") Long categoryId, @Param("walletId") Long walletId);
 
     @Query("""
         SELECT e.category.name, SUM(e.amount), COUNT(e), e.category.color, e.category.icon
         FROM Expense e
         WHERE e.user.id = :userId AND e.date BETWEEN :from AND :to
+          AND (:walletId IS NULL OR e.wallet.id = :walletId)
         GROUP BY e.category.name, e.category.color, e.category.icon
         ORDER BY SUM(e.amount) DESC
         """)
-    List<Object[]> findCategoryBreakdownByUserId(@Param("userId") Long userId, @Param("from") LocalDate from, @Param("to") LocalDate to);
+    List<Object[]> findCategoryBreakdownByUserId(@Param("userId") Long userId, @Param("from") LocalDate from, @Param("to") LocalDate to, @Param("walletId") Long walletId);
 }

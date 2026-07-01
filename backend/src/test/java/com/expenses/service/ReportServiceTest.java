@@ -54,9 +54,9 @@ class ReportServiceTest {
             new Object[]{"Comida", new BigDecimal("80.00"), 3L, "#EF4444", "utensils"},
             new Object[]{"Transporte", new BigDecimal("20.00"), 1L, "#3B82F6", "car"}
         );
-        when(expenseRepository.findCategoryBreakdownByUserId(1L, from, to)).thenReturn(raw);
+        when(expenseRepository.findCategoryBreakdownByUserId(1L, from, to, (Long) null)).thenReturn(raw);
 
-        List<CategoryBreakdownDTO> result = reportService.getCategoryBreakdown(from, to, 1L, null, "EXPENSE");
+        List<CategoryBreakdownDTO> result = reportService.getCategoryBreakdown(from, to, 1L, null, "EXPENSE", null);
 
         assertThat(result).hasSize(2);
         assertThat(result.get(0).getPercentage()).isEqualTo(80.0);
@@ -72,11 +72,11 @@ class ReportServiceTest {
         List<Object[]> raw = Collections.singletonList(
             new Object[]{"Salario", new BigDecimal("300.00"), 1L, "#10B981", "banknote"}
         );
-        when(incomeRepository.findCategoryBreakdownByUserId(1L, from, to)).thenReturn(raw);
-        when(incomeRepository.findUncategorizedTotals(1L, from, to))
+        when(incomeRepository.findCategoryBreakdownByUserId(1L, from, to, (Long) null)).thenReturn(raw);
+        when(incomeRepository.findUncategorizedTotals(1L, from, to, (Long) null))
                 .thenReturn(Collections.singletonList(new Object[]{new BigDecimal("100.00"), 2L}));
 
-        List<CategoryBreakdownDTO> result = reportService.getCategoryBreakdown(from, to, 1L, null, "INCOME");
+        List<CategoryBreakdownDTO> result = reportService.getCategoryBreakdown(from, to, 1L, null, "INCOME", null);
 
         assertThat(result).hasSize(2);
         assertThat(result.get(0).getCategoryName()).isEqualTo("Salario");
@@ -94,11 +94,11 @@ class ReportServiceTest {
         List<Object[]> raw = Collections.singletonList(
             new Object[]{"Salario", new BigDecimal("300.00"), 1L, "#10B981", "banknote"}
         );
-        when(incomeRepository.findCategoryBreakdownByUserId(1L, from, to)).thenReturn(raw);
-        when(incomeRepository.findUncategorizedTotals(1L, from, to))
+        when(incomeRepository.findCategoryBreakdownByUserId(1L, from, to, (Long) null)).thenReturn(raw);
+        when(incomeRepository.findUncategorizedTotals(1L, from, to, (Long) null))
                 .thenReturn(Collections.singletonList(new Object[]{BigDecimal.ZERO, 0L}));
 
-        List<CategoryBreakdownDTO> result = reportService.getCategoryBreakdown(from, to, 1L, null, "INCOME");
+        List<CategoryBreakdownDTO> result = reportService.getCategoryBreakdown(from, to, 1L, null, "INCOME", null);
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getPercentage()).isEqualTo(100.0);

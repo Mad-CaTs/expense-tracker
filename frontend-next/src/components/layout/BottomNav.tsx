@@ -3,13 +3,13 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
-import { BarChart2, Receipt, Settings, Wallet } from 'lucide-react'
+import { NavIcon, type NavIconName } from '@/components/layout/NavIcon'
 
-const NAV_ITEMS = [
-  { href: '/expenses', label: 'Finanzas', Icon: Receipt   },
-  { href: '/wallets',  label: 'Cuentas',  Icon: Wallet    },
-  { href: '/reports',  label: 'Reportes', Icon: BarChart2 },
-  { href: '/account',  label: 'Cuenta',   Icon: Settings  },
+const NAV_ITEMS: { href: string; label: string; icon: NavIconName }[] = [
+  { href: '/expenses', label: 'Finanzas', icon: 'finanzas' },
+  { href: '/wallets',  label: 'Cuentas',  icon: 'cuentas'  },
+  { href: '/reports',  label: 'Reportes', icon: 'reportes' },
+  { href: '/account',  label: 'Cuenta',   icon: 'cuenta'   },
 ]
 
 export function BottomNav({ onFABClick }: { onFABClick?: () => void }) {
@@ -24,7 +24,6 @@ export function BottomNav({ onFABClick }: { onFABClick?: () => void }) {
       >
         {NAV_ITEMS.map((item) => {
           const active = pathname.startsWith(item.href)
-          const { Icon } = item
 
           return (
             <Link
@@ -35,11 +34,9 @@ export function BottomNav({ onFABClick }: { onFABClick?: () => void }) {
               className="flex items-center gap-2 rounded-full px-3.5 py-2.5 transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]"
               style={{ background: active ? 'var(--accent-bg)' : 'transparent' }}
             >
-              <Icon
-                size={18}
-                strokeWidth={active ? 2 : 1.7}
-                style={{ color: active ? 'var(--accent)' : 'var(--text-tertiary)', flexShrink: 0 }}
-              />
+              <span style={{ color: active ? 'var(--accent)' : 'var(--text-tertiary)', flexShrink: 0, lineHeight: 0 }}>
+                <NavIcon name={item.icon} active={active} size={20} />
+              </span>
               <span
                 className={`overflow-hidden whitespace-nowrap text-[12px] font-semibold transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${
                   active ? 'max-w-[80px] opacity-100' : 'max-w-0 opacity-0'
