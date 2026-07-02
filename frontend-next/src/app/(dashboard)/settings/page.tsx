@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 import { motion } from 'framer-motion'
@@ -54,11 +54,10 @@ function ThemeToggleRow() {
 
 export default function AccountPage() {
   const router = useRouter()
-  const [username, setUsername] = useState('')
-
-  useEffect(() => {
-    setUsername(localStorage.getItem('auth_username') ?? '')
-  }, [])
+  // Lazy init: lee localStorage una sola vez (guard de SSR), sin useEffect+setState.
+  const [username] = useState(() =>
+    typeof window !== 'undefined' ? (localStorage.getItem('auth_username') ?? '') : ''
+  )
 
   function handleLogout() {
     localStorage.removeItem('auth_token')
