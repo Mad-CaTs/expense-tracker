@@ -1,8 +1,6 @@
 package com.expenses.dto;
 
 import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import java.math.BigDecimal;
@@ -16,16 +14,14 @@ public class BudgetDTO {
     private String categoryIcon;
 
     @NotNull
+    private Long walletId;
+    private String walletName;
+
+    @NotNull
     @DecimalMin("0.01")
     private BigDecimal amount;
 
-    @NotNull @Min(1) @Max(12)
-    private Integer month;
-
-    @NotNull @Min(2020)
-    private Integer year;
-
-    // Calculado: gasto real en ese mes/año para esta categoría
+    // Calculado: gasto real del mes actual para esta categoría en este wallet
     private BigDecimal spent;
     private double percentage;
 }

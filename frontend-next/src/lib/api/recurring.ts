@@ -2,8 +2,10 @@ import type { RecurringExpense, CreateRecurringPayload } from '@/types'
 
 import { apiClient } from './client'
 
-export async function getRecurring(): Promise<RecurringExpense[]> {
-  const res = await apiClient.get<RecurringExpense[]>('/recurring')
+export async function getRecurring(walletId?: number): Promise<RecurringExpense[]> {
+  const res = await apiClient.get<RecurringExpense[]>('/recurring', {
+    params: walletId ? { walletId } : undefined,
+  })
   return res.data
 }
 

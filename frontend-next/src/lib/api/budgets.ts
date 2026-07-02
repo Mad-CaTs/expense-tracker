@@ -4,15 +4,13 @@ import { apiClient } from './client'
 
 export interface CreateBudgetPayload {
   categoryId: number
+  walletId: number
   amount: number
-  month: number
-  year: number
 }
 
-export async function getBudgets(): Promise<Budget[]> {
-  const now = new Date()
+export async function getBudgets(walletId?: number): Promise<Budget[]> {
   const res = await apiClient.get<Budget[]>('/budgets', {
-    params: { month: now.getMonth() + 1, year: now.getFullYear() },
+    params: walletId ? { walletId } : {},
   })
   return res.data
 }

@@ -116,9 +116,9 @@ export interface Budget {
   categoryName?: string
   categoryColor?: string
   categoryIcon?: string
+  walletId: number
+  walletName?: string
   amount: number
-  month: number
-  year: number
   spent: number
   percentage: number
 }
@@ -155,6 +155,8 @@ export interface RecurringExpense {
   categoryName: string
   categoryColor?: string
   categoryIcon?: string
+  walletId: number
+  walletName?: string
   amount: number
   description: string
   frequency: RecurringFrequency
@@ -165,6 +167,7 @@ export interface RecurringExpense {
 
 export interface CreateRecurringPayload {
   categoryId: number
+  walletId: number
   amount: number
   description: string
   frequency: RecurringFrequency

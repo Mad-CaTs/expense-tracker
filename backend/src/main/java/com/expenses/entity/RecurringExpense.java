@@ -25,6 +25,10 @@ public class RecurringExpense {
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "wallet_id", nullable = false)
+    private Wallet wallet;
+
     @Column(nullable = false)
     private BigDecimal amount;
 

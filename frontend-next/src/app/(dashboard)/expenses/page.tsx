@@ -3,7 +3,7 @@
 import { Suspense, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 
 import { WalletCarousel } from '@/components/features/expenses/WalletCarousel'
 import { BudgetCarousel } from '@/components/features/expenses/BudgetCarousel'
@@ -25,6 +25,7 @@ const QUICK_ACTIONS: { label: string; icon: ActionIconName; kind: QuickActionKin
 function QuickActions() {
   const openSheet = useSheetStore((s) => s.open)
   const [soon, setSoon] = useState(false)
+  const reduce = useReducedMotion()
 
   function handle(kind: QuickActionKind) {
     if (kind === 'scan') {
@@ -42,10 +43,10 @@ function QuickActions() {
           <motion.button
             key={kind}
             type="button"
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={reduce ? { opacity: 0 } : { opacity: 0, y: 24, scale: 0.92 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
             whileTap={{ scale: 0.98 }}
-            transition={{ type: 'spring', stiffness: 500, damping: 30, delay: i * 0.04 }}
+            transition={reduce ? { duration: 0.2 } : { type: 'spring', stiffness: 260, damping: 24, delay: i * 0.09 }}
             onClick={() => handle(kind)}
             className="soft-action flex flex-col items-center justify-center gap-2 rounded-[20px] py-4 cursor-pointer"
             style={{ background: 'var(--surface-overlay)' }}
@@ -98,7 +99,14 @@ function ExpensesPageInner() {
       </div>
 
       <div className="px-4 pt-6">
-        <SectionHeader title="Presupuestos" onAction={() => router.push('/budgets')} actionLabel="Ver todo" />
+        <SectionHeader
+          title="Presupuestos"
+          onAction={() => router.push('/budgets')}
+          actionLabel="Ver todos los presupuestos"
+          actionVariant="icon"
+          titleClassName="text-[20px] font-extrabold tracking-[-0.03em]"
+          titleStyle={{ color: 'var(--text-primary)' }}
+        />
       </div>
       <BudgetCarousel />
     </div>

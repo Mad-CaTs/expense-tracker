@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 
-import { AnimatePresence, motion, useMotionValue, useSpring, useTransform } from 'framer-motion'
+import { AnimatePresence, motion, useMotionValue, useReducedMotion, useSpring, useTransform } from 'framer-motion'
 // useTransform kept for rotateX/rotateY tilt
 import { Eye, EyeOff, History, Plus, TrendingDown, TrendingUp } from 'lucide-react'
 
@@ -22,6 +22,7 @@ function WalletCard({
   wallet,
   selected,
   hidden,
+  index,
   onToggleHidden,
   onSelect,
   onShowMovements,
@@ -29,10 +30,12 @@ function WalletCard({
   wallet: Wallet
   selected: boolean
   hidden: boolean
+  index: number
   onToggleHidden: () => void
   onSelect: () => void
   onShowMovements: () => void
 }) {
+  const reduce = useReducedMotion()
   const balance = Number(wallet.balance)
   const initial = Number(wallet.initialBalance)
   const diff = balance - initial
@@ -77,6 +80,8 @@ function WalletCard({
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect() } }}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
+      initial={reduce ? { opacity: 0 } : { opacity: 0, y: 24, scale: 0.92 }}
+      animate={{ opacity: 1, y: 0, scale: 1, transition: reduce ? { duration: 0.2 } : { type: 'spring', stiffness: 260, damping: 24, delay: index * 0.09 } }}
       whileTap={{ scale: 0.985 }}
       transition={{ type: 'spring', stiffness: 380, damping: 28 }}
       style={{
@@ -179,14 +184,14 @@ function WalletCard({
   )
 }
 
-function AddWalletCard({ onClick }: { onClick: () => void }) {
+function AddWalletCard({ onClick, full = false }: { onClick: () => void; full?: boolean }) {
   return (
     <motion.button
       type="button"
       onClick={onClick}
       whileTap={{ scale: 0.97 }}
       transition={{ type: 'spring', stiffness: 400, damping: 28 }}
-      className="flex-shrink-0 w-[140px] rounded-[22px] border border-dashed flex flex-col items-center justify-center gap-2 py-8"
+      className={`${full ? 'w-full' : 'flex-shrink-0 w-[140px]'} rounded-[22px] border border-dashed flex flex-col items-center justify-center gap-2 py-8`}
       style={{ borderColor: 'var(--border-subtle)', color: 'var(--text-placeholder)' }}
     >
       <Plus size={20} />
@@ -223,35 +228,40 @@ export function WalletCarousel({ selectedWalletId, onSelect }: WalletCarouselPro
   return (
     <>
     <div className="pt-5 pb-1">
-      <div
-        ref={scrollRef}
-        className="flex gap-3 overflow-x-auto px-4 pt-1 pb-2"
-        style={{
-          scrollbarWidth: 'none',
-          msOverflowStyle: 'none',
-          perspective: '1000px',
-        }}
-      >
-        {wallets.map((w) => (
-          <div
-            key={w.id}
-            ref={(el) => { if (el) cardRefs.current.set(w.id, el); else cardRefs.current.delete(w.id) }}
-            className="flex-shrink-0"
-            style={{ width: 'calc(100vw - 2rem)', maxWidth: '480px' }}
-          >
-            <WalletCard
-              wallet={w}
-              selected={selectedWalletId === w.id}
-              hidden={hidden}
-              onToggleHidden={() => setHidden((v) => !v)}
-              onSelect={() => onSelect(selectedWalletId === w.id ? undefined : w.id)}
-              onShowMovements={() => onSelect(w.id)}
-            />
-          </div>
-        ))}
-
-        <AddWalletCard onClick={() => setShowSheet(true)} />
-      </div>
+      {wallets.length === 0 ? (
+        <div className="px-4 pt-1 pb-2">
+          <AddWalletCard onClick={() => setShowSheet(true)} full />
+        </div>
+      ) : (
+        <div
+          ref={scrollRef}
+          className="flex gap-3 overflow-x-auto px-4 pt-1 pb-2"
+          style={{
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none',
+            perspective: '1000px',
+          }}
+        >
+          {wallets.map((w, i) => (
+            <div
+              key={w.id}
+              ref={(el) => { if (el) cardRefs.current.set(w.id, el); else cardRefs.current.delete(w.id) }}
+              className="flex-shrink-0"
+              style={{ width: 'calc(100vw - 2rem)', maxWidth: '480px' }}
+            >
+              <WalletCard
+                wallet={w}
+                selected={selectedWalletId === w.id}
+                hidden={hidden}
+                index={i}
+                onToggleHidden={() => setHidden((v) => !v)}
+                onSelect={() => onSelect(selectedWalletId === w.id ? undefined : w.id)}
+                onShowMovements={() => onSelect(w.id)}
+              />
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Dots paginación */}
       {wallets.length > 1 && (

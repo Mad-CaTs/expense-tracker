@@ -8,8 +8,8 @@ import {
 } from '@/lib/api/recurring'
 import type { CreateRecurringPayload } from '@/types'
 
-export function useRecurring() {
-  return useQuery({ queryKey: ['recurring'], queryFn: getRecurring })
+export function useRecurring(walletId?: number) {
+  return useQuery({ queryKey: ['recurring', walletId ?? null], queryFn: () => getRecurring(walletId) })
 }
 
 export function useCreateRecurring() {

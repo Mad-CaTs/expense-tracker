@@ -2,10 +2,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { createBudget, deleteBudget, getBudgets, updateBudget, type CreateBudgetPayload } from '@/lib/api/budgets'
 
-export function useBudgets() {
+export function useBudgets(walletId?: number) {
   return useQuery({
-    queryKey: ['budgets'],
-    queryFn: getBudgets,
+    queryKey: ['budgets', walletId ?? null],
+    queryFn: () => getBudgets(walletId),
   })
 }
 

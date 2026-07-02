@@ -22,8 +22,8 @@ public class RecurringExpenseController {
     private final UserRepository userRepository;
 
     @GetMapping
-    public List<RecurringExpenseDTO> getAll() {
-        return recurringService.findAll(userResolver.getCurrentUserId());
+    public List<RecurringExpenseDTO> getAll(@RequestParam(required = false) Long walletId) {
+        return recurringService.findAll(userResolver.getCurrentUserId(), walletId);
     }
 
     @PostMapping

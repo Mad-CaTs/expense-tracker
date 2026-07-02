@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "budgets", uniqueConstraints = {
-    @UniqueConstraint(columnNames = {"user_id", "category_id", "month", "year"})
+    @UniqueConstraint(columnNames = {"user_id", "category_id", "wallet_id"})
 })
 @Data
 @NoArgsConstructor
@@ -26,14 +26,12 @@ public class Budget {
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "wallet_id", nullable = false)
+    private Wallet wallet;
+
     @Column(nullable = false)
     private BigDecimal amount;
-
-    @Column(nullable = false)
-    private Integer month;
-
-    @Column(nullable = false)
-    private Integer year;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();

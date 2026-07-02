@@ -23,6 +23,8 @@ import {
   useRecurring,
   useToggleRecurring,
 } from '@/lib/hooks/useRecurring'
+import { useWallets } from '@/lib/hooks/useWallets'
+import { useFilterStore } from '@/stores/filterStore'
 import type { RecurringExpense, RecurringFrequency } from '@/types'
 
 import {
@@ -199,8 +201,10 @@ function RecurringCard({
 }
 
 export default function RecurringPage() {
-  const { data, isLoading } = useRecurring()
+  const activeWalletId = useFilterStore((s) => s.walletId)
+  const { data, isLoading } = useRecurring(activeWalletId)
   const { data: categories } = useCategories('EXPENSE')
+  const { data: wallets = [] } = useWallets()
   const createRecurring = useCreateRecurring()
   const toggleRecurring = useToggleRecurring()
   const deleteRecurring = useDeleteRecurring()
@@ -209,6 +213,7 @@ export default function RecurringPage() {
 
   const [showForm, setShowForm] = useState(false)
   const [categoryId, setCategoryId] = useState('')
+  const [walletId, setWalletId] = useState(activeWalletId ? String(activeWalletId) : '')
   const [amount, setAmount] = useState('')
   const [description, setDescription] = useState('')
   const [frequency, setFrequency] = useState<RecurringFrequency>('MONTHLY')
@@ -227,6 +232,7 @@ export default function RecurringPage() {
 
   function resetForm() {
     setCategoryId('')
+    setWalletId(activeWalletId ? String(activeWalletId) : '')
     setAmount('')
     setDescription('')
     setFrequency('MONTHLY')
@@ -238,6 +244,7 @@ export default function RecurringPage() {
   async function handleCreate() {
     const errs: Record<string, string> = {}
     if (!categoryId) errs.categoryId = 'Requerido'
+    if (!walletId) errs.walletId = 'Elige una cuenta'
     if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) errs.amount = 'Monto inválido'
     if (!description.trim()) errs.description = 'Requerido'
     if (!startDate) errs.startDate = 'Requerido'
@@ -245,6 +252,7 @@ export default function RecurringPage() {
 
     await createRecurring.mutateAsync({
       categoryId: Number(categoryId),
+      walletId: Number(walletId),
       amount: Number(amount),
       description: description.trim(),
       frequency,
@@ -327,6 +335,44 @@ export default function RecurringPage() {
                     ))}
                   </SelectContent>
                 </Select>
+
+                {/* Cuenta (wallet) */}
+                <div className="flex flex-col gap-1.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
+                      Cuenta
+                    </label>
+                    {errors.walletId && <p className="text-[11px]" style={{ color: 'var(--danger)' }}>{errors.walletId}</p>}
+                  </div>
+                  <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+                    {wallets.map((w) => {
+                      const selected = walletId === w.id.toString()
+                      const wColor = w.color ?? '#d4af37'
+                      return (
+                        <motion.button
+                          key={w.id}
+                          type="button"
+                          onClick={() => { setWalletId(w.id.toString()); setErrors(e => ({ ...e, walletId: '' })) }}
+                          whileTap={{ scale: 0.95 }}
+                          transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                          className="flex shrink-0 flex-col items-start justify-between rounded-2xl px-3 py-2.5"
+                          style={{
+                            minWidth: '110px',
+                            background: selected ? `${wColor}15` : 'var(--bg-input)',
+                            boxShadow: selected ? `0 0 0 1.5px ${wColor}60` : 'none',
+                          }}
+                        >
+                          <span className="mb-1 max-w-full truncate text-[12px] font-bold" style={{ color: selected ? wColor : 'var(--text-primary)' }}>
+                            {w.name}
+                          </span>
+                          <span className="mono-amount text-[11px]" style={{ color: wColor }}>
+                            S/ {Number(w.balance).toFixed(2)}
+                          </span>
+                        </motion.button>
+                      )
+                    })}
+                  </div>
+                </div>
 
                 {/* Amount + Frequency */}
                 <div className="grid grid-cols-2 gap-2">

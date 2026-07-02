@@ -109,7 +109,7 @@ export function BudgetCard({ budget, index, onDelete, onSaved }: BudgetCardProps
                 {budget.categoryName ?? 'Sin categoría'}
               </p>
               <p className="text-[11px]" style={{ color: 'var(--text-dim)' }}>
-                {budget.month}/{budget.year}
+                {budget.walletName ?? ''}
               </p>
             </div>
           </div>

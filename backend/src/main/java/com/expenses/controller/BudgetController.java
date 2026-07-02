@@ -11,7 +11,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -25,12 +24,8 @@ public class BudgetController {
     private final UserRepository userRepository;
 
     @GetMapping
-    public List<BudgetDTO> getByPeriod(
-            @RequestParam(required = false) Integer month,
-            @RequestParam(required = false) Integer year) {
-        int m = month != null ? month : LocalDate.now().getMonthValue();
-        int y = year  != null ? year  : LocalDate.now().getYear();
-        return budgetService.findByPeriod(m, y, userResolver.getCurrentUserId());
+    public List<BudgetDTO> getAll(@RequestParam(required = false) Long walletId) {
+        return budgetService.findAll(userResolver.getCurrentUserId(), walletId);
     }
 
     @PostMapping

@@ -44,23 +44,46 @@ CREATE INDEX IF NOT EXISTS idx_expenses_user_date     ON expenses(user_id, date)
 CREATE INDEX IF NOT EXISTS idx_refresh_tokens_hash    ON refresh_tokens(token_hash);
 CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user_id ON refresh_tokens(user_id);
 
+-- card_backgrounds y wallets deben existir antes de budgets/recurring (FK a wallets).
+CREATE TABLE IF NOT EXISTS card_backgrounds (
+    id        BIGSERIAL PRIMARY KEY,
+    name      VARCHAR(100) NOT NULL,
+    image_url VARCHAR(500) NOT NULL UNIQUE,
+    position  INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS wallets (
+  id              BIGSERIAL PRIMARY KEY,
+  name            VARCHAR(100)  NOT NULL,
+  initial_balance NUMERIC(12,2) NOT NULL,
+  balance         NUMERIC(12,2) NOT NULL,
+  color           VARCHAR(7),
+  icon            VARCHAR(50),
+  background_id   BIGINT        REFERENCES card_backgrounds(id) ON DELETE SET NULL,
+  user_id         BIGINT        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at      TIMESTAMP     DEFAULT NOW(),
+  updated_at      TIMESTAMP     DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_wallets_user_id ON wallets(user_id);
+
 CREATE TABLE IF NOT EXISTS budgets (
   id          BIGSERIAL PRIMARY KEY,
   user_id     BIGINT        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   category_id BIGINT        NOT NULL REFERENCES categories(id) ON DELETE CASCADE,
+  wallet_id   BIGINT        NOT NULL REFERENCES wallets(id) ON DELETE CASCADE,
   amount      NUMERIC(10,2) NOT NULL CHECK (amount > 0),
-  month       INTEGER       NOT NULL CHECK (month BETWEEN 1 AND 12),
-  year        INTEGER       NOT NULL,
   created_at  TIMESTAMP     DEFAULT NOW(),
   updated_at  TIMESTAMP     DEFAULT NOW(),
-  UNIQUE (user_id, category_id, month, year)
+  UNIQUE (user_id, category_id, wallet_id)
 );
-CREATE INDEX IF NOT EXISTS idx_budgets_user_id ON budgets(user_id);
+CREATE INDEX IF NOT EXISTS idx_budgets_user_id   ON budgets(user_id);
+CREATE INDEX IF NOT EXISTS idx_budgets_wallet_id ON budgets(wallet_id);
 
 CREATE TABLE IF NOT EXISTS recurring_expenses (
   id          BIGSERIAL PRIMARY KEY,
   user_id     BIGINT        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   category_id BIGINT        NOT NULL REFERENCES categories(id) ON DELETE CASCADE,
+  wallet_id   BIGINT        NOT NULL REFERENCES wallets(id) ON DELETE CASCADE,
   amount      NUMERIC(10,2) NOT NULL CHECK (amount > 0),
   description VARCHAR(500),
   frequency   VARCHAR(20)   NOT NULL CHECK (frequency IN ('MONTHLY','WEEKLY','YEARLY')),
@@ -71,6 +94,7 @@ CREATE TABLE IF NOT EXISTS recurring_expenses (
 );
 CREATE INDEX IF NOT EXISTS idx_recurring_user_id   ON recurring_expenses(user_id);
 CREATE INDEX IF NOT EXISTS idx_recurring_next_date ON recurring_expenses(next_date, active);
+CREATE INDEX IF NOT EXISTS idx_recurring_wallet_id ON recurring_expenses(wallet_id);
 
 -- Para crear un usuario: genera el hash con BCrypt (cost 10) y haz INSERT aquí.
 -- Ejemplo (hash de "temporal123"):
@@ -85,11 +109,4 @@ CREATE TABLE IF NOT EXISTS expense_attachments (
     content_type VARCHAR(100) NOT NULL,
     file_size    BIGINT NOT NULL,
     created_at   TIMESTAMP DEFAULT NOW()
-);
-
-CREATE TABLE IF NOT EXISTS card_backgrounds (
-    id        BIGSERIAL PRIMARY KEY,
-    name      VARCHAR(100) NOT NULL,
-    image_url VARCHAR(500) NOT NULL UNIQUE,
-    position  INTEGER NOT NULL DEFAULT 0
 );

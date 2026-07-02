@@ -15,6 +15,10 @@ public class RecurringExpenseDTO {
     private String categoryColor;
     private String categoryIcon;
 
+    @NotNull
+    private Long walletId;
+    private String walletName;
+
     @NotNull @DecimalMin("0.01")
     private BigDecimal amount;
 

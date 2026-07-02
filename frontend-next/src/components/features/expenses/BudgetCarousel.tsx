@@ -2,136 +2,145 @@
 
 import { useState } from 'react'
 
-import { AnimatePresence, motion } from 'framer-motion'
-import {
-  Car, Ellipsis, Film, HeartPulse, Home,
-  type LucideIcon, Plus, Utensils, Wallet, Zap,
-} from 'lucide-react'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import { Plus } from 'lucide-react'
 
+import { BudgetCategoryIcon } from '@/components/features/budgets/BudgetCategoryIcon'
 import { BudgetSheet } from '@/components/features/budgets/BudgetSheet'
 import { useBudgets } from '@/lib/hooks/useBudgets'
+import { walletAura } from '@/lib/utils/cardVisuals'
+import { useFilterStore } from '@/stores/filterStore'
 import type { Budget } from '@/types'
 
-const ICON_MAP: Record<string, LucideIcon> = {
-  utensils: Utensils,
-  car: Car,
-  'heart-pulse': HeartPulse,
-  film: Film,
-  home: Home,
-  ellipsis: Ellipsis,
-  wallet: Wallet,
-  zap: Zap,
-}
-
-function BudgetMiniCard({ budget, index }: { budget: Budget; index: number }) {
-  const pct = Math.min(budget.percentage ?? 0, 100)
+function BudgetMiniCard({ budget, index, onOpen }: { budget: Budget; index: number; onOpen: () => void }) {
+  const reduce = useReducedMotion()
   const spent = budget.spent ?? 0
   const amount = budget.amount ?? 0
   const remaining = amount - spent
-  const isOver = (budget.percentage ?? 0) > 100
-  const isNear = (budget.percentage ?? 0) > 80 && !isOver
+  const pctRaw = budget.percentage ?? 0
+  const pct = Math.min(pctRaw, 100)
+  const isOver = pctRaw > 100
   const color = budget.categoryColor ?? '#d4af37'
-  const Icon = budget.categoryIcon ? (ICON_MAP[budget.categoryIcon] ?? Wallet) : Wallet
 
-  const barColor = isOver ? '#ef4444' : isNear ? '#f97316' : color
+  // Aurora derivada del color de la categoría (mismo mesh que los wallets)
+  const aura = walletAura(color)
 
   return (
     <motion.div
-      initial={{ opacity: 0, x: 12 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: index * 0.05, duration: 0.24, ease: [0.32, 0.72, 0, 1] }}
-      className="flex-shrink-0 rounded-[18px] border p-[1px]"
+      initial={reduce ? { opacity: 0 } : { opacity: 0, y: 24, scale: 0.92 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={reduce ? { duration: 0.2 } : { type: 'spring', stiffness: 260, damping: 24, delay: index * 0.09 }}
+      className="relative flex flex-shrink-0 flex-col justify-end overflow-hidden rounded-[24px]"
       style={{
-        width: 'calc((100vw - 2.5rem) * 0.42)',
-        maxWidth: '180px',
-        minWidth: '140px',
-        borderColor: 'var(--border-subtle)',
-        background: 'var(--bg-subtle)',
-        boxShadow: 'var(--soft-raised-sm)',
+        width: 'calc((100vw - 2rem - 0.75rem) / 2)',
+        maxWidth: '220px',
+        height: '196px',
+        background: aura.base,
+        boxShadow: '0 10px 24px rgba(0,0,0,0.16)',
       }}
     >
+      {/* Aurora animada */}
+      <div className="wallet-aura" aria-hidden>
+        <span className="wallet-blob b1" style={{ background: aura.blobs[0] }} />
+        <span className="wallet-blob b2" style={{ background: aura.blobs[1] }} />
+        <span className="wallet-blob b3" style={{ background: aura.blobs[2] }} />
+        <span className="wallet-blob b4" style={{ background: aura.blobs[3] }} />
+      </div>
+
+      {/* Textura de puntos sutil */}
+      <span
+        className="pointer-events-none absolute inset-0 z-0 opacity-[0.06]"
+        aria-hidden
+        style={{
+          backgroundImage: 'radial-gradient(circle at 20% 20%, #fff 1px, transparent 1px)',
+          backgroundSize: '11px 11px',
+        }}
+      />
+
+      {/* Notch superior con icono de categoría */}
       <div
-        className="flex flex-col gap-3 rounded-[17px] px-3.5 py-3.5"
-        style={{ background: 'var(--bg-card-inner)', boxShadow: 'var(--inset-highlight)' }}
+        className="absolute left-1/2 top-0 z-[2] flex h-6 w-[66px] -translate-x-1/2 items-start justify-center rounded-b-[16px]"
+        style={{ background: 'var(--bg-base)' }}
       >
-        {/* Icon + name */}
-        <div className="flex items-center gap-2">
-          <div
-            className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg"
-            style={{ background: `${color}18` }}
-          >
-            <Icon size={14} style={{ color }} strokeWidth={1.6} />
-          </div>
-          <p className="truncate text-[12px] font-semibold leading-tight" style={{ color: 'var(--text-primary)' }}>
-            {budget.categoryName ?? 'Sin cat.'}
-          </p>
+        <div
+          className="mt-[11px] flex h-9 w-9 items-center justify-center rounded-full bg-white"
+          style={{ boxShadow: '0 2px 6px rgba(0,0,0,0.15)' }}
+        >
+          <span style={{ color, lineHeight: 0 }}>
+            <BudgetCategoryIcon name={budget.categoryIcon} size={19} />
+          </span>
         </div>
+      </div>
 
-        {/* Spent / total */}
-        <div>
-          <p className="mono-amount text-[15px] font-extrabold leading-none" style={{ color: 'var(--text-primary)' }}>
-            S/ {spent.toFixed(0)}
-          </p>
-          <p className="mono-amount mt-0.5 text-[10px]" style={{ color: 'var(--text-placeholder)' }}>
-            de S/ {amount.toFixed(0)}
-          </p>
-        </div>
+      {/* Cuerpo */}
+      <div className="relative z-[1] px-[15px] pb-[15px] pt-4 text-white">
+        <p className="mb-2 text-[15px] font-bold leading-tight tracking-[-0.01em]" style={{ textShadow: '0 1px 8px rgba(0,0,0,0.2)' }}>
+          {budget.categoryName ?? 'Sin cat.'}
+        </p>
 
-        {/* Progress bar */}
-        <div className="h-[3px] overflow-hidden rounded-full" style={{ background: 'var(--border-subtle)' }}>
+        <p className="text-[11px] font-medium" style={{ color: 'rgba(255,255,255,0.75)' }}>Gastado</p>
+        <p className="text-[21px] font-extrabold leading-none tracking-[-0.02em]" style={{ textShadow: '0 1px 10px rgba(0,0,0,0.25)' }}>
+          S/{spent.toFixed(0)} <span className="text-[12px] font-medium" style={{ color: 'rgba(255,255,255,0.7)' }}>/ {amount.toFixed(0)}</span>
+        </p>
+
+        {/* Barra (deja libre la zona del FAB) — fill anima con scaleX (GPU), no width */}
+        <div className="mr-[42px] mt-3 h-[6px] overflow-hidden rounded-full" style={{ background: 'rgba(255,255,255,0.25)' }}>
           <motion.div
-            initial={{ width: 0 }}
-            animate={{ width: `${pct}%` }}
-            transition={{ duration: 0.6, ease: [0.32, 0.72, 0, 1], delay: index * 0.05 + 0.1 }}
+            initial={reduce ? { opacity: 0 } : { transform: 'scaleX(0)' }}
+            animate={reduce ? { opacity: 1 } : { transform: 'scaleX(1)' }}
+            transition={{ duration: reduce ? 0.2 : 0.6, ease: [0.32, 0.72, 0, 1], delay: reduce ? 0 : index * 0.05 + 0.1 }}
             className="h-full rounded-full"
-            style={{ background: barColor }}
+            style={{ width: `${pct}%`, transformOrigin: 'left', background: isOver ? '#ffd9d0' : '#fff' }}
           />
         </div>
 
-        {/* Remaining */}
-        <p
-          className="text-[10px] font-medium"
-          style={{ color: isOver ? 'var(--danger)' : isNear ? 'var(--warning)' : 'var(--text-muted)' }}
-        >
-          {isOver ? `+S/ ${Math.abs(remaining).toFixed(0)} excedido` : `S/ ${remaining.toFixed(0)} rest.`}
+        <p className="mr-[42px] mt-2 text-[11px] font-medium" style={{ color: 'rgba(255,255,255,0.85)' }}>
+          {isOver ? `+S/${Math.abs(remaining).toFixed(0)} excedido` : `S/${remaining.toFixed(0)} rest.`}
         </p>
       </div>
+
+      {/* FAB */}
+      <button
+        type="button"
+        onClick={onOpen}
+        aria-label={`Editar presupuesto de ${budget.categoryName ?? 'categoría'}`}
+        className="absolute bottom-[13px] right-[13px] z-[3] flex h-[34px] w-[34px] items-center justify-center rounded-full text-white transition-transform active:scale-90"
+        style={{ background: 'rgba(255,255,255,0.22)', backdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,0.3)' }}
+      >
+        <Plus size={17} strokeWidth={2.4} />
+      </button>
     </motion.div>
   )
 }
 
 export function BudgetCarousel() {
-  const { data: budgets = [] } = useBudgets()
+  const walletId = useFilterStore((s) => s.walletId)
+  const { data: budgets = [] } = useBudgets(walletId)
   const [showSheet, setShowSheet] = useState(false)
 
   return (
     <>
       <div className="pt-2 pb-1">
-
-        <div
-          className="flex gap-2.5 overflow-x-auto px-4 pb-2"
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-        >
-          {budgets.map((b, i) => (
-            <BudgetMiniCard key={b.id} budget={b} index={i} />
-          ))}
-
-          <motion.button
+        {budgets.length === 0 ? (
+          <button
             type="button"
             onClick={() => setShowSheet(true)}
-            whileTap={{ scale: 0.96 }}
-            className="flex-shrink-0 rounded-[18px] border border-dashed flex flex-col items-center justify-center gap-1.5"
-            style={{
-              width: '90px',
-              minHeight: '130px',
-              borderColor: 'var(--border-subtle)',
-              color: 'var(--text-placeholder)',
-            }}
+            className="mx-4 flex w-[calc(100%-2rem)] flex-col items-center justify-center gap-1.5 rounded-[24px] border border-dashed py-8"
+            style={{ borderColor: 'var(--border-strong)', color: 'var(--text-placeholder)' }}
           >
             <Plus size={18} />
-            <span className="text-[10px] font-medium text-center leading-tight px-1">Nuevo presupuesto</span>
-          </motion.button>
-        </div>
+            <span className="text-[11px] font-medium">Crea tu primer presupuesto</span>
+          </button>
+        ) : (
+          <div
+            className="flex gap-3 overflow-x-auto px-4 pb-2 pt-0.5"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          >
+            {budgets.map((b, i) => (
+              <BudgetMiniCard key={b.id} budget={b} index={i} onOpen={() => setShowSheet(true)} />
+            ))}
+          </div>
+        )}
       </div>
 
       <AnimatePresence>

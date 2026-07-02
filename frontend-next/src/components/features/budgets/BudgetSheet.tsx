@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 
-import { AnimatePresence, motion } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { X } from 'lucide-react'
 
 import {
@@ -14,11 +14,8 @@ import {
 } from '@/components/ui/Select'
 import { useCategories } from '@/lib/hooks/useCategories'
 import { useCreateBudget } from '@/lib/hooks/useBudgets'
-
-const MONTHS = [
-  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
-]
+import { useWallets } from '@/lib/hooks/useWallets'
+import { useFilterStore } from '@/stores/filterStore'
 
 interface BudgetSheetProps {
   onClose: () => void
@@ -26,16 +23,13 @@ interface BudgetSheetProps {
 
 export function BudgetSheet({ onClose }: BudgetSheetProps) {
   const { data: categories } = useCategories('EXPENSE')
+  const { data: wallets = [] } = useWallets()
   const createBudget = useCreateBudget()
-
-  const now = new Date()
-  const currentYear = now.getFullYear()
-  const years = [currentYear - 1, currentYear, currentYear + 1]
+  const activeWalletId = useFilterStore((s) => s.walletId)
 
   const [categoryId, setCategoryId] = useState('')
   const [amount, setAmount] = useState('')
-  const [month, setMonth] = useState(String(now.getMonth() + 1))
-  const [year, setYear] = useState(String(currentYear))
+  const [walletId, setWalletId] = useState(activeWalletId ? String(activeWalletId) : '')
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   useEffect(() => {
@@ -47,14 +41,14 @@ export function BudgetSheet({ onClose }: BudgetSheetProps) {
   async function handleCreate() {
     const errs: Record<string, string> = {}
     if (!categoryId) errs.categoryId = 'Requerido'
+    if (!walletId) errs.walletId = 'Elige una cuenta'
     if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) errs.amount = 'Monto inválido'
     if (Object.keys(errs).length) { setErrors(errs); return }
 
     await createBudget.mutateAsync({
       categoryId: Number(categoryId),
+      walletId: Number(walletId),
       amount: Number(amount),
-      month: Number(month),
-      year: Number(year),
     })
     onClose()
   }
@@ -129,29 +123,42 @@ export function BudgetSheet({ onClose }: BudgetSheetProps) {
             {errors.amount && <p className="text-[11px]" style={{ color: 'var(--danger)' }}>{errors.amount}</p>}
           </div>
 
-          {/* Mes / Año */}
-          <div className="grid grid-cols-2 gap-3">
-            <Select value={month} onValueChange={setMonth}>
-              <SelectTrigger label="Mes">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {MONTHS.map((m, i) => (
-                  <SelectItem key={i + 1} value={String(i + 1)}>{m}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select value={year} onValueChange={setYear}>
-              <SelectTrigger label="Año">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {years.map((y) => (
-                  <SelectItem key={y} value={String(y)}>{y}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          {/* Cuenta (wallet) */}
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center justify-between">
+              <label className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
+                Cuenta
+              </label>
+              {errors.walletId && <p className="text-[11px]" style={{ color: 'var(--danger)' }}>{errors.walletId}</p>}
+            </div>
+            <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+              {wallets.map((w) => {
+                const selected = walletId === w.id.toString()
+                const wColor = w.color ?? '#d4af37'
+                return (
+                  <motion.button
+                    key={w.id}
+                    type="button"
+                    onClick={() => { setWalletId(w.id.toString()); setErrors(e => ({ ...e, walletId: '' })) }}
+                    whileTap={{ scale: 0.95 }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                    className="flex shrink-0 flex-col items-start justify-between rounded-2xl px-3 py-2.5"
+                    style={{
+                      minWidth: '110px',
+                      background: selected ? `${wColor}15` : 'var(--bg-input)',
+                      boxShadow: selected ? `0 0 0 1.5px ${wColor}60` : 'none',
+                    }}
+                  >
+                    <span className="mb-1 max-w-full truncate text-[12px] font-bold" style={{ color: selected ? wColor : 'var(--text-primary)' }}>
+                      {w.name}
+                    </span>
+                    <span className="mono-amount text-[11px]" style={{ color: wColor }}>
+                      S/ {Number(w.balance).toFixed(2)}
+                    </span>
+                  </motion.button>
+                )
+              })}
+            </div>
           </div>
 
           {/* CTA */}

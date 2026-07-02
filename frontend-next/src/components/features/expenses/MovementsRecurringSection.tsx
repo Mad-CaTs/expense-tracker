@@ -1,6 +1,6 @@
 'use client'
 
-import { motion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
 import { ArrowDownLeft, ArrowUpRight } from 'lucide-react'
 
 import { CategoryIcon } from '@/components/features/categories/CategoryIcon'
@@ -34,6 +34,7 @@ function formatAmount(n: number) {
 
 /** Barra horizontal segmentada por categoría. Construida solo con flex, sin librerías. */
 function SegmentedBar({ items }: { items: CategoryBreakdown[] }) {
+  const reduce = useReducedMotion()
   const withValue = items.filter((it) => (it.total ?? 0) > 0)
 
   if (withValue.length === 0) {
@@ -46,28 +47,45 @@ function SegmentedBar({ items }: { items: CategoryBreakdown[] }) {
   }
 
   return (
-    <div className="flex h-[14px] w-full gap-[3px] overflow-hidden">
-      {withValue.map((it, i) => {
-        const weight = it.percentage && it.percentage > 0 ? it.percentage : it.total
-        const { h, s } = categoryHueSat(getCategoryColor(it, i))
-        return (
-          <motion.span
-            key={`${it.categoryName}-${i}`}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.05 + i * 0.03, duration: 0.3 }}
-            className="mov-seg rounded-[5px]"
-            style={{ flexGrow: weight, flexBasis: 0, ['--h' as string]: `${h}`, ['--s' as string]: `${s}%` }}
-            title={`${it.categoryName} · ${Math.round(it.percentage ?? 0)}%`}
-          >
-            <span className="mov-seg-aura" aria-hidden>
-              <span className="mov-seg-blob mb1" />
-              <span className="mov-seg-blob mb2" />
-              <span className="mov-seg-blob mb3" />
-            </span>
-          </motion.span>
-        )
-      })}
+    <div className="h-[14px] w-full overflow-hidden">
+      {/* Pop izq→der: reveal con clip-path + scaleX con spring (ambos GPU) */}
+      <motion.div
+        className="h-full w-full"
+        style={{ transformOrigin: 'left' }}
+        initial={reduce ? { opacity: 0 } : { clipPath: 'inset(0 100% 0 0)', transform: 'scaleX(0.6)' }}
+        animate={reduce ? { opacity: 1 } : { clipPath: 'inset(0 0 0 0)', transform: 'scaleX(1)' }}
+        transition={reduce
+          ? { duration: 0.2 }
+          : {
+              clipPath: { duration: 0.5, ease: [0.32, 0.72, 0, 1] },
+              transform: { type: 'spring', stiffness: 260, damping: 24 },
+            }}
+      >
+        <div className="flex h-full w-full gap-[3px]">
+          {withValue.map((it, i) => {
+            const weight = it.percentage && it.percentage > 0 ? it.percentage : it.total
+            const { h, s } = categoryHueSat(getCategoryColor(it, i))
+            return (
+              // ...y cada segmento hace fade-in escalonado encima del reveal
+              <motion.span
+                key={`${it.categoryName}-${i}`}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.4, ease: 'easeOut', delay: reduce ? 0 : 0.12 + i * 0.06 }}
+                className="mov-seg rounded-[5px]"
+                style={{ flexGrow: weight, flexBasis: 0, ['--h' as string]: `${h}`, ['--s' as string]: `${s}%` }}
+                title={`${it.categoryName} · ${Math.round(it.percentage ?? 0)}%`}
+              >
+                <span className="mov-seg-aura" aria-hidden>
+                  <span className="mov-seg-blob mb1" />
+                  <span className="mov-seg-blob mb2" />
+                  <span className="mov-seg-blob mb3" />
+                </span>
+              </motion.span>
+            )
+          })}
+        </div>
+      </motion.div>
     </div>
   )
 }
@@ -130,7 +148,7 @@ function MovementsCard() {
       className="flex flex-col gap-5 rounded-[26px] p-[22px]"
       style={{ background: 'var(--surface-raised)', boxShadow: 'var(--soft-raised-sm)' }}
     >
-      <p className="t-label uppercase tracking-[0.12em]" style={{ color: 'var(--text-placeholder)' }}>
+      <p className="text-[16px] font-bold tracking-[-0.02em]" style={{ color: 'var(--text-primary)' }}>
         Movimientos
       </p>
 
@@ -141,7 +159,9 @@ function MovementsCard() {
 }
 
 function RecurringCard() {
-  const { data: recurring = [] } = useRecurring()
+  const reduce = useReducedMotion()
+  const walletId = useFilterStore((s) => s.walletId)
+  const { data: recurring = [] } = useRecurring(walletId)
 
   // Si caben en los slots, se muestran todos; si sobran, el último slot es "+N".
   const overflow = recurring.length > RECURRING_SLOTS
@@ -153,7 +173,7 @@ function RecurringCard() {
       className="flex flex-col rounded-[26px] px-4 py-[22px]"
       style={{ background: 'var(--surface-raised)', boxShadow: 'var(--soft-raised-sm)' }}
     >
-      <p className="t-label uppercase tracking-[0.12em]" style={{ color: 'var(--text-placeholder)' }}>
+      <p className="text-[16px] font-bold tracking-[-0.02em]" style={{ color: 'var(--text-primary)' }}>
         Recurrentes
       </p>
 
@@ -163,9 +183,9 @@ function RecurringCard() {
           return (
             <motion.div
               key={r.id}
-              initial={{ opacity: 0, scale: 0.85 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: i * 0.05, type: 'spring', stiffness: 400, damping: 26 }}
+              initial={reduce ? { opacity: 0 } : { opacity: 0, y: 14, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={reduce ? { duration: 0.2 } : { delay: i * 0.08, type: 'spring', stiffness: 260, damping: 20 }}
               className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full"
               style={{
                 background: `${color}1f`,
@@ -180,7 +200,10 @@ function RecurringCard() {
         })}
 
         {extra > 0 && (
-          <div
+          <motion.div
+            initial={reduce ? { opacity: 0 } : { opacity: 0, y: 14, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={reduce ? { duration: 0.2 } : { delay: visible.length * 0.08, type: 'spring', stiffness: 260, damping: 20 }}
             className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full text-[13px] font-bold"
             style={{
               background: 'var(--bg-hover)',
@@ -191,7 +214,7 @@ function RecurringCard() {
             }}
           >
             +{extra}
-          </div>
+          </motion.div>
         )}
 
         {recurring.length === 0 && (

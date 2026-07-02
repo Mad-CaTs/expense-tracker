@@ -6,11 +6,13 @@ import com.expenses.entity.CategoryType;
 import com.expenses.entity.Expense;
 import com.expenses.entity.RecurringExpense;
 import com.expenses.entity.User;
+import com.expenses.entity.Wallet;
 import com.expenses.exception.ResourceNotFoundException;
 import com.expenses.repository.CategoryRepository;
 import com.expenses.repository.ExpenseRepository;
 import com.expenses.repository.RecurringExpenseRepository;
 import com.expenses.repository.UserRepository;
+import com.expenses.repository.WalletRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -28,10 +30,11 @@ public class RecurringExpenseService {
     private final RecurringExpenseRepository recurringRepo;
     private final ExpenseRepository expenseRepository;
     private final CategoryRepository categoryRepository;
+    private final WalletRepository walletRepository;
     private final UserRepository userRepository;
 
-    public List<RecurringExpenseDTO> findAll(Long userId) {
-        return recurringRepo.findByUserId(userId).stream().map(this::toDTO).toList();
+    public List<RecurringExpenseDTO> findAll(Long userId, Long walletId) {
+        return recurringRepo.findByUserIdAndOptionalWallet(userId, walletId).stream().map(this::toDTO).toList();
     }
 
     @Transactional
@@ -42,9 +45,13 @@ public class RecurringExpenseService {
             throw new IllegalArgumentException("Los gastos recurrentes solo aplican a categorías de gasto");
         }
 
+        Wallet wallet = walletRepository.findByIdAndUserId(dto.getWalletId(), userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Wallet no encontrado"));
+
         RecurringExpense r = new RecurringExpense();
         r.setUser(user);
         r.setCategory(category);
+        r.setWallet(wallet);
         r.setAmount(dto.getAmount());
         r.setDescription(dto.getDescription());
         r.setFrequency(dto.getFrequency());
@@ -81,6 +88,7 @@ public class RecurringExpenseService {
             Expense expense = new Expense();
             expense.setUser(r.getUser());
             expense.setCategory(r.getCategory());
+            expense.setWallet(r.getWallet());
             expense.setAmount(r.getAmount());
             expense.setDescription(r.getDescription() != null
                     ? r.getDescription() + " (automático)"
@@ -110,6 +118,8 @@ public class RecurringExpenseService {
         dto.setCategoryName(r.getCategory().getName());
         dto.setCategoryColor(r.getCategory().getColor());
         dto.setCategoryIcon(r.getCategory().getIcon());
+        dto.setWalletId(r.getWallet().getId());
+        dto.setWalletName(r.getWallet().getName());
         dto.setAmount(r.getAmount());
         dto.setDescription(r.getDescription());
         dto.setFrequency(r.getFrequency());
