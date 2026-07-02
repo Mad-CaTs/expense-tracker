@@ -26,7 +26,7 @@ export function BottomNav() {
         layout
         transition={SPRING}
         className="relative flex items-center gap-1 overflow-hidden rounded-full px-2 py-2"
-        style={{ boxShadow: '0 10px 30px rgba(0,0,0,0.22)' }}
+        style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.12)' }}
         aria-label="Navegación"
       >
         {/* Aurora animada de fondo (mini-tarjeta wallet derivada del --bg-base del tema) */}

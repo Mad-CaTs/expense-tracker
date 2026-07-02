@@ -2,17 +2,17 @@
 
 /* ── Dark mode (default) ── */
 :root {
-  --bg-base: #0a0b0d;
-  --bg-elevated: #16181c;
-  --bg-subtle: #0e0f12;
-  --bg-card: #131519;
-  --bg-card-inner: #16181c;
-  --bg-input: #1a1d22;
-  --bg-hover: #1e2128;
+  --bg-base: #191918;
+  --bg-elevated: #202021;
+  --bg-subtle: #1c1c1c;
+  --bg-card: #202021;
+  --bg-card-inner: #202021;
+  --bg-input: #252526;
+  --bg-hover: #252526;
 
-  --border-subtle: #1e2026;
-  --border-default: #262931;
-  --border-strong: #2e323b;
+  --border-subtle: #2a2a2b;
+  --border-default: #333335;
+  --border-strong: #3d3d3f;
 
   --text-primary: #f4f6f8;
   --text-secondary: #c2c8d2;
@@ -36,9 +36,9 @@
   /* shadcn compat tokens */
   --background: var(--bg-base);
   --foreground: var(--text-primary);
-  --popover: #1e2127;
+  --popover: #252526;
   --popover-foreground: var(--text-primary);
-  --muted: #1e2127;
+  --muted: #252526;
   --muted-foreground: var(--text-muted);
   --primary: var(--accent-light);
   --primary-foreground: var(--bg-base);
@@ -46,13 +46,13 @@
   --border: var(--border-subtle);
   --ring: var(--accent-ring);
 
-  --skeleton-from: #1a1d22;
-  --skeleton-to: #23262d;
+  --skeleton-from: #252526;
+  --skeleton-to: #303032;
   --inset-highlight: inset 0 1px 1px rgba(255,255,255,0.06), inset 0 -1px 0 rgba(0,0,0,0.4);
   --card-shadow: 0 1px 3px rgba(0,0,0,0.4);
-  --sidebar-border: #1a1d22;
-  --topbar-bg: rgba(10,11,13,0.92);
-  --bottomnav-bg: rgba(16,18,22,0.95);
+  --sidebar-border: #2a2a2b;
+  --topbar-bg: rgba(25,25,24,0.92);
+  --bottomnav-bg: rgba(32,32,33,0.95);
 
   /* ── Design system: radios ── */
   --r-sm: 12px;
@@ -61,8 +61,8 @@
   --r-xl: 26px;
 
   /* ── Design system: superficies sin borde (dark) ── */
-  --surface-raised: #16181c;
-  --surface-overlay: #1e2127;
+  --surface-raised: #202021;
+  --surface-overlay: #252526;
 }
 
 /* ── Light mode (Cool Gray) ── */
@@ -403,12 +403,12 @@ select:focus-visible,
 
 /* ── Aurora del bottom nav (mini-tarjeta wallet derivada del --bg-base del tema) ── */
 :root {
-  /* Oscuro: base casi-negra + blobs gris-azulados que suben de luminosidad, blend screen */
-  --nav-aura-base: hsl(220 18% 7%);
-  --nav-aura-b1: hsl(220 24% 20%);
-  --nav-aura-b2: hsl(220 26% 30%);
-  --nav-aura-b3: hsl(220 20% 42%);
-  --nav-aura-b4: hsl(220 22% 16%);
+  /* Oscuro: base carbón (deriva del nuevo --bg-base #191918) + blobs grises que suben, blend screen */
+  --nav-aura-base: hsl(40 3% 11%);
+  --nav-aura-b1: hsl(220 14% 24%);
+  --nav-aura-b2: hsl(220 16% 34%);
+  --nav-aura-b3: hsl(220 12% 46%);
+  --nav-aura-b4: hsl(220 12% 20%);
   --nav-aura-blend: screen;
   /* Color de iconos/label sobre la aurora */
   --nav-ink: #ffffff;
@@ -452,15 +452,15 @@ select:focus-visible,
   .nav-blob { animation: none; }
 }
 
-/* ── Botones Soft UI (cards elevadas de acciones rápidas) ── */
+/* ── Botones Soft UI (cards elevadas de acciones rápidas) — sombras MUY sutiles ── */
 :root {
-  --soft-raised: 0 10px 24px rgba(0,0,0,0.42), 0 3px 8px rgba(0,0,0,0.30), inset 0 1px 0 rgba(255,255,255,0.06);
-  /* Variante más suave para cards grandes (MOVIMIENTOS/RECURRENTES/Presupuestos) */
-  --soft-raised-sm: 0 6px 16px rgba(0,0,0,0.28), 0 2px 5px rgba(0,0,0,0.20), inset 0 1px 0 rgba(255,255,255,0.05);
+  --soft-raised: 0 1px 3px rgba(0,0,0,0.18);
+  /* Variante para cards grandes (MOVIMIENTOS/RECURRENTES/Presupuestos) */
+  --soft-raised-sm: 0 1px 2px rgba(0,0,0,0.15);
 }
 .light {
-  --soft-raised: 0 10px 24px rgba(15,23,42,0.06), 0 3px 8px rgba(15,23,42,0.04), inset 0 1px 0 rgba(255,255,255,0.95);
-  --soft-raised-sm: 0 5px 14px rgba(15,23,42,0.04), 0 2px 4px rgba(15,23,42,0.03), inset 0 1px 0 rgba(255,255,255,0.9);
+  --soft-raised: 0 1px 3px rgba(15,23,42,0.05);
+  --soft-raised-sm: 0 1px 2px rgba(15,23,42,0.04);
 }
 .soft-action {
   box-shadow: var(--soft-raised);

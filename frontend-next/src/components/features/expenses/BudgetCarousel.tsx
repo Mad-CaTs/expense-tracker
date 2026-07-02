@@ -30,15 +30,19 @@ function BudgetMiniCard({ budget, index, onOpen }: { budget: Budget; index: numb
       initial={reduce ? { opacity: 0 } : { opacity: 0, y: 24, scale: 0.92 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={reduce ? { duration: 0.2 } : { type: 'spring', stiffness: 260, damping: 24, delay: index * 0.09 }}
-      className="relative flex flex-shrink-0 flex-col justify-end overflow-hidden rounded-[24px]"
+      className="relative flex-shrink-0 rounded-[24px]"
       style={{
         width: 'calc((100vw - 2rem - 0.75rem) / 2)',
         maxWidth: '220px',
         height: '196px',
-        background: aura.base,
-        boxShadow: '0 10px 24px rgba(0,0,0,0.16)',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.14)',
       }}
     >
+      {/* Contenedor interior: recorta la aurora (la sombra vive en el wrapper para no cortarse) */}
+      <div
+        className="relative flex h-full w-full flex-col justify-end overflow-hidden rounded-[24px]"
+        style={{ background: aura.base }}
+      >
       {/* Aurora animada */}
       <div className="wallet-aura" aria-hidden>
         <span className="wallet-blob b1" style={{ background: aura.blobs[0] }} />
@@ -109,6 +113,7 @@ function BudgetMiniCard({ budget, index, onOpen }: { budget: Budget; index: numb
       >
         <Plus size={17} strokeWidth={2.4} />
       </button>
+      </div>
     </motion.div>
   )
 }
@@ -120,7 +125,7 @@ export function BudgetCarousel() {
 
   return (
     <>
-      <div className="pt-2 pb-1">
+      <div className="pt-2 -mb-3">
         {budgets.length === 0 ? (
           <button
             type="button"
@@ -132,8 +137,10 @@ export function BudgetCarousel() {
             <span className="text-[11px] font-medium">Crea tu primer presupuesto</span>
           </button>
         ) : (
+          // pb amplio: la sombra necesita espacio dentro del área de scroll (overflow-x
+          // recorta también el overflow-y). El -mb del wrapper compensa el layout.
           <div
-            className="flex gap-3 overflow-x-auto px-4 pb-2 pt-0.5"
+            className="flex gap-3 overflow-x-auto px-4 pb-6 pt-1"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
             {budgets.map((b, i) => (
