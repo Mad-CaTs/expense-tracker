@@ -51,7 +51,7 @@
   --inset-highlight: inset 0 1px 1px rgba(255,255,255,0.06), inset 0 -1px 0 rgba(0,0,0,0.4);
   --card-shadow: 0 1px 3px rgba(0,0,0,0.4);
   --sidebar-border: #2a2a2b;
-  --topbar-bg: rgba(25,25,24,0.92);
+  --topbar-bg: #191918;
   --bottomnav-bg: rgba(32,32,33,0.95);
 
   /* ── Design system: radios ── */
@@ -116,7 +116,7 @@
   --inset-highlight: inset 0 1px 1px rgba(255,255,255,0.9), inset 0 -1px 0 rgba(15,23,42,0.05);
   --card-shadow:     0 1px 4px rgba(15,23,42,0.08), 0 0 0 1px rgba(15,23,42,0.04);
   --sidebar-border:  #e7eaef;
-  --topbar-bg:       rgba(241,243,246,0.92);
+  --topbar-bg:       #f1f3f6;
   --bottomnav-bg:    rgba(241,243,246,0.95);
 
   /* ── Design system: superficies sin borde (light) ── */

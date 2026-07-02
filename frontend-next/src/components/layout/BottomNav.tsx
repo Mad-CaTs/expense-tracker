@@ -11,7 +11,7 @@ const NAV_ITEMS: { href: string; label: string; icon: NavIconName }[] = [
   { href: '/expenses', label: 'Finanzas', icon: 'finanzas' },
   { href: '/wallets',  label: 'Cuentas',  icon: 'cuentas'  },
   { href: '/reports',  label: 'Reportes', icon: 'reportes' },
-  { href: '/account',  label: 'Cuenta',   icon: 'cuenta'   },
+  { href: '/settings', label: 'Ajustes',  icon: 'cuenta'   },
 ]
 
 // Un único spring para pill, layout y label → todo se mueve al unísono (sin saltos)
