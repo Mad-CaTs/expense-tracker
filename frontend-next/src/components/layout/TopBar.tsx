@@ -3,7 +3,26 @@
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence } from 'framer-motion'
+
+import { DropdownMenu } from '@/components/ui/DropdownMenu'
+
+/** Iconos Solar Bold del menú (inline, currentColor). */
+function UserCircleIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path fill="currentColor" fillRule="evenodd" d="M22 12c0 5.523-4.477 10-10 10S2 17.523 2 12S6.477 2 12 2s10 4.477 10 10m-7-3a3 3 0 1 1-6 0a3 3 0 0 1 6 0m-3 11.5a8.46 8.46 0 0 0 4.807-1.489c.604-.415.862-1.205.51-1.848C16.59 15.83 15.09 15 12 15s-4.59.83-5.318 2.163c-.351.643-.093 1.433.511 1.848A8.46 8.46 0 0 0 12 20.5" clipRule="evenodd" />
+    </svg>
+  )
+}
+function LogoutIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path fill="currentColor" fillRule="evenodd" d="M16.125 12a.75.75 0 0 0-.75-.75H4.402l1.961-1.68a.75.75 0 1 0-.976-1.14l-3.5 3a.75.75 0 0 0 0 1.14l3.5 3a.75.75 0 1 0 .976-1.14l-1.96-1.68h10.972a.75.75 0 0 0 .75-.75" clipRule="evenodd" />
+      <path fill="currentColor" d="M9.375 8c0 .702 0 1.053.169 1.306a1 1 0 0 0 .275.275c.253.169.604.169 1.306.169h4.25a2.25 2.25 0 0 1 0 4.5h-4.25c-.702 0-1.053 0-1.306.168a1 1 0 0 0-.275.276c-.169.253-.169.604-.169 1.306c0 2.828 0 4.243.879 5.121c.878.879 2.292.879 5.12.879h1c2.83 0 4.243 0 5.122-.879c.879-.878.879-2.293.879-5.121V8c0-2.828 0-4.243-.879-5.121S19.203 2 16.375 2h-1c-2.829 0-4.243 0-5.121.879c-.879.878-.879 2.293-.879 5.121" />
+    </svg>
+  )
+}
 
 /** Título contextual por ruta (el Home muestra el saludo en su lugar). */
 const PAGE_TITLES: Record<string, string> = {
@@ -71,39 +90,22 @@ export function TopBar() {
 
         <AnimatePresence>
           {profileOpen && (
-            <motion.div
-              initial={{ opacity: 0, y: 4, scale: 0.96 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 4, scale: 0.96 }}
-              transition={{ duration: 0.15, ease: [0.32, 0.72, 0, 1] }}
-              className="absolute left-0 top-full mt-2 w-44 rounded-xl border p-1 z-50"
-              style={{ borderColor: 'var(--border-subtle)', background: 'var(--bg-elevated)', boxShadow: 'var(--card-shadow)' }}
-            >
-              <button
-                onClick={() => { setProfileOpen(false); router.push('/settings') }}
-                className="w-full border-b px-3 py-2 mb-1 text-left cursor-pointer rounded-t-xl transition-colors"
-                style={{ borderColor: 'var(--border-subtle)' }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-hover)' }}
-                onMouseLeave={e => { e.currentTarget.style.background = '' }}
-              >
-                <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Cuenta</p>
-                <p className="truncate text-[12px] font-medium" style={{ color: 'var(--text-secondary)' }}>{username.toUpperCase()}</p>
-              </button>
-              <button
-                onClick={handleLogout}
-                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-[12px] transition-colors cursor-pointer"
-                style={{ color: 'var(--text-secondary)' }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.1)'; e.currentTarget.style.color = '#ef4444' }}
-                onMouseLeave={e => { e.currentTarget.style.background = ''; e.currentTarget.style.color = 'var(--text-secondary)' }}
-              >
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                  <polyline points="16 17 21 12 16 7" />
-                  <line x1="21" y1="12" x2="9" y2="12" />
-                </svg>
-                Cerrar sesión
-              </button>
-            </motion.div>
+            <DropdownMenu
+              align="left"
+              items={[
+                {
+                  icon: <UserCircleIcon />,
+                  label: 'Mi cuenta',
+                  onClick: () => { setProfileOpen(false); router.push('/settings') },
+                },
+                {
+                  icon: <LogoutIcon />,
+                  label: 'Cerrar sesión',
+                  variant: 'danger',
+                  onClick: () => { setProfileOpen(false); handleLogout() },
+                },
+              ]}
+            />
           )}
         </AnimatePresence>
       </div>

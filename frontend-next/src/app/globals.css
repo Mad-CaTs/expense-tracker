@@ -63,6 +63,15 @@
   /* ── Design system: superficies sin borde (dark) ── */
   --surface-raised: #202021;
   --surface-overlay: #252526;
+
+  /* ── Menú glass desplegable (dark) ── */
+  --glass-bg: rgba(36, 37, 38, 0.72);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  --glass-item-ic: rgba(255, 255, 255, 0.08);
+  --glass-item-active: rgba(255, 255, 255, 0.12);
+  --glass-item-active-ic: rgba(255, 255, 255, 0.18);
+  --glass-sep: rgba(255, 255, 255, 0.09);
 }
 
 /* ── Light mode (Cool Gray) ── */
@@ -122,6 +131,15 @@
   /* ── Design system: superficies sin borde (light) ── */
   --surface-raised: #ffffff;
   --surface-overlay: #ffffff;
+
+  /* ── Menú glass desplegable (light) ── */
+  --glass-bg: rgba(245, 246, 248, 0.78);
+  --glass-border: rgba(255, 255, 255, 0.6);
+  --glass-shadow: 0 16px 44px rgba(15, 23, 42, 0.18);
+  --glass-item-ic: rgba(27, 36, 54, 0.06);
+  --glass-item-active: rgba(27, 36, 54, 0.08);
+  --glass-item-active-ic: rgba(59, 130, 246, 0.15);
+  --glass-sep: rgba(27, 36, 54, 0.10);
 }
 
 @theme inline {
