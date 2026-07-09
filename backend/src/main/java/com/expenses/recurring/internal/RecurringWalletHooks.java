@@ -10,9 +10,11 @@ import org.springframework.stereotype.Component;
 class RecurringWalletHooks {
 
     private final RecurringExpenseRepository recurringExpenseRepository;
+    private final RecurringOccurrenceRepository occurrenceRepository;
 
     @EventListener
     public void on(WalletDeletedEvent event) {
+        occurrenceRepository.skipPendingByWalletId(event.userId(), event.walletId(), event.deletedAt());
         recurringExpenseRepository.softDeleteByWalletId(event.userId(), event.walletId(), event.deletedAt());
     }
 }

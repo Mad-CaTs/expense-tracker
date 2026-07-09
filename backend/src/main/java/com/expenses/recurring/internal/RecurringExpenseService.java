@@ -3,8 +3,6 @@ package com.expenses.recurring.internal;
 import com.expenses.category.Category;
 import com.expenses.category.CategoryFinder;
 import com.expenses.category.CategoryType;
-import com.expenses.expense.ExpenseRequest;
-import com.expenses.expense.ExpenseService;
 import com.expenses.shared.exception.BusinessRuleException;
 import com.expenses.shared.exception.ResourceNotFoundException;
 import com.expenses.shared.user.User;
@@ -12,11 +10,13 @@ import com.expenses.wallet.Wallet;
 import com.expenses.wallet.WalletFinder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Slf4j
@@ -25,7 +25,8 @@ import java.util.List;
 public class RecurringExpenseService {
 
     private final RecurringExpenseRepository recurringRepo;
-    private final ExpenseService expenseService;
+    private final RecurringOccurrenceRepository occurrenceRepository;
+    private final RecurringOccurrenceService occurrenceService;
     private final CategoryFinder categoryFinder;
     private final WalletFinder walletFinder;
     private final RecurringExpenseMapper recurringExpenseMapper;
@@ -73,38 +74,21 @@ public class RecurringExpenseService {
     public void delete(Long id, Long userId) {
         recurringRepo.findByIdAndUserId(id, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Gasto recurrente no encontrado"));
+        occurrenceRepository.skipPendingByRecurringId(id, userId, LocalDateTime.now());
         recurringRepo.deleteById(id);
     }
 
-    @Scheduled(cron = "0 0 0 * * *")
-    @Transactional
-    public void processRecurring() {
+    @Scheduled(cron = "${app.recurring.cron:0 0 0 * * *}")
+    public void generateDueOccurrences() {
         LocalDate today = LocalDate.now();
         List<RecurringExpense> due = recurringRepo.findByActiveTrueAndNextDateLessThanEqual(today);
 
         for (RecurringExpense r : due) {
-            ExpenseRequest request = new ExpenseRequest();
-            request.setAmount(r.getAmount());
-            request.setDate(r.getNextDate());
-            request.setCategoryId(r.getCategory().getId());
-            request.setWalletId(r.getWallet().getId());
-            request.setDescription(r.getDescription() != null
-                    ? r.getDescription() + " (automático)"
-                    : "Gasto recurrente (automático)");
-            expenseService.create(request, r.getUser().getId(), r.getUser());
-
-            r.setNextDate(nextDate(r.getNextDate(), r.getFrequency()));
-            recurringRepo.save(r);
-
-            log.info("Gasto recurrente procesado: {} - {}", r.getUser().getUsername(), r.getDescription());
+            try {
+                occurrenceService.generateFor(r.getId(), today);
+            } catch (DataIntegrityViolationException duplicate) {
+                log.info("Ocurrencia ya existente para recurrente {} (corrida duplicada); se omite", r.getId());
+            }
         }
-    }
-
-    private LocalDate nextDate(LocalDate current, String frequency) {
-        return switch (frequency) {
-            case "WEEKLY"  -> current.plusWeeks(1);
-            case "YEARLY"  -> current.plusYears(1);
-            default        -> current.plusMonths(1); // MONTHLY
-        };
     }
 }
