@@ -8,7 +8,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 
 const NAV_ITEMS = [
   { href: '/expenses', label: 'Finanzas', icon: ReceiptIcon },
-  { href: '/wallets', label: 'Cuentas', icon: WalletIcon },
+  { href: '/wallets', label: 'Billeteras', icon: WalletIcon },
   { href: '/reports', label: 'Reportes', icon: ChartIcon },
 ]
 

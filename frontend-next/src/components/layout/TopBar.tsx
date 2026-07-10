@@ -26,7 +26,7 @@ function LogoutIcon() {
 
 /** Título contextual por ruta (el Home muestra el saludo en su lugar). */
 const PAGE_TITLES: Record<string, string> = {
-  '/wallets': 'Cuentas',
+  '/wallets': 'Billeteras',
   '/reports': 'Reportes',
   '/settings': 'Configuración',
 }
