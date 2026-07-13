@@ -1,35 +1,12 @@
 'use client'
 
 import React from 'react'
-import {
-  Car,
-  ChevronDown,
-  Ellipsis,
-  Film,
-  HeartPulse,
-  Home,
-  type LucideIcon,
-  ShoppingCart,
-  Utensils,
-  Wallet,
-  Zap,
-} from 'lucide-react'
+import { ChevronDown, Wallet } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 
 import { AttachmentsModal } from '@/components/features/expenses/AttachmentsModal'
+import { CATEGORY_ICON_MAP } from '@/lib/utils/categoryIcons'
 import type { Expense } from '@/types'
-
-const ICON_MAP: Record<string, LucideIcon> = {
-  utensils: Utensils,
-  car: Car,
-  'heart-pulse': HeartPulse,
-  film: Film,
-  home: Home,
-  ellipsis: Ellipsis,
-  'shopping-cart': ShoppingCart,
-  wallet: Wallet,
-  zap: Zap,
-}
 
 interface ExpenseRowProps {
   expense: Expense
@@ -42,7 +19,7 @@ interface ExpenseRowProps {
 
 export function ExpenseRow({ expense, onEdit, onDelete, index, expanded, onToggle }: ExpenseRowProps) {
   const [showAttachments, setShowAttachments] = React.useState(false)
-  const Icon = expense.categoryIcon ? (ICON_MAP[expense.categoryIcon] ?? Wallet) : Wallet
+  const Icon = expense.categoryIcon ? (CATEGORY_ICON_MAP[expense.categoryIcon] ?? Wallet) : Wallet
   const color = expense.categoryColor ?? '#d4af37'
 
   const formattedDate = new Date(expense.date + 'T12:00:00').toLocaleDateString('es-PE', {

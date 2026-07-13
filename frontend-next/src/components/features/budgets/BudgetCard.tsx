@@ -2,36 +2,12 @@
 
 import { useState } from 'react'
 
-import {
-  Car,
-  Check,
-  Ellipsis,
-  Film,
-  HeartPulse,
-  Home,
-  type LucideIcon,
-  Pencil,
-  Trash2,
-  Utensils,
-  Wallet,
-  X,
-  Zap,
-} from 'lucide-react'
+import { Check, Pencil, Trash2, Wallet, X } from 'lucide-react'
 import { motion } from 'framer-motion'
 
 import { useUpdateBudget } from '@/lib/hooks/useBudgets'
+import { CATEGORY_ICON_MAP } from '@/lib/utils/categoryIcons'
 import type { Budget } from '@/types'
-
-const ICON_MAP: Record<string, LucideIcon> = {
-  utensils: Utensils,
-  car: Car,
-  'heart-pulse': HeartPulse,
-  film: Film,
-  home: Home,
-  ellipsis: Ellipsis,
-  wallet: Wallet,
-  zap: Zap,
-}
 
 interface BudgetCardProps {
   budget: Budget
@@ -53,7 +29,7 @@ export function BudgetCard({ budget, index, onDelete, onSaved }: BudgetCardProps
   const isOverBudget = (budget.percentage ?? 0) > 100
   const isNearLimit = (budget.percentage ?? 0) > 80 && !isOverBudget
 
-  const Icon = budget.categoryIcon ? (ICON_MAP[budget.categoryIcon] ?? Wallet) : Wallet
+  const Icon = budget.categoryIcon ? (CATEGORY_ICON_MAP[budget.categoryIcon] ?? Wallet) : Wallet
   const color = budget.categoryColor ?? '#d4af37'
 
   const barGradient = isOverBudget

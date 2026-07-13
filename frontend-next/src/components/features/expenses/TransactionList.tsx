@@ -1,34 +1,12 @@
 'use client'
 
-import {
-  Car,
-  Ellipsis,
-  Film,
-  HeartPulse,
-  Home,
-  type LucideIcon,
-  ShoppingCart,
-  Utensils,
-  Wallet,
-  Zap,
-} from 'lucide-react'
+import { Wallet } from 'lucide-react'
 
 import { ListRow } from '@/components/ui/ListRow'
 import { MoneyText } from '@/components/ui/MoneyText'
+import { CATEGORY_ICON_MAP } from '@/lib/utils/categoryIcons'
 import { useSheetStore } from '@/stores/sheetStore'
 import type { Expense, Income } from '@/types'
-
-const ICON_MAP: Record<string, LucideIcon> = {
-  utensils: Utensils,
-  car: Car,
-  'heart-pulse': HeartPulse,
-  film: Film,
-  home: Home,
-  ellipsis: Ellipsis,
-  'shopping-cart': ShoppingCart,
-  wallet: Wallet,
-  zap: Zap,
-}
 
 export type MixedTx =
   | { kind: 'expense'; data: Expense }
@@ -47,7 +25,7 @@ export function TransactionList({ items }: { items: MixedTx[] }) {
         const isExpense = item.kind === 'expense'
         const tx = item.data
         const color = tx.categoryColor ?? '#d4af37'
-        const Icon = tx.categoryIcon ? (ICON_MAP[tx.categoryIcon] ?? Wallet) : Wallet
+        const Icon = tx.categoryIcon ? (CATEGORY_ICON_MAP[tx.categoryIcon] ?? Wallet) : Wallet
         const amount = Number(tx.amount ?? 0)
 
         return (

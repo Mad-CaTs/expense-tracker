@@ -27,34 +27,10 @@ import { useWallets } from '@/lib/hooks/useWallets'
 import { useFilterStore } from '@/stores/filterStore'
 import type { RecurringExpense, RecurringFrequency } from '@/types'
 
-import {
-  CalendarClock,
-  CalendarDays,
-  Car,
-  Ellipsis,
-  Film,
-  HeartPulse,
-  Home,
-  type LucideIcon,
-  ShoppingCart,
-  Utensils,
-  Wallet,
-  Zap,
-} from 'lucide-react'
+import { CalendarClock, CalendarDays, Wallet } from 'lucide-react'
 
 import { DateWheelPicker } from '@/components/ui/DateWheelPicker'
-
-const ICON_MAP: Record<string, LucideIcon> = {
-  utensils: Utensils,
-  car: Car,
-  'heart-pulse': HeartPulse,
-  film: Film,
-  home: Home,
-  ellipsis: Ellipsis,
-  'shopping-cart': ShoppingCart,
-  wallet: Wallet,
-  zap: Zap,
-}
+import { CATEGORY_ICON_MAP } from '@/lib/utils/categoryIcons'
 
 const FREQUENCY_LABELS: Record<RecurringFrequency, string> = {
   MONTHLY: 'Mensual',
@@ -85,7 +61,7 @@ function RecurringCard({
   expanded: boolean
   onExpandToggle: () => void
 }) {
-  const Icon = item.categoryIcon ? (ICON_MAP[item.categoryIcon] ?? Wallet) : Wallet
+  const Icon = item.categoryIcon ? (CATEGORY_ICON_MAP[item.categoryIcon] ?? Wallet) : Wallet
   const color = item.categoryColor ?? '#d4af37'
 
   return (
