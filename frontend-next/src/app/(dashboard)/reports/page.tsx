@@ -10,7 +10,7 @@ import { ReportSummaryCards } from '@/components/features/reports/ReportSummaryC
 import { EmptyState } from '@/components/ui/EmptyState'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Skeleton } from '@/components/ui/Skeleton'
-import { FinanceFilters, FinanceFilterType, TxType, applyFinanceFilters, type FinanceFilter } from '@/components/ui/finance-filters'
+import { FinanceFilters, FinanceFilterType, TxType, applyFinanceFilters, type FinanceFilter } from '@/components/ui/FinanceFilters'
 import { useCategories } from '@/lib/hooks/useCategories'
 import { useCategoryBreakdown, useReportSummary } from '@/lib/hooks/useReports'
 

@@ -6,8 +6,8 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { Calendar, Check, ListFilter, Layers, Tag, X } from 'lucide-react'
 import { nanoid } from 'nanoid'
 
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/Command'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/Popover'
 import type { Category } from '@/types'
 
 // ─── Types ────────────────────────────────────────────────────────────────────

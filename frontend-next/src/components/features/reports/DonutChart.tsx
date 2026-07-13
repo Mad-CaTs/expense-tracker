@@ -6,7 +6,7 @@ import { Pie, PieChart, Sector } from 'recharts'
 import type { PieSectorShapeProps } from 'recharts/types/polar/Pie'
 
 import type { LinkedHighlightProps } from '@/components/features/reports/DistributionSection'
-import { ChartContainer, type ChartConfig } from '@/components/ui/pie-chart'
+import { ChartContainer, type ChartConfig } from '@/components/ui/PieChart'
 import { getCategoryColor } from '@/lib/utils/categoryColors'
 
 const ACTIVE_RADIUS_GROWTH = 4
