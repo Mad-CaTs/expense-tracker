@@ -3,71 +3,32 @@
 import { useState } from 'react'
 
 import { motion } from 'framer-motion'
-import { Plus, Wallet, X } from 'lucide-react'
+import { Plus, X } from 'lucide-react'
 
 import { BudgetCard } from '@/components/features/budgets/BudgetCard'
+import { BudgetForm } from '@/components/features/budgets/BudgetForm'
 import { BudgetOverview } from '@/components/features/budgets/BudgetOverview'
+import { SmartEmptyBudgets } from '@/components/features/budgets/SmartEmptyBudgets'
 import { SubPageHeader } from '@/components/layout/SubPageHeader'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { SuccessDialog } from '@/components/ui/SuccessDialog'
-import { EmptyState } from '@/components/ui/EmptyState'
 import { BudgetCardSkeleton } from '@/components/ui/Skeleton'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/Select'
+import { useBudgets, useDeleteBudget } from '@/lib/hooks/useBudgets'
 import { useCategories } from '@/lib/hooks/useCategories'
-import { useBudgets, useCreateBudget, useDeleteBudget } from '@/lib/hooks/useBudgets'
 import { useCategoryBreakdown } from '@/lib/hooks/useReports'
-import { useWallets } from '@/lib/hooks/useWallets'
-import { CATEGORY_ICON_MAP } from '@/lib/utils/categoryIcons'
 import { useFilterStore } from '@/stores/filterStore'
-import type { CategoryBreakdown } from '@/types'
 
 export default function BudgetsPage() {
   const activeWalletId = useFilterStore((s) => s.walletId)
   const { data, isLoading } = useBudgets(activeWalletId)
-  const createBudget = useCreateBudget()
   const deleteBudget = useDeleteBudget()
   const { data: categories } = useCategories('EXPENSE')
-  const { data: wallets = [] } = useWallets()
 
   const now = new Date()
   const [showForm, setShowForm] = useState(false)
   const [categoryId, setCategoryId] = useState('')
-  const [amount, setAmount] = useState('')
-  const [walletId, setWalletId] = useState(activeWalletId ? String(activeWalletId) : '')
-  const [errors, setErrors] = useState<Record<string, string>>({})
   const [deleteId, setDeleteId] = useState<number | null>(null)
   const [success, setSuccess] = useState<{ name: string; action: 'create' | 'edit' } | null>(null)
-
-  function resetForm() {
-    setCategoryId('')
-    setAmount('')
-    setWalletId(activeWalletId ? String(activeWalletId) : '')
-    setErrors({})
-    setShowForm(false)
-  }
-
-  async function handleCreate() {
-    const errs: Record<string, string> = {}
-    if (!categoryId) errs.categoryId = 'Requerido'
-    if (!walletId) errs.walletId = 'Elige una cuenta'
-    if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) errs.amount = 'Monto inválido'
-    if (Object.keys(errs).length) { setErrors(errs); return }
-
-    const catName = categories?.find((c) => c.id === Number(categoryId))?.name ?? ''
-    await createBudget.mutateAsync({
-      categoryId: Number(categoryId),
-      walletId: Number(walletId),
-      amount: Number(amount),
-    })
-    resetForm()
-    setSuccess({ name: catName, action: 'create' })
-  }
 
   const pad = (n: number) => String(n).padStart(2, '0')
   const mFrom = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-01`
@@ -103,115 +64,13 @@ export default function BudgetsPage() {
       {!isLoading && data && data.length > 0 && <BudgetOverview budgets={data} />}
 
       {/* Create form + list coordinated */}
-      <div
-        className="grid transition-[grid-template-rows] duration-[260ms] ease-[cubic-bezier(0.32,0.72,0,1)] mb-4"
-        style={{ gridTemplateRows: showForm ? '1fr' : '0fr' }}
-      >
-        <div className="overflow-hidden">
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: showForm ? 1 : 0 }}
-            transition={{ duration: 0.18, ease: 'easeOut' }}
-            className="pb-1"
-          >
-            <div className="rounded-[18px] border p-[1px]" style={{ borderColor: 'var(--border-subtle)', background: 'var(--bg-subtle)' }}>
-              <div
-                className="flex flex-col gap-3 rounded-[17px] p-5"
-                style={{ background: 'var(--bg-card-inner)', boxShadow: 'var(--inset-highlight)' }}
-              >
-                <p className="text-[10px] font-semibold tracking-[0.18em] uppercase" style={{ color: 'var(--text-placeholder)' }}>
-                  Nuevo presupuesto
-                </p>
-
-                <div className="grid grid-cols-2 gap-3">
-                  {/* Category */}
-                  <div className="col-span-2">
-                    <Select value={categoryId} onValueChange={setCategoryId}>
-                      <SelectTrigger label="Categoría" error={errors.categoryId}>
-                        <SelectValue placeholder="Seleccionar categoría" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {categories?.map((c) => (
-                          <SelectItem key={c.id} value={c.id.toString()}>
-                            {c.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Amount */}
-                  <div className="col-span-2 flex flex-col gap-1.5">
-                    <label className="text-xs font-medium tracking-widest uppercase" style={{ color: 'var(--text-muted)' }}>
-                      Límite (S/)
-                    </label>
-                    <input
-                      type="number"
-                      min="0.01"
-                      step="0.01"
-                      value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
-                      placeholder="0.00"
-                      className="input-wrapper h-10 w-full px-3 text-sm"
-                      style={{ color: 'var(--text-primary)', ...(errors.amount ? { borderColor: 'var(--danger)' } : {}) }}
-                    />
-                    {errors.amount && <p className="text-[11px]" style={{ color: 'var(--danger)' }}>{errors.amount}</p>}
-                  </div>
-
-                  {/* Cuenta (wallet) */}
-                  <div className="col-span-2 flex flex-col gap-1.5">
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs font-medium tracking-widest uppercase" style={{ color: 'var(--text-muted)' }}>
-                        Cuenta
-                      </label>
-                      {errors.walletId && <p className="text-[11px]" style={{ color: 'var(--danger)' }}>{errors.walletId}</p>}
-                    </div>
-                    <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
-                      {wallets.map((w) => {
-                        const selected = walletId === w.id.toString()
-                        const wColor = w.color ?? '#d4af37'
-                        return (
-                          <motion.button
-                            key={w.id}
-                            type="button"
-                            onClick={() => { setWalletId(w.id.toString()); setErrors(e => ({ ...e, walletId: '' })) }}
-                            whileTap={{ scale: 0.95 }}
-                            transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                            className="flex shrink-0 flex-col items-start justify-between rounded-2xl px-3 py-2.5"
-                            style={{
-                              minWidth: '110px',
-                              background: selected ? `${wColor}15` : 'var(--bg-input)',
-                              boxShadow: selected ? `0 0 0 1.5px ${wColor}60` : 'none',
-                            }}
-                          >
-                            <span className="mb-1 max-w-full truncate text-[12px] font-bold" style={{ color: selected ? wColor : 'var(--text-primary)' }}>
-                              {w.name}
-                            </span>
-                            <span className="mono-amount text-[11px]" style={{ color: wColor }}>
-                              S/ {Number(w.balance).toFixed(2)}
-                            </span>
-                          </motion.button>
-                        )
-                      })}
-                    </div>
-                  </div>
-                </div>
-
-                <motion.button
-                  onClick={handleCreate}
-                  disabled={createBudget.isPending}
-                  whileTap={{ scale: 0.97 }}
-                  transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                  className="mt-1 h-10 w-full rounded-full text-[13px] font-bold disabled:opacity-50"
-                  style={{ background: 'var(--accent-light)', color: 'var(--bg-base)' }}
-                >
-                  {createBudget.isPending ? 'Guardando...' : 'Crear presupuesto'}
-                </motion.button>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      </div>
+      <BudgetForm
+        open={showForm}
+        categoryId={categoryId}
+        onCategoryChange={setCategoryId}
+        onClose={() => setShowForm(false)}
+        onCreated={(name) => setSuccess({ name, action: 'create' })}
+      />
 
       <div className="flex flex-col gap-3">
         {isLoading ? (
@@ -251,66 +110,6 @@ export default function BudgetsPage() {
         ) : undefined}
         onClose={() => setSuccess(null)}
       />
-    </div>
-  )
-}
-
-function SmartEmptyBudgets({ breakdown, onPick }: { breakdown?: CategoryBreakdown[]; onPick: (name: string) => void }) {
-  const top = (breakdown ?? [])
-    .filter((b) => (b.total ?? 0) > 0 && b.categoryName !== 'Sin categoría')
-    .slice(0, 4)
-
-  if (!top.length) {
-    return (
-      <EmptyState
-        title="Sin presupuestos"
-        description="Crea un presupuesto mensual para controlar tus gastos por categoría."
-      />
-    )
-  }
-
-  return (
-    <div>
-      <EmptyState
-        title="Empieza con tus mayores gastos"
-        description="Ponle un límite a las categorías donde más gastaste este mes."
-      />
-      <div className="mt-4 flex flex-col gap-2">
-        <p className="px-1 text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
-          Sugerencias
-        </p>
-        {top.map((b, i) => {
-          const color = b.color ?? '#d4af37'
-          const Icon = b.icon ? (CATEGORY_ICON_MAP[b.icon] ?? Wallet) : Wallet
-          return (
-            <motion.button
-              key={b.categoryName}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05, duration: 0.22, ease: [0.32, 0.72, 0, 1] }}
-              onClick={() => onPick(b.categoryName)}
-              className="flex items-center gap-3 rounded-[14px] border px-4 py-3 text-left transition-colors cursor-pointer"
-              style={{ borderColor: 'var(--border-subtle)', background: 'var(--bg-card-inner)' }}
-            >
-              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl" style={{ background: `${color}18` }}>
-                <Icon size={15} style={{ color }} strokeWidth={1.6} />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-[13px] font-semibold" style={{ color: 'var(--text-primary)' }}>{b.categoryName}</p>
-                <p className="mono-amount text-[11px]" style={{ color: 'var(--text-muted)' }}>
-                  S/ {(b.total ?? 0).toFixed(2)} gastado este mes
-                </p>
-              </div>
-              <span
-                className="flex flex-shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold"
-                style={{ background: 'var(--accent-bg)', color: 'var(--accent-light)' }}
-              >
-                <Plus size={11} /> Límite
-              </span>
-            </motion.button>
-          )
-        })}
-      </div>
     </div>
   )
 }
