@@ -216,10 +216,12 @@ export function DateWheelPicker({
   const daysInMonth = getDaysInMonth(selectedYear, selectedMonth)
   const days = Array.from({ length: daysInMonth }, (_, i) => String(i + 1).padStart(2, '0'))
 
-  // Clamp day when month/year changes
+  // Clamp day when month/year changes. El timing de onChange es comportamiento observable:
+  // clampear el día debe pasar por el effect de selectedDay para notificar al padre una sola vez.
   useEffect(() => {
     const maxDay = getDaysInMonth(selectedYear, selectedMonth)
     const clamped = clamp(selectedDay, 1, maxDay)
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (clamped !== selectedDay) setSelectedDay(clamped)
     else onChange(new Date(selectedYear, selectedMonth - 1, clamped))
   }, [selectedYear, selectedMonth])

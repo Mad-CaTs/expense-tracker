@@ -1,9 +1,22 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 
 import { AnimatePresence, motion } from 'framer-motion'
+
+function subscribeUsername() {
+  return () => {}
+}
+
+function readStoredUsername() {
+  return localStorage.getItem('auth_username') ?? ''
+}
+
+// En servidor e hidratación se rinde '' (igual que el HTML prerenderizado).
+function getServerUsername() {
+  return ''
+}
 
 function getTodayLabel() {
   const raw = new Date().toLocaleDateString('es-PE', {
@@ -17,13 +30,9 @@ function getTodayLabel() {
 
 export function PageHeader({ title, action }: { title?: string; action?: React.ReactNode }) {
   const router = useRouter()
-  const [username, setUsername] = useState('')
+  const username = useSyncExternalStore(subscribeUsername, readStoredUsername, getServerUsername)
   const [profileOpen, setProfileOpen] = useState(false)
   const profileRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    setUsername(localStorage.getItem('auth_username') ?? '')
-  }, [])
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {

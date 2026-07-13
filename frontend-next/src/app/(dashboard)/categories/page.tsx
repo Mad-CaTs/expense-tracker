@@ -30,7 +30,7 @@ export default function CategoriesPage() {
   const { data: categories, isLoading } = useCategories()
   const [activeType, setActiveType] = useState<CategoryType>('EXPENSE')
 
-  const { from, to } = useMemo(monthRange, [])
+  const { from, to } = useMemo(() => monthRange(), [])
   const { data: breakdown } = useCategoryBreakdown({ period: 'CUSTOM', from, to, txType: activeType })
 
   const filtered = (categories ?? [])

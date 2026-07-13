@@ -1,8 +1,35 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useSyncExternalStore } from 'react'
 
 type Theme = 'dark' | 'light'
+
+const THEME_KEY = 'pockr-theme'
+
+let themeListeners: Array<() => void> = []
+
+function subscribeTheme(listener: () => void) {
+  themeListeners = [...themeListeners, listener]
+  return () => {
+    themeListeners = themeListeners.filter((l) => l !== listener)
+  }
+}
+
+function readStoredTheme(): Theme {
+  return localStorage.getItem(THEME_KEY) === 'light' ? 'light' : 'dark'
+}
+
+// En servidor e hidratación se rinde 'dark' (igual que el HTML prerenderizado);
+// useSyncExternalStore re-lee el valor guardado tras el mount, sin mismatch.
+function getServerTheme(): Theme {
+  return 'dark'
+}
+
+function applyTheme(t: Theme) {
+  const root = document.documentElement
+  root.classList.remove('dark', 'light')
+  root.classList.add(t)
+}
 
 interface ThemeContextValue {
   theme: Theme
@@ -19,26 +46,17 @@ export function useTheme() {
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>('dark')
+  const theme = useSyncExternalStore(subscribeTheme, readStoredTheme, getServerTheme)
 
   useEffect(() => {
-    const stored = localStorage.getItem('pockr-theme') as Theme | null
-    const resolved: Theme = stored === 'light' ? 'light' : 'dark'
-    setTheme(resolved)
-    applyTheme(resolved)
+    applyTheme(readStoredTheme())
   }, [])
-
-  function applyTheme(t: Theme) {
-    const root = document.documentElement
-    root.classList.remove('dark', 'light')
-    root.classList.add(t)
-  }
 
   function toggle() {
     const next: Theme = theme === 'dark' ? 'light' : 'dark'
-    setTheme(next)
+    localStorage.setItem(THEME_KEY, next)
     applyTheme(next)
-    localStorage.setItem('pockr-theme', next)
+    themeListeners.forEach((l) => l())
   }
 
   return (

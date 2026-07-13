@@ -33,8 +33,12 @@ export function CategoryRow({
   const [error, setError] = useState('')
   const updateCategory = useUpdateCategory()
 
+  // Sincronización legítima con props: el draft se resetea al (re)abrir edición. Remontar con
+  // `key` no sirve: el panel nunca se desmonta (anima con grid-rows) y resetearía el draft
+  // también al cerrar, cambiando lo que se ve durante la animación de cierre.
   useEffect(() => {
     if (isEditing) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setEditName(name)
       setEditIcon(icon)
       setEditColor(color)
