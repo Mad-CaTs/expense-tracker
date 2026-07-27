@@ -68,7 +68,7 @@ export function TopBar() {
       <div ref={profileRef} className="relative flex items-center gap-[13px]">
         <button
           onClick={() => setProfileOpen((v) => !v)}
-          className="liquid-glass flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full text-[18px] font-bold cursor-pointer"
+          className="liquid-glass flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full text-[18px] font-bold cursor-pointer transition-transform active:scale-95"
           style={{ color: 'var(--text-primary)' }}
           aria-label="Perfil"
         >

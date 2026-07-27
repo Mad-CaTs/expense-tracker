@@ -62,7 +62,7 @@ function WalletFrameStrip({
   )
 }
 
-/** Card de acceso (Categorías / Gastos Frecuentes / Presupuesto), estilo /expenses. */
+/** Card de acceso (Categorías / Frecuentes / Presupuestos), estilo /expenses. */
 function AccessCard({
   title,
   caption,
@@ -70,7 +70,6 @@ function AccessCard({
   iconTint,
   chevron,
   wide,
-  className = '',
 }: {
   title: string
   caption: string
@@ -78,39 +77,44 @@ function AccessCard({
   iconTint?: string
   chevron?: boolean
   wide?: boolean
-  className?: string
 }) {
   return (
     <button
       type="button"
-      className={`${className} liquid-glass relative flex min-w-0 flex-1 cursor-pointer items-center gap-3 rounded-[20px] text-left transition-transform active:scale-[0.985]`}
-      style={{ paddingLeft: wide ? 18 : 14, paddingRight: wide ? 18 : 14 }}
+      className={`liquid-glass relative flex min-w-0 flex-1 cursor-pointer items-center rounded-[20px] text-left transition-transform active:scale-[0.985] ${wide ? 'gap-3' : 'gap-2'}`}
+      style={{ paddingLeft: wide ? 18 : 8, paddingRight: wide ? 18 : 3 }}
     >
-      {!wide && (
-        <span
-          className={`flex h-[34px] w-[34px] flex-none items-center justify-center rounded-[10px]${iconTint ? '' : ' liquid-glass-ic'}`}
-          style={iconTint ? { background: `${iconTint}21`, color: iconTint } : { color: 'var(--text-primary)' }}
-        >
-          {icon}
-        </span>
-      )}
+      {/* Icono SIEMPRE a la izquierda y con marco cuadrado: las tres cards
+          comparten el mismo lenguaje, la ancha solo escala el contenedor. */}
+      <span
+        className={`flex flex-none items-center justify-center${iconTint ? '' : ' liquid-glass-ic'} ${wide ? 'h-10 w-10 rounded-[12px]' : 'h-[28px] w-[28px] rounded-[9px]'}`}
+        style={iconTint ? { background: `${iconTint}21`, color: iconTint } : { color: 'var(--text-primary)' }}
+      >
+        {icon}
+      </span>
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-[15px] font-bold tracking-[-0.02em]" style={{ color: 'var(--text-primary)' }}>
+        {/* En las estrechas el título baja a 14px: "Presupuestos" es el caso
+            límite (97px medidos) y a 360px solo entra con estas métricas. */}
+        <span
+          className={`block truncate font-bold tracking-[-0.02em] ${wide ? 'text-[15px]' : 'text-[14px]'}`}
+          style={{ color: 'var(--text-primary)' }}
+        >
           {title}
         </span>
-        <span className="mt-0.5 block text-[11.5px]" style={{ color: 'var(--text-placeholder)' }}>
+        <span
+          className={`mt-0.5 block truncate ${wide ? 'text-[11.5px]' : 'text-[11px]'}`}
+          style={{ color: 'var(--text-placeholder)' }}
+        >
           {caption}
         </span>
       </span>
-      {wide && (
-        <span className="liquid-glass-ic flex h-10 w-10 flex-none items-center justify-center rounded-full" style={{ color: 'var(--text-primary)' }}>
-          {icon}
-        </span>
-      )}
-      {/* Chevron SOLO en la card ancha: en las estrechas no cabe sin truncar el
-          título ("Presupuesto"), y el ancho del texto manda sobre el adorno. */}
-      {chevron && wide && (
-        <ChevronRight size={18} className="ml-1 flex-none" style={{ color: 'var(--text-muted)' }} />
+      {/* El chevron se encoge en las estrechas para no robarle ancho al título. */}
+      {chevron && (
+        <ChevronRight
+          size={wide ? 18 : 14}
+          className={`flex-none ${wide ? 'ml-1' : '-mr-0.5'}`}
+          style={{ color: 'var(--text-muted)' }}
+        />
       )}
     </button>
   )
@@ -173,13 +177,14 @@ export function WalletDetailPanel({ wallet, adoptedCard, onBack, panelRef, strip
   return (
     <div ref={panelRef} className="wd-panel">
       <div className="flex flex-none items-center pb-3 pt-4">
-        {/* Mismo lenguaje que el avatar de la top-bar (h-12, redondo, tinta accent) */}
+        {/* Mismo estilo que el avatar de la top-bar: liquid-glass, h-12, redondo
+            y tinta neutra — no un botón de acento, es la misma pieza de chrome. */}
         <button
           type="button"
           onClick={onBack}
           aria-label="Volver a las billeteras"
-          className="flex h-12 w-12 flex-shrink-0 cursor-pointer items-center justify-center rounded-full transition-transform active:scale-95"
-          style={{ background: 'var(--accent-bg)', color: 'var(--accent)' }}
+          className="liquid-glass flex h-12 w-12 flex-shrink-0 cursor-pointer items-center justify-center rounded-full transition-transform active:scale-95"
+          style={{ color: 'var(--text-primary)' }}
         >
           <ArrowLeft size={20} />
         </button>
@@ -188,14 +193,19 @@ export function WalletDetailPanel({ wallet, adoptedCard, onBack, panelRef, strip
       <WalletFrameStrip stripRef={stripRef} slotRef={slotRef} adoptedCard={adoptedCard} />
 
       <div className="wd-access flex flex-none flex-col pb-3">
-        <AccessCard
-          wide
-          chevron
-          className="wd-reveal wd-reveal-1"
-          title="Categorías"
-          caption={`${categories.length} activas`}
-          icon={<WalletAccessIcon name="categorias" />}
-        />
+        {/* El wd-reveal va en un wrapper, NO en el botón: si vive en el propio
+            botón, su transition de entrada (0.3s) se aplica también al
+            active:scale y el hundido del clic se siente lento y blando —
+            distinto al de las cards estrechas. */}
+        <div className="wd-reveal wd-reveal-1 flex">
+          <AccessCard
+            wide
+            chevron
+            title="Categorías"
+            caption={`${categories.length} activas`}
+            icon={<WalletAccessIcon name="categorias" />}
+          />
+        </div>
         <div className="wd-reveal wd-reveal-2 flex gap-3">
           <AccessCard
             chevron
@@ -205,7 +215,7 @@ export function WalletDetailPanel({ wallet, adoptedCard, onBack, panelRef, strip
           />
           <AccessCard
             chevron
-            title="Presupuesto"
+            title="Presupuestos"
             caption={`${budgets.length} activas`}
             icon={<WalletAccessIcon name="presupuesto" />}
           />
