@@ -135,7 +135,7 @@ function MovementsCard() {
 
   return (
     <div
-      className="liquid-glass flex flex-col gap-5 rounded-[26px] p-[22px]"
+      className="liquid-glass flex flex-col gap-5 rounded-[20px] p-[22px]"
     >
       <p className="text-[16px] font-bold tracking-[-0.02em]" style={{ color: 'var(--text-primary)' }}>
         Movimientos
@@ -158,7 +158,7 @@ function RecurringCard() {
 
   return (
     <div
-      className="liquid-glass flex flex-col rounded-[26px] px-4 py-[22px]"
+      className="liquid-glass flex flex-col rounded-[20px] px-4 py-[22px]"
     >
       <p className="text-[16px] font-bold tracking-[-0.02em]" style={{ color: 'var(--text-primary)' }}>
         Recurrentes

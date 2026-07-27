@@ -68,7 +68,7 @@ export function BudgetSheet({ onClose }: BudgetSheetProps) {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 32 }}
         transition={{ duration: 0.22, ease: [0.32, 0.72, 0, 1] }}
-        className="w-full max-w-sm overflow-hidden rounded-t-[24px] sm:max-w-md sm:rounded-[20px]"
+        className="w-full max-w-sm overflow-hidden rounded-t-[20px] sm:max-w-md sm:rounded-[16px]"
         style={{ background: 'var(--bg-card-inner)' }}
         onClick={e => e.stopPropagation()}
       >

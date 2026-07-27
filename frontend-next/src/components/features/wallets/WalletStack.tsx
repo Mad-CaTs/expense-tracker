@@ -87,7 +87,7 @@ export function WalletStack() {
       {isLoading ? (
         <div className="flex flex-col gap-3">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="h-[96px] rounded-[22px] animate-pulse" style={{ background: 'var(--skeleton-from)' }} />
+            <div key={i} className="h-[96px] rounded-[18px] animate-pulse" style={{ background: 'var(--skeleton-from)' }} />
           ))}
         </div>
       ) : list.length === 0 ? (

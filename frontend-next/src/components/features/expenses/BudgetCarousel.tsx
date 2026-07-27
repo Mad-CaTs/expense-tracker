@@ -26,7 +26,7 @@ function BudgetMiniCard({ budget, index, onOpen }: { budget: Budget; index: numb
 
   return (
     <div
-      className="enter-pop relative flex-shrink-0 rounded-[24px]"
+      className="enter-pop relative flex-shrink-0 rounded-[20px]"
       style={{
         width: 'calc((100vw - 2rem - 0.75rem) / 2)',
         maxWidth: '220px',
@@ -37,7 +37,7 @@ function BudgetMiniCard({ budget, index, onOpen }: { budget: Budget; index: numb
     >
       {/* Contenedor interior: recorta la aurora (la sombra vive en el wrapper para no cortarse) */}
       <div
-        className="relative flex h-full w-full flex-col justify-end overflow-hidden rounded-[24px]"
+        className="relative flex h-full w-full flex-col justify-end overflow-hidden rounded-[20px]"
         style={{ background: aura.base }}
       >
       {/* Aurora animada */}
@@ -124,7 +124,7 @@ export function BudgetCarousel() {
           <button
             type="button"
             onClick={() => setShowSheet(true)}
-            className="mx-4 flex w-[calc(100%-2rem)] flex-col items-center justify-center gap-1.5 rounded-[24px] border border-dashed py-8"
+            className="mx-4 flex w-[calc(100%-2rem)] flex-col items-center justify-center gap-1.5 rounded-[20px] border border-dashed py-8"
             style={{ borderColor: 'var(--border-strong)', color: 'var(--text-placeholder)' }}
           >
             <Plus size={18} />
