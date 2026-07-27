@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 
-import { AnimatePresence, motion, useMotionValue, useReducedMotion, useSpring, useTransform } from 'framer-motion'
+import { AnimatePresence, motion, useMotionValue, useSpring, useTransform } from 'framer-motion'
 // useTransform kept for rotateX/rotateY tilt
 import { Eye, EyeOff, History, Plus, TrendingDown, TrendingUp } from 'lucide-react'
 
@@ -11,8 +11,8 @@ import { useWallets } from '@/lib/hooks/useWallets'
 import { walletAura } from '@/lib/utils/cardVisuals'
 import type { Wallet } from '@/types'
 
-// Logo de la app (bucket público R2)
-const LOGO_URL = 'https://pub-9be4d45b1f4e4c9a869f708de0984f55.r2.dev/Logo%20negro%20sin%20fondo.png'
+// Logo de la app (asset local optimizado; antes bucket externo R2)
+const LOGO_URL = '/brand/logo.webp'
 
 function formatBalance(n: number) {
   return n.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -35,7 +35,6 @@ function WalletCard({
   onSelect: () => void
   onShowMovements: () => void
 }) {
-  const reduce = useReducedMotion()
   const balance = Number(wallet.balance)
   const initial = Number(wallet.initialBalance)
   const diff = balance - initial
@@ -80,16 +79,15 @@ function WalletCard({
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect() } }}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      initial={reduce ? { opacity: 0 } : { opacity: 0, y: 24, scale: 0.92 }}
-      animate={{ opacity: 1, y: 0, scale: 1, transition: reduce ? { duration: 0.2 } : { type: 'spring', stiffness: 260, damping: 24, delay: index * 0.09 } }}
       whileTap={{ scale: 0.985 }}
       transition={{ type: 'spring', stiffness: 380, damping: 28 }}
       style={{
         rotateX,
         rotateY,
         boxShadow,
+        ['--enter-i' as string]: index,
       }}
-      className="relative flex-shrink-0 w-full rounded-[28px] text-left cursor-pointer"
+      className="enter-pop relative flex-shrink-0 w-full rounded-[28px] text-left cursor-pointer"
     >
       <div
         className="relative rounded-[28px] overflow-hidden"
@@ -112,6 +110,7 @@ function WalletCard({
               src={LOGO_URL}
               alt=""
               aria-hidden
+              decoding="async"
               style={{
                 width: '54px',
                 height: '36px',

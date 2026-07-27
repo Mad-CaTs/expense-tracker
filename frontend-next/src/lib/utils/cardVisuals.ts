@@ -37,12 +37,14 @@ export function walletAura(color: string): { base: string; blobs: [string, strin
   }
   const h = Math.round(hsl.h)
   const s = Math.max(45, Math.min(Math.round(hsl.s), 82))
-  const base = `hsl(${h} ${Math.round(s * 0.7)}% 9%)`
+  // Variante "V7 Contraluz" (elegida por el usuario en demo 2026-07-14):
+  // un solo foco brillante y el resto en penumbra — más negro que el mesh original.
+  const base = `hsl(${h} ${Math.round(s * 0.6)}% 6%)`
   const blobs: [string, string, string, string] = [
-    `hsl(${h} ${s}% 38%)`,
-    `hsl(${h} ${s}% 54%)`,
-    `hsl(${h} ${Math.max(s - 18, 28)}% 70%)`, // glow brillante (algo desaturado → tiende a blanco)
-    `hsl(${h} ${s}% 30%)`,                     // tono medio-oscuro para profundidad
+    `hsl(${h} ${s}% 16%)`,                     // penumbra
+    `hsl(${h} ${s}% 54%)`,                     // el único foco de luz
+    `hsl(${h} ${Math.max(s - 18, 28)}% 60%)`, // halo del foco (desaturado)
+    `hsl(${h} ${s}% 12%)`,                     // sombra profunda
   ]
   return { base, blobs }
 }

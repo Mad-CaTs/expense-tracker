@@ -21,7 +21,7 @@ export function BottomNav() {
   const pathname = usePathname()
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-30 flex justify-center pb-4 md:hidden">
+    <div className="bottomnav-host fixed bottom-0 left-0 right-0 z-30 flex justify-center pb-4 md:hidden">
       <motion.nav
         layout
         transition={SPRING}

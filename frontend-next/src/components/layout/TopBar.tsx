@@ -62,14 +62,14 @@ export function TopBar() {
 
   return (
     <header
-      className="relative z-30 flex items-center justify-between px-[18px] pt-5 pb-2 md:hidden"
+      className="topbar-host relative z-30 flex items-center justify-between px-[18px] pt-5 pb-2 md:hidden"
     >
       {/* Izquierda: avatar (menú perfil) + saludo/título contextual */}
       <div ref={profileRef} className="relative flex items-center gap-[13px]">
         <button
           onClick={() => setProfileOpen((v) => !v)}
-          className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full text-[18px] font-bold transition-colors cursor-pointer"
-          style={{ background: 'var(--accent-bg)', color: 'var(--accent)' }}
+          className="liquid-glass flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full text-[18px] font-bold cursor-pointer"
+          style={{ color: 'var(--text-primary)' }}
           aria-label="Perfil"
         >
           {username ? username[0].toUpperCase() : '?'}

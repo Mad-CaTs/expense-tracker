@@ -12,7 +12,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: 0,
+            // 30s: evita re-fetch + re-render de todas las queries en cada cambio
+            // de tab (móvil). Las mutaciones invalidan sus queries, así que los
+            // datos propios siguen frescos al instante.
+            staleTime: 30_000,
             retry: 1,
             refetchOnWindowFocus: true,
           },

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import { AnimatePresence } from 'framer-motion'
 import { Plus } from 'lucide-react'
 
 import { BudgetCategoryIcon } from '@/components/features/budgets/BudgetCategoryIcon'
@@ -13,7 +13,6 @@ import { useFilterStore } from '@/stores/filterStore'
 import type { Budget } from '@/types'
 
 function BudgetMiniCard({ budget, index, onOpen }: { budget: Budget; index: number; onOpen: () => void }) {
-  const reduce = useReducedMotion()
   const spent = budget.spent ?? 0
   const amount = budget.amount ?? 0
   const remaining = amount - spent
@@ -26,16 +25,14 @@ function BudgetMiniCard({ budget, index, onOpen }: { budget: Budget; index: numb
   const aura = walletAura(color)
 
   return (
-    <motion.div
-      initial={reduce ? { opacity: 0 } : { opacity: 0, y: 24, scale: 0.92 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={reduce ? { duration: 0.2 } : { type: 'spring', stiffness: 260, damping: 24, delay: index * 0.09 }}
-      className="relative flex-shrink-0 rounded-[24px]"
+    <div
+      className="enter-pop relative flex-shrink-0 rounded-[24px]"
       style={{
         width: 'calc((100vw - 2rem - 0.75rem) / 2)',
         maxWidth: '220px',
         height: '196px',
         boxShadow: '0 1px 3px rgba(0,0,0,0.14)',
+        ['--enter-i' as string]: index,
       }}
     >
       {/* Contenedor interior: recorta la aurora (la sombra vive en el wrapper para no cortarse) */}
@@ -89,12 +86,9 @@ function BudgetMiniCard({ budget, index, onOpen }: { budget: Budget; index: numb
 
         {/* Barra (deja libre la zona del FAB) — fill anima con scaleX (GPU), no width */}
         <div className="mr-[42px] mt-3 h-[6px] overflow-hidden rounded-full" style={{ background: 'rgba(255,255,255,0.25)' }}>
-          <motion.div
-            initial={reduce ? { opacity: 0 } : { transform: 'scaleX(0)' }}
-            animate={reduce ? { opacity: 1 } : { transform: 'scaleX(1)' }}
-            transition={{ duration: reduce ? 0.2 : 0.6, ease: [0.32, 0.72, 0, 1], delay: reduce ? 0 : index * 0.05 + 0.1 }}
-            className="h-full rounded-full"
-            style={{ width: `${pct}%`, transformOrigin: 'left', background: isOver ? '#ffd9d0' : '#fff' }}
+          <div
+            className="enter-grow h-full rounded-full"
+            style={{ width: `${pct}%`, background: isOver ? '#ffd9d0' : '#fff', ['--enter-i' as string]: index }}
           />
         </div>
 
@@ -114,7 +108,7 @@ function BudgetMiniCard({ budget, index, onOpen }: { budget: Budget; index: numb
         <Plus size={17} strokeWidth={2.4} />
       </button>
       </div>
-    </motion.div>
+    </div>
   )
 }
 

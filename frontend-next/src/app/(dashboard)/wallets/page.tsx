@@ -1,12 +1,12 @@
 'use client'
 
-import { WalletLeatherCarousel } from '@/components/features/wallets/WalletLeatherCarousel'
+import { WalletsScreen } from '@/components/features/wallets/WalletsScreen'
 
 export default function WalletsPage() {
   return (
     <div className="mx-auto max-w-3xl">
       <div className="px-4 pb-8">
-        <WalletLeatherCarousel />
+        <WalletsScreen />
       </div>
     </div>
   )

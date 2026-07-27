@@ -261,9 +261,73 @@ textarea::placeholder {
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ── Animaciones de entrada (CSS puro) ──
+   Corren en el compositor y no dependen del hilo principal: la página sigue
+   respondiendo a taps (bottom nav incluida) aunque esté hidratando/renderizando.
+   El escalonado se parametriza con --enter-i; `backwards` mantiene el estado
+   inicial durante el delay y devuelve el control a estilos inline al terminar. */
+@keyframes page-enter {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+.page-enter {
+  animation: page-enter 0.18s ease-out both;
+}
+
+/* Equivale al spring(260, 24) de entrada: ease-out con ligero overshoot */
+@keyframes enter-pop {
+  from { opacity: 0; transform: translateY(24px) scale(0.92); }
+  to   { opacity: 1; transform: none; }
+}
+.enter-pop {
+  animation: enter-pop 0.55s cubic-bezier(0.22, 1.36, 0.32, 1) backwards;
+  animation-delay: calc(var(--enter-i, 0) * 90ms);
+}
+
+/* Variante corta (iconos apilados de RECURRENTES, spring(260, 20) + 14px) */
+@keyframes enter-pop-sm {
+  from { opacity: 0; transform: translateY(14px) scale(0.9); }
+  to   { opacity: 1; transform: none; }
+}
+.enter-pop-sm {
+  /* Bezier con más rebote: el original era spring(260, 20), ζ≈0.62 → overshoot ~8% */
+  animation: enter-pop-sm 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+  animation-delay: calc(var(--enter-i, 0) * 80ms);
+}
+
+/* Reveal izq→der de la barra segmentada de MOVIMIENTOS (clip-path + scaleX, GPU) */
+@keyframes seg-reveal {
+  from { clip-path: inset(0 100% 0 0); transform: scaleX(0.6); }
+  to   { clip-path: inset(0 0 0 0); transform: scaleX(1); }
+}
+.seg-reveal {
+  transform-origin: left;
+  animation: seg-reveal 0.5s cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+@keyframes seg-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.seg-fade {
+  animation: seg-fade 0.4s ease-out backwards;
+  animation-delay: calc(120ms + var(--enter-i, 0) * 60ms);
+}
+
+/* Crecimiento del fill de la barra de progreso (presupuestos) */
+@keyframes enter-grow {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+.enter-grow {
+  transform-origin: left;
+  animation: enter-grow 0.6s cubic-bezier(0.32, 0.72, 0, 1) backwards;
+  animation-delay: calc(100ms + var(--enter-i, 0) * 50ms);
 }
 
 /* Tabular numbers for financial data */
@@ -389,12 +453,14 @@ select:focus-visible,
   line-height: 1.3;
 }
 
-/* ── Aurora animada de los wallets (mesh gradient en movimiento, estilo skylrk) ── */
+/* ── Aurora animada de los wallets (mesh gradient en movimiento, estilo skylrk) ──
+   El blur/saturate vive en CADA blob (contenido estático → el navegador lo
+   rasteriza una vez y el transform animado solo compone la textura cacheada).
+   En el contenedor obligaría a re-rasterizar toda la capa en cada frame. */
 .wallet-aura {
   position: absolute;
   inset: -25%;
   z-index: 0;
-  filter: blur(38px) saturate(1.15);
   pointer-events: none;
 }
 .wallet-blob {
@@ -402,6 +468,7 @@ select:focus-visible,
   width: 62%;
   height: 62%;
   border-radius: 50%;
+  filter: blur(38px) saturate(1.15);
   mix-blend-mode: screen;
   will-change: transform;
 }
@@ -449,7 +516,6 @@ select:focus-visible,
   position: absolute;
   inset: -30%;
   z-index: 0;
-  filter: blur(16px) saturate(1.05);
   pointer-events: none;
   background: var(--nav-aura-base);
 }
@@ -458,6 +524,7 @@ select:focus-visible,
   width: 70%;
   height: 130%;
   border-radius: 50%;
+  filter: blur(16px) saturate(1.05);
   mix-blend-mode: var(--nav-aura-blend);
   will-change: transform;
 }
@@ -484,6 +551,67 @@ select:focus-visible,
   box-shadow: var(--soft-raised);
 }
 
+/* ── Material "cristal líquido" (referencia Skylrk, variante F) ──
+   Vidrio grueso: gradiente diagonal + specular highlight arriba + sombra
+   interna abajo, con la transparencia atenuada para que el contenido
+   conserve contraste. Superficie de cards, acciones, chips y avatar. */
+:root {
+  --lg-grad: linear-gradient(160deg, rgba(255,255,255,.085) 0%, rgba(255,255,255,.032) 42%, rgba(255,255,255,.055) 100%);
+  --lg-border: rgba(255,255,255,.11);
+  --lg-inset: inset 0 1px 1px rgba(255,255,255,.20), inset 0 -14px 22px rgba(0,0,0,.16);
+  --lg-drop: 0 6px 20px rgba(0,0,0,.30);
+  --lg-sheen: linear-gradient(180deg, rgba(255,255,255,.09), transparent);
+  --lg-ic-grad: linear-gradient(160deg, rgba(255,255,255,.10), rgba(255,255,255,.035));
+  --lg-ic-border: rgba(255,255,255,.10);
+  /* anillo que separa avatares solapados sobre cristal (antes: color sólido de la card) */
+  --lg-avatar-ring: rgba(28,28,30,.72);
+}
+.light {
+  --lg-grad: linear-gradient(160deg, rgba(255,255,255,.92) 0%, rgba(255,255,255,.72) 42%, rgba(255,255,255,.82) 100%);
+  --lg-border: rgba(255,255,255,.85);
+  --lg-inset: inset 0 1px 1px rgba(255,255,255,.9), inset 0 -14px 22px rgba(15,23,42,.05);
+  --lg-drop: 0 6px 20px rgba(15,23,42,.10);
+  --lg-sheen: linear-gradient(180deg, rgba(255,255,255,.55), transparent);
+  --lg-ic-grad: linear-gradient(160deg, rgba(255,255,255,.85), rgba(255,255,255,.55));
+  --lg-ic-border: rgba(15,23,42,.06);
+  --lg-avatar-ring: rgba(255,255,255,.86);
+}
+
+.liquid-glass {
+  position: relative;
+  background: var(--lg-grad);
+  backdrop-filter: blur(22px) saturate(1.7);
+  -webkit-backdrop-filter: blur(22px) saturate(1.7);
+  border: 1px solid var(--lg-border);
+  box-shadow: var(--lg-inset), var(--lg-drop);
+  overflow: hidden;
+}
+/* brillo especular superior: la firma del vidrio grueso.
+   Va DETRÁS del contenido (z-index 0 + hijos elevados); si se pintara encima,
+   lavaría los títulos que caen en el 44% superior de la card. */
+/* Brillo especular: altura FIJA, no porcentual. Con `44%` el reflejo crecía con
+   la card — en una card alta (Movimientos) eran ~110px de degradado frente a
+   ~26px en las bajas, y se veía mucho más clara que las demás. */
+.liquid-glass::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; top: 0;
+  height: 34px;
+  z-index: 0;
+  background: var(--lg-sheen);
+  pointer-events: none;
+}
+.liquid-glass > * {
+  position: relative;
+  z-index: 1;
+}
+/* contenedores de icono dentro del cristal (más tenues que la superficie) */
+.liquid-glass-ic {
+  background: var(--lg-ic-grad);
+  border: 1px solid var(--lg-ic-border);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.20);
+}
+
 /* ── Aurora animada de los segmentos del gráfico de MOVIMIENTOS ──
    Mismo lenguaje que los wallets (base casi-negra + blobs monocromáticos del hue
    de la categoría), miniaturizado para segmentos de 14px. Balance oscuro:
@@ -496,7 +624,6 @@ select:focus-visible,
 .mov-seg-aura {
   position: absolute;
   inset: -40%;
-  filter: blur(9px) saturate(1.15);
   pointer-events: none;
 }
 .mov-seg-blob {
@@ -504,6 +631,7 @@ select:focus-visible,
   width: 70%;
   height: 180%;
   border-radius: 50%;
+  filter: blur(9px) saturate(1.15);
   mix-blend-mode: screen;
   will-change: transform;
 }
@@ -518,3 +646,200 @@ select:focus-visible,
 @media (prefers-reduced-motion: reduce) {
   .mov-seg-blob { animation: none; }
 }
+
+/* ═══════════════ Detalle de billetera (/wallets): marco, vuelo y bolsillo ═══════════════
+   Port del demo aprobado (docs/demos/wallets-carousel-demo-header.html).
+   Coreografía por clases en la raíz .wd-screen: .is-detail (vuelo en curso u hoja abierta)
+   y .is-settled (panel visible; la tarjeta aterrizó o está por encajar). */
+
+/* marco-billetera: la tarjeta vive METIDA en el bolsillo; solo asoma su banda superior */
+/* Alto proporcional: con 200px fijos, en pantallas de móvil (iPhone 11 ≈ 715px
+   útiles) la billetera + las cards de acceso consumían 520px y a la lista de
+   movimientos le quedaban 150px (≈1 fila). Cede alto en pantallas cortas. */
+.wd-strip { position: relative; height: clamp(168px, 24vh, 200px); flex: none; margin-bottom: clamp(6px, 1.2vh, 14px); }
+/* Bloque de accesos (Categorías / Frecuentes / Presupuesto): separaciones
+   proporcionales, para no comerse la lista en pantallas cortas. */
+.wd-access { margin-top: clamp(6px, 1.2vh, 16px); gap: clamp(6px, 1vh, 12px); padding-bottom: clamp(4px, 1vh, 12px) !important; }
+.wd-access .liquid-glass { padding-top: clamp(9px, 1.4vh, 20px); padding-bottom: clamp(9px, 1.4vh, 20px); }
+.wd-strip-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: fill; }
+.wd-strip-bg { filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.38)); }
+.wd-strip-front { pointer-events: none; }
+/* boca del bolsillo medida sobre el asset (costura ~36% con onda suave) */
+.wd-pocket-clip {
+  clip-path: polygon(0% 36.5%, 8% 36.4%, 16% 35.8%, 26% 35.6%, 36% 35.6%, 44% 36.4%,
+                     50% 36.9%, 56% 36.4%, 64% 35.9%, 74% 35.8%, 84% 35.6%, 92% 35.6%,
+                     100% 36.2%, 100% 100%, 0% 100%);
+}
+.wd-card-slot { position: absolute; left: 24px; right: 24px; top: 15px; aspect-ratio: 1313 / 857; }
+
+/* logo TALLADO PROFUNDO en el cuero: 3 capas enmascaradas (luz bajo el borde,
+   tinta hundida, sombra superior difusa) */
+.wd-logo { position: absolute; right: 26px; bottom: 17px; width: 66px; height: 36px; pointer-events: none; }
+.wd-logo i {
+  position: absolute; inset: 0;
+  -webkit-mask: url('/brand/logo.webp') center / contain no-repeat;
+  mask: url('/brand/logo.webp') center / contain no-repeat;
+}
+.wd-logo .wd-logo-hl  { background: rgba(255, 240, 218, 0.20); transform: translateY(2.5px); }
+.wd-logo .wd-logo-ink { background: rgba(30, 22, 14, 0.40); }
+.wd-logo .wd-logo-sh  { background: rgba(0, 0, 0, 0.24); transform: translateY(-2px); filter: blur(1px); }
+
+/* cara FRONTAL de la tarjeta: saldo grabado. Tipografía/padding en em sobre un
+   font-size proporcional al ancho (lo fija el JS) → idéntica en vuelo y adoptada */
+.wd-card-front {
+  position: absolute; inset: 0; border-radius: 0.63em; overflow: hidden;
+  background-color: #15151c; /* fondo bajo la imagen metálica teñida */
+  box-shadow: inset 0 0 0 0.045em rgba(0, 0, 0, 0.45),
+              inset 0 0.045em 0 rgba(255, 255, 255, 0.18), inset 0 0 0 0.045em rgba(255, 255, 255, 0.05);
+  padding: 0.53em 0.84em;
+  color: #fff;
+}
+/* iluminación radial suave desde arriba-derecha (propuesta C) */
+.wd-cf-glow {
+  position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background: radial-gradient(120% 90% at 78% 8%, rgba(255, 255, 255, 0.20), transparent 55%);
+}
+/* chip dorado + ondas contactless (propuesta B). Todo en em: escala con el vuelo. */
+.wd-cf-chip {
+  position: absolute; z-index: 2; right: 2.1em; top: 0.6em;
+  width: 1.2em; height: 0.92em; border-radius: 0.18em;
+  background: linear-gradient(145deg, #e8d9a8 0%, #c9b273 38%, #f0e6c0 60%, #b99f5e 100%);
+  box-shadow: inset 0 0 0 0.03em rgba(0, 0, 0, 0.28), 0 0.03em 0.07em rgba(0, 0, 0, 0.3);
+}
+.wd-cf-chip::before, .wd-cf-chip::after { content: ''; position: absolute; background: rgba(0, 0, 0, 0.26); }
+.wd-cf-chip::before { left: 0; right: 0; top: 50%; height: 0.03em; }
+.wd-cf-chip::after { top: 0.14em; bottom: 0.14em; left: 34%; width: 0.03em; }
+.wd-cf-wave {
+  position: absolute; z-index: 2; right: 0.72em; top: 0.72em;
+  width: 0.68em; height: 0.68em; color: #fff; opacity: 0.8;
+}
+.wd-cf-content { position: relative; z-index: 1; display: block; }
+
+.wd-cf-label {
+  display: block;
+  font-family: var(--font-sans);
+  font-size: 0.42em; font-weight: 600; letter-spacing: 0.14em;
+  color: rgba(255, 255, 255, 0.78); text-transform: uppercase;
+}
+.wd-cf-amount {
+  display: block;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.92em; font-weight: 700; letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums; margin-top: 0.14em;
+}
+.wd-cf-amount small { font-size: 0.6em; font-weight: 700; opacity: 0.85; margin-right: 0.13em; }
+
+/* tarjeta adoptada por el layout tras encajar (el JS le fija el clip a la boca).
+   Se monta OCULTA durante el vuelo; el motor la revela en el tick del encaje. */
+.wd-static-card { position: absolute; inset: 0; visibility: hidden; }
+.wd-static-card.is-on { visibility: visible; }
+
+/* ── panel del detalle: PÁGINA ESTÁTICA (solo scrollea la lista de movimientos) ── */
+.wd-panel {
+  /* fixed a viewport (mismo plano que las capas de cuero fx en body): así el
+     sándwich trasero(z1) < panel(z10) < frontal(z40) se cumple por z-index reales.
+     left/width se fijan por JS (--wd-left/--wd-width) al ancho real del screen. */
+  position: fixed;
+  top: 0; bottom: 0;
+  left: var(--wd-left, 0px); width: var(--wd-width, 100%);
+  padding: 0 16px;
+  z-index: 10;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+  opacity: 0; visibility: hidden; transform: translateY(16px);
+  transition: opacity 0.28s var(--ease-out-strong, cubic-bezier(0.23, 1, 0.32, 1)),
+              transform 0.28s var(--ease-out-strong, cubic-bezier(0.23, 1, 0.32, 1)),
+              visibility 0s 0.28s;
+}
+.wd-screen.is-settled .wd-panel {
+  opacity: 1; visibility: visible; transform: none;
+  transition: opacity 0.32s var(--ease-out-strong, cubic-bezier(0.23, 1, 0.32, 1)),
+              transform 0.32s var(--ease-out-strong, cubic-bezier(0.23, 1, 0.32, 1)),
+              visibility 0s;
+}
+.wd-screen.is-detail .wd-carousel { opacity: 0; pointer-events: none; }
+.wd-carousel { transition: opacity 0.42s cubic-bezier(0.23, 1, 0.32, 1); }
+
+/* scroll interno de la lista (scrollbar oculta, look móvil) */
+.wd-mv-scroll {
+  flex: 1; min-height: 0;
+  overflow-y: auto;
+  /* Reserva bajo la lista para que las últimas filas puedan subir por encima del
+     bolsillo. Proporcional al alto de pantalla: un valor fijo (190px) dejaba sin
+     espacio la lista en móviles y no se veían los movimientos. */
+  padding-bottom: clamp(96px, 15vh, 190px);
+  scrollbar-width: none;
+}
+.wd-mv-scroll::-webkit-scrollbar { display: none; }
+
+/* cards de acceso y Movimientos: entran RECIÉN cuando la tarjeta encaja (is-seated) */
+.wd-reveal {
+  opacity: 0; transform: translateY(14px);
+  transition: opacity 0.3s cubic-bezier(0.23, 1, 0.32, 1), transform 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+}
+.wd-screen.is-seated .wd-reveal { opacity: 1; transform: none; }
+.wd-screen.is-seated .wd-reveal-2 { transition-delay: 0.05s; }
+.wd-screen.is-seated .wd-reveal-3 { transition-delay: 0.1s; }
+
+/* entrada de las filas: stagger gateado por el encaje */
+.wd-mv-item {
+  opacity: 0; transform: translateY(10px);
+  transition: opacity 0.28s cubic-bezier(0.23, 1, 0.32, 1), transform 0.28s cubic-bezier(0.23, 1, 0.32, 1);
+}
+.wd-screen.is-seated .wd-mv-item { opacity: 1; transform: none; transition-delay: 0.1s; }
+.wd-screen.is-seated .wd-mv-item:nth-child(2) { transition-delay: 0.13s; }
+.wd-screen.is-seated .wd-mv-item:nth-child(3) { transition-delay: 0.16s; }
+.wd-screen.is-seated .wd-mv-item:nth-child(4) { transition-delay: 0.19s; }
+.wd-screen.is-seated .wd-mv-item:nth-child(5) { transition-delay: 0.22s; }
+.wd-screen.is-seated .wd-mv-item:nth-child(6) { transition-delay: 0.25s; }
+.wd-screen.is-seated .wd-mv-item:nth-child(7) { transition-delay: 0.28s; }
+.wd-screen.is-seated .wd-mv-item:nth-child(8) { transition-delay: 0.31s; }
+
+/* traspaso entrada → scroll: en flow-live el rAF manda (sin transiciones) */
+.wd-panel.wd-flow .wd-flow-el { transition: opacity 0.3s ease, transform 0.3s ease, filter 0.3s ease; }
+.wd-panel.wd-flow-live .wd-flow-el { transition: none; }
+
+/* ── capas fx del vuelo (viewport-fixed; el dock cubre la bottom-nav z-30) ── */
+.wd-fx { position: fixed; inset: 0; pointer-events: none; }
+.wd-fx-under { z-index: 6; } /* cuero trasero: bajo el panel (z10) -> la lista tapa su franja superior y entra por la boca */
+.wd-fx-over  { z-index: 40; perspective: 1100px; }
+.wd-fx-leather { position: absolute; object-fit: contain; will-change: transform; }
+.wd-fx-leather.back { filter: drop-shadow(0 20px 26px rgba(0, 0, 0, 0.5)); }
+.wd-fx-leather.front {
+  clip-path: polygon(0% 14%, 30% 14%, 34% 14.6%, 38% 16.5%, 42% 19.5%,
+                     46% 21.3%, 50% 22%, 54% 21.8%, 58% 20.5%, 62% 18%,
+                     66% 15.5%, 70% 14.4%, 100% 14.4%, 100% 100%, 0% 100%);
+}
+.wd-fx-card { position: absolute; will-change: transform, opacity, filter; transform-style: preserve-3d; }
+.wd-fx-card .wd-spin { position: absolute; inset: 0; will-change: transform; transform-style: preserve-3d; }
+.wd-fx-card .wd-face { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.wd-fx-card .wd-face.front { transform: rotateY(180deg); }
+/* sombra de la tarjeta EN VUELO: solo en la capa fx; el encaje la funde a cero
+   (una tarjeta dentro del bolsillo no proyecta sombra) */
+.wd-fx-card .wd-face.front { filter: drop-shadow(0 5px 9px rgba(0, 0, 0, 0.3)); will-change: filter; }
+.wd-fx-card img { position: absolute; inset: 0; width: 100%; height: 100%; filter: drop-shadow(0 5px 9px rgba(0, 0, 0, 0.35)); }
+.wd-fx-card .wd-tint {
+  position: absolute; inset: 0;
+  background: var(--tint); mix-blend-mode: color; opacity: 0.55;
+  -webkit-mask: url('/wallets/card-flat.webp') center / contain no-repeat;
+  mask: url('/wallets/card-flat.webp') center / contain no-repeat;
+}
+/* clon del bolsillo del marco: recorta la tarjeta al encajar; aparece con el panel */
+.wd-fx-strip-front {
+  position: absolute; pointer-events: none;
+  opacity: 0; transition: opacity 0.32s cubic-bezier(0.23, 1, 0.32, 1);
+}
+.wd-fx-strip-front > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: fill; }
+.wd-fx-strip-front.is-settled { opacity: 1; }
+
+/* el panel del detalle es fixed: ningún ancestro puede tener transform (rompería
+   el anclaje al viewport). page-enter termina en transform:none, pero lo forzamos. */
+body.wallet-detail-open .page-enter { transform: none !important; animation: none; }
+
+/* con el detalle abierto, el chrome de la página se retira: la top-bar (avatar +
+   título) desaparece dejando solo el ← del panel, y la bottom-nav no debe recibir
+   taps bajo el cuero anclado. Solo opacidad: el layout no se mueve (la geometría
+   del vuelo depende de él). */
+body.wallet-detail-open .topbar-host,
+body.wallet-detail-open .bottomnav-host { opacity: 0; pointer-events: none; }
+.topbar-host, .bottomnav-host { transition: opacity 0.3s ease; }

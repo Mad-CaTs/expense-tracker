@@ -1,7 +1,6 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
-import { motion } from 'framer-motion'
 
 import { BottomNav } from '@/components/layout/BottomNav'
 import { SheetHost } from '@/components/layout/SheetHost'
@@ -17,14 +16,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   if (isFocusedRoute) {
     return (
       <div className="min-h-screen" style={{ background: 'var(--bg-base)' }}>
-        <motion.div
-          key={pathname}
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.18, ease: 'easeOut' }}
-        >
+        <div key={pathname} className="page-enter">
           {children}
-        </motion.div>
+        </div>
         <SheetHost />
       </div>
     )
@@ -36,14 +30,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <TopBar />
 
       <main id="main-content" className="pb-24 md:ml-[220px] md:pb-0">
-        <motion.div
-          key={pathname}
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.18, ease: 'easeOut' }}
-        >
+        <div key={pathname} className="page-enter">
           {children}
-        </motion.div>
+        </div>
       </main>
 
       <SheetHost />

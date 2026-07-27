@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
+import { preload } from 'react-dom'
 
 import { useReducedMotion } from 'framer-motion'
 
@@ -9,17 +10,17 @@ import { useWallets } from '@/lib/hooks/useWallets'
 import { categoryHueSat } from '@/lib/utils/cardVisuals'
 import type { Wallet } from '@/types'
 
-/** Los 3 temas de cuero disponibles (assets en public/wallets). */
-type LeatherTheme = 'green' | 'brown' | 'tan'
-const LEATHER_SRC: Record<LeatherTheme, string> = {
-  green: '/wallets/wallet-green.png',
-  brown: '/wallets/wallet-brown.png',
-  tan: '/wallets/wallet-tan.png',
+/** Los 3 temas de cuero disponibles (assets en public/wallets, WebP al tamaño de render ×3). */
+export type LeatherTheme = 'green' | 'brown' | 'tan'
+export const LEATHER_SRC: Record<LeatherTheme, string> = {
+  green: '/wallets/wallet-green.webp',
+  brown: '/wallets/wallet-brown.webp',
+  tan: '/wallets/wallet-tan.webp',
 }
-const CARD_SRC = '/wallets/card.png'
+const CARD_SRC = '/wallets/card.webp'
 
 /** Mapea el color del wallet al tema de cuero más cercano por su matiz (hue). */
-function themeForColor(color?: string): LeatherTheme {
+export function themeForColor(color?: string): LeatherTheme {
   if (!color) return 'green'
   const { h } = categoryHueSat(color)
   // verde ~80-170, tan/ámbar ~35-65, marrón el resto (rojizos/naranjas oscuros)
@@ -50,6 +51,7 @@ function LeatherWallet({ wallet, active }: { wallet: Wallet; active: boolean }) 
   const tint = wallet.color ?? '#4ade80'
   return (
     <div
+      data-wallet-visual
       className="relative select-none"
       style={{
         width: 260,
@@ -66,18 +68,20 @@ function LeatherWallet({ wallet, active }: { wallet: Wallet; active: boolean }) 
         src={leather}
         alt=""
         aria-hidden
+        decoding="async"
         className="absolute inset-0 h-full w-full object-contain pointer-events-none"
         style={{ zIndex: 1 }}
       />
 
       {/* z2 — tarjeta metálica teñida al color del wallet, sale de la ranura */}
       <div
+        data-wallet-card
         className="absolute left-1/2 -translate-x-1/2"
         style={{ width: 190, aspectRatio: '1313 / 1207', top: -66, zIndex: 2 }}
       >
         <div className="absolute inset-0" style={{ filter: active ? 'drop-shadow(0 5px 9px rgba(0,0,0,0.35))' : 'none' }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={CARD_SRC} alt="" aria-hidden className="absolute inset-0 h-full w-full object-contain" />
+          <img src={CARD_SRC} alt="" aria-hidden decoding="async" className="absolute inset-0 h-full w-full object-contain" />
           <div
             className="absolute inset-0 pointer-events-none"
             style={{
@@ -102,6 +106,7 @@ function LeatherWallet({ wallet, active }: { wallet: Wallet; active: boolean }) 
       <img
         src={leather}
         alt={wallet.name}
+        decoding="async"
         className="absolute inset-0 h-full w-full object-contain pointer-events-none"
         style={{
           zIndex: 3,
@@ -128,7 +133,17 @@ const DURATION = 260
 
 const SWIPE_THRESHOLD = 45
 
-export function WalletLeatherCarousel() {
+export interface WalletLeatherCarouselProps {
+  /** Toque sobre la billetera activa: entrega el wallet y sus capas para el vuelo al detalle. */
+  onOpenActive?: (wallet: Wallet, els: { walletEl: HTMLElement; cardEl: HTMLElement }) => void
+}
+
+export function WalletLeatherCarousel({ onOpenActive }: WalletLeatherCarouselProps = {}) {
+  // Los assets del arte por capas se conocen de antemano: se precargan en paralelo
+  // con la query de wallets en vez de esperar a que la data llegue y monte los <img>.
+  preload(CARD_SRC, { as: 'image' })
+  for (const src of Object.values(LEATHER_SRC)) preload(src, { as: 'image' })
+
   const { data: wallets = [], isLoading } = useWallets()
   const [rawCurrent, setCurrent] = useState(0)
   const [pressed, setPressed] = useState<number | null>(null)
@@ -235,7 +250,7 @@ export function WalletLeatherCarousel() {
                 height: 291,
                 margin: '-145px 0 0 -130px',
                 paddingTop: 76,
-                cursor: isActive ? 'default' : 'pointer',
+                cursor: 'pointer',
                 willChange: 'transform, opacity, filter',
                 ...base,
                 // reduced-motion: sin desplazamiento ni escala, solo opacidad
@@ -246,7 +261,16 @@ export function WalletLeatherCarousel() {
               }}
               onPointerDown={() => { if (!isActive) setPressed(i) }}
               onPointerLeave={() => setPressed(null)}
-              onClick={() => { if (!moved.current && !isActive) setCurrent(i) }}
+              onClick={(e) => {
+                if (moved.current) return
+                if (!isActive) {
+                  setCurrent(i)
+                  return
+                }
+                const walletEl = e.currentTarget.querySelector<HTMLElement>('[data-wallet-visual]')
+                const cardEl = e.currentTarget.querySelector<HTMLElement>('[data-wallet-card]')
+                if (walletEl && cardEl) onOpenActive?.(w, { walletEl, cardEl })
+              }}
             >
               <LeatherWallet wallet={w} active={isActive} />
             </div>
