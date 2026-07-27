@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 
 import { AttachmentsModal } from '@/components/features/expenses/AttachmentsModal'
 import { CATEGORY_ICON_MAP } from '@/lib/utils/categoryIcons'
+import { EASE, MOTION_S } from '@/lib/utils/motion'
 import type { Expense } from '@/types'
 
 interface ExpenseRowProps {
@@ -38,7 +39,7 @@ export function ExpenseRow({ expense, onEdit, onDelete, index, expanded, onToggl
       <motion.button
         initial={{ opacity: 0, y: 4 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: index * 0.03, duration: 0.18, ease: [0.32, 0.72, 0, 1] }}
+        transition={{ delay: index * 0.03, duration: MOTION_S.tint, ease: EASE }}
         onClick={onToggle}
         className="w-full cursor-pointer transition-colors duration-150"
         style={{
@@ -50,7 +51,7 @@ export function ExpenseRow({ expense, onEdit, onDelete, index, expanded, onToggl
         <div className="flex items-center gap-3 px-4 py-3">
           <motion.div
             animate={{ rotate: expanded ? 180 : 0 }}
-            transition={{ duration: 0.2, ease: [0.32, 0.72, 0, 1] }}
+            transition={{ duration: MOTION_S.layer, ease: EASE }}
             className="flex-shrink-0"
           >
             <ChevronDown size={13} style={{ color: 'var(--text-muted)' }} />
@@ -92,7 +93,7 @@ export function ExpenseRow({ expense, onEdit, onDelete, index, expanded, onToggl
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2, ease: [0.32, 0.72, 0, 1] }}
+            transition={{ duration: MOTION_S.layer, ease: EASE }}
             className="overflow-hidden"
             style={{ borderTop: '1px solid var(--border-subtle)', background: 'var(--bg-subtle)' }}
           >

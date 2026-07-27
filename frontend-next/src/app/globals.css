@@ -72,6 +72,16 @@
   --glass-item-active: rgba(255, 255, 255, 0.12);
   --glass-item-active-ic: rgba(255, 255, 255, 0.18);
   --glass-sep: rgba(255, 255, 255, 0.09);
+
+  /* ── Movimiento ──
+     Una sola curva para toda la app (el paginado de iOS): arranca con algo de
+     aceleración y frena largo, así el recorrido se LEE. Lo que cambia por
+     interacción es la DURACIÓN, no la curva. Espejo de lib/utils/motion.ts. */
+  --ease-sys: cubic-bezier(0.32, 0.72, 0, 1);
+  --dur-press: 120ms;  /* hundido de un botón: responde al dedo */
+  --dur-tint: 180ms;   /* color/opacidad en el sitio: hover, estado activo */
+  --dur-layer: 300ms;  /* aparición de una capa: sheets, modales */
+  --dur-travel: 460ms; /* recorrido que se sigue con la vista: carruseles */
 }
 
 /* ── Light mode (Cool Gray) ── */
@@ -174,7 +184,7 @@
 
 .icon-btn {
   color: var(--text-muted);
-  transition: background 0.15s, color 0.15s;
+  transition: background var(--dur-tint) var(--ease-sys), color var(--dur-tint) var(--ease-sys);
 }
 .icon-btn:hover {
   background: var(--bg-hover);
@@ -188,7 +198,7 @@
 .btn-danger-soft {
   background: rgba(239, 68, 68, 0.1);
   color: var(--danger);
-  transition: background 0.15s;
+  transition: background var(--dur-tint) var(--ease-sys);
 }
 .btn-danger-soft:hover {
   background: rgba(239, 68, 68, 0.18);
@@ -198,7 +208,7 @@
   border: 1px solid var(--border-default);
   background: var(--bg-input);
   border-radius: 12px;
-  transition: border-color 0.15s;
+  transition: border-color var(--dur-tint) var(--ease-sys);
 }
 .input-wrapper:hover {
   border-color: var(--border-strong);
@@ -218,11 +228,26 @@ button.input-wrapper:focus:not([data-state="closed"]),
   border: 1px solid transparent;
   background: var(--bg-input);
   border-radius: 12px;
-  transition: border-color 0.15s;
+  transition: border-color var(--dur-tint) var(--ease-sys);
 }
 .input-borderless:focus,
 .input-borderless:focus-within {
   border-color: var(--accent-light) !important;
+}
+
+/* Las utilidades transition-* de Tailwind traen su propia curva (0.4,0,0.2,1)
+   y 150ms. Se alinean con la escala del sistema en un solo sitio, en vez de
+   anotar duración y ease en cada uno de los ~19 usos. */
+.transition-colors,
+.transition-opacity,
+.transition-transform,
+.transition-all {
+  transition-timing-function: var(--ease-sys);
+  transition-duration: var(--dur-tint);
+}
+/* El hundido de un tap es la excepción: debe seguir al dedo, no leerse. */
+.transition-transform {
+  transition-duration: var(--dur-press);
 }
 
 html {
@@ -235,7 +260,7 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition: background-color var(--dur-tint) var(--ease-sys), color var(--dur-tint) var(--ease-sys);
 }
 
 /* Subtle noise overlay — fixed, pointer-events-none, below all interactive layers */
@@ -277,7 +302,8 @@ textarea::placeholder {
   to   { opacity: 1; transform: none; }
 }
 .page-enter {
-  animation: page-enter 0.18s ease-out both;
+  /* 0.18s ease-out entraba de golpe: la curva del sistema, con recorrido legible. */
+  animation: page-enter 0.3s var(--ease-sys) both;
 }
 
 /* Equivale al spring(260, 24) de entrada: ease-out con ligero overshoot */
@@ -286,7 +312,9 @@ textarea::placeholder {
   to   { opacity: 1; transform: none; }
 }
 .enter-pop {
-  animation: enter-pop 0.55s cubic-bezier(0.22, 1.36, 0.32, 1) backwards;
+  /* Conserva el overshoot (spring con rebote): es el carácter de la entrada,
+     no un timing a uniformar. Solo se alarga para poder seguirse en móvil. */
+  animation: enter-pop 0.62s cubic-bezier(0.22, 1.36, 0.32, 1) backwards;
   animation-delay: calc(var(--enter-i, 0) * 90ms);
 }
 
@@ -315,7 +343,7 @@ textarea::placeholder {
   to   { opacity: 1; }
 }
 .seg-fade {
-  animation: seg-fade 0.4s ease-out backwards;
+  animation: seg-fade 0.4s var(--ease-sys) backwards;
   animation-delay: calc(120ms + var(--enter-i, 0) * 60ms);
 }
 
@@ -656,10 +684,10 @@ select:focus-visible,
 /* Alto proporcional: con 200px fijos, en pantallas de móvil (iPhone 11 ≈ 715px
    útiles) la billetera + las cards de acceso consumían 520px y a la lista de
    movimientos le quedaban 150px (≈1 fila). Cede alto en pantallas cortas. */
-.wd-strip { position: relative; height: clamp(168px, 24vh, 200px); flex: none; margin-bottom: clamp(6px, 1.2vh, 14px); }
+.wd-strip { position: relative; height: clamp(168px, 24vh, 200px); flex: none; margin-bottom: clamp(10px, 1.6vh, 18px); }
 /* Bloque de accesos (Categorías / Frecuentes / Presupuesto): separaciones
    proporcionales, para no comerse la lista en pantallas cortas. */
-.wd-access { margin-top: clamp(6px, 1.2vh, 16px); gap: clamp(6px, 1vh, 12px); padding-bottom: clamp(4px, 1vh, 12px) !important; }
+.wd-access { margin-top: clamp(10px, 1.8vh, 20px); gap: clamp(10px, 1.6vh, 16px); padding-bottom: clamp(8px, 1.5vh, 16px) !important; }
 .wd-access .liquid-glass { padding-top: clamp(9px, 1.4vh, 20px); padding-bottom: clamp(9px, 1.4vh, 20px); }
 .wd-strip-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: fill; }
 .wd-strip-bg { filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.38)); }

@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from '@/components/ui/Select'
 import { useCategories } from '@/lib/hooks/useCategories'
+import { EASE, MOTION_S } from '@/lib/utils/motion'
 import { useFilterStore } from '@/stores/filterStore'
 import type { Period } from '@/types'
 
@@ -42,7 +43,7 @@ export function ExpenseFilters({ onNew }: { onNew?: () => void }) {
                   <motion.span
                     layoutId="period-active"
                     className="bg-gold absolute inset-0 rounded-full"
-                    transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                    transition={{ duration: MOTION_S.tint, ease: EASE }}
                   />
                 )}
                 <span className="relative">{label}</span>
@@ -97,7 +98,7 @@ export function ExpenseFilters({ onNew }: { onNew?: () => void }) {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.22, ease: [0.32, 0.72, 0, 1] }}
+            transition={{ duration: MOTION_S.layer, ease: EASE }}
             className="overflow-hidden"
           >
             <div className="pt-3 pb-1">

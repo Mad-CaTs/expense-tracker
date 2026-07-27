@@ -9,6 +9,7 @@ import { Eye, EyeOff, History, Plus, TrendingDown, TrendingUp } from 'lucide-rea
 import { WalletSheet } from '@/components/features/expenses/WalletSheet'
 import { useWallets } from '@/lib/hooks/useWallets'
 import { walletAura } from '@/lib/utils/cardVisuals'
+import { EASE, MOTION_S } from '@/lib/utils/motion'
 import type { Wallet } from '@/types'
 
 // Logo de la app (asset local optimizado; antes bucket externo R2)
@@ -80,17 +81,17 @@ function WalletCard({
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       whileTap={{ scale: 0.985 }}
-      transition={{ type: 'spring', stiffness: 380, damping: 28 }}
+      transition={{ duration: MOTION_S.press, ease: EASE }}
       style={{
         rotateX,
         rotateY,
         boxShadow,
         ['--enter-i' as string]: index,
       }}
-      className="enter-pop relative flex-shrink-0 w-full rounded-[28px] text-left cursor-pointer"
+      className="enter-pop relative flex-shrink-0 w-full rounded-[22px] text-left cursor-pointer"
     >
       <div
-        className="relative rounded-[28px] overflow-hidden"
+        className="relative rounded-[22px] overflow-hidden"
         style={{ background: aura.base }}
       >
         {/* Aurora animada (blobs difuminados) */}
@@ -189,8 +190,8 @@ function AddWalletCard({ onClick, full = false }: { onClick: () => void; full?: 
       type="button"
       onClick={onClick}
       whileTap={{ scale: 0.97 }}
-      transition={{ type: 'spring', stiffness: 400, damping: 28 }}
-      className={`${full ? 'w-full' : 'flex-shrink-0 w-[140px]'} rounded-[22px] border border-dashed flex flex-col items-center justify-center gap-2 py-8`}
+      transition={{ duration: MOTION_S.press, ease: EASE }}
+      className={`${full ? 'w-full' : 'flex-shrink-0 w-[140px]'} rounded-[18px] border border-dashed flex flex-col items-center justify-center gap-2 py-8`}
       style={{ borderColor: 'var(--border-subtle)', color: 'var(--text-placeholder)' }}
     >
       <Plus size={20} />
@@ -275,7 +276,7 @@ export function WalletCarousel({ selectedWalletId, onSelect }: WalletCarouselPro
                   ? (w.color ?? 'var(--accent-light)')
                   : 'var(--border-strong)',
               }}
-              transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+              transition={{ duration: MOTION_S.tint, ease: EASE }}
               style={{ height: '6px' }}
             />
           ))}

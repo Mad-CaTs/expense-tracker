@@ -6,6 +6,7 @@ import { motion } from 'framer-motion'
 import { X } from 'lucide-react'
 
 import { useCreateWallet } from '@/lib/hooks/useWallets'
+import { EASE, MOTION_S } from '@/lib/utils/motion'
 
 const COLOR_PRESETS = [
   '#d4af37', '#ef4444', '#3b82f6', '#22c55e',
@@ -40,7 +41,7 @@ export function WalletSheet({ onClose }: WalletSheetProps) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.15 }}
+      transition={{ duration: MOTION_S.tint, ease: EASE }}
       className="fixed inset-0 z-50 flex items-end justify-center sm:items-center"
       style={{ background: 'rgba(0,0,0,0.5)' }}
       onClick={onClose}
@@ -49,8 +50,8 @@ export function WalletSheet({ onClose }: WalletSheetProps) {
         initial={{ opacity: 0, y: 32 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 32 }}
-        transition={{ duration: 0.22, ease: [0.32, 0.72, 0, 1] }}
-        className="w-full max-w-sm overflow-hidden rounded-t-[24px] sm:max-w-md sm:rounded-[20px]"
+        transition={{ duration: MOTION_S.layer, ease: EASE }}
+        className="w-full max-w-sm overflow-hidden rounded-t-[20px] sm:max-w-md sm:rounded-[16px]"
         style={{ background: 'var(--bg-card-inner)' }}
         onClick={e => e.stopPropagation()}
       >
@@ -125,7 +126,7 @@ export function WalletSheet({ onClose }: WalletSheetProps) {
             onClick={handleCreate}
             disabled={create.isPending}
             whileTap={{ scale: 0.97 }}
-            transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+            transition={{ duration: MOTION_S.press, ease: EASE }}
             className="h-11 w-full rounded-full text-[13px] font-bold disabled:opacity-50"
             style={{ background: 'var(--accent-light)', color: 'var(--bg-base)' }}
           >

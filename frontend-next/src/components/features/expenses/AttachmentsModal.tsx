@@ -6,6 +6,7 @@ import { motion } from 'framer-motion'
 
 import { getDownloadUrl } from '@/lib/api/attachments'
 import { useAttachments } from '@/lib/hooks/useAttachments'
+import { EASE, MOTION_S } from '@/lib/utils/motion'
 import type { Attachment } from '@/types'
 
 function formatSize(bytes: number) {
@@ -87,7 +88,7 @@ export function AttachmentsModal({ expenseId, description, onClose }: Attachment
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        transition={{ duration: 0.15 }}
+        transition={{ duration: MOTION_S.tint, ease: EASE }}
         className="fixed inset-0 z-50 flex items-end justify-center sm:items-center"
         style={{ background: 'rgba(0,0,0,0.5)' }}
         onClick={onClose}
@@ -96,8 +97,8 @@ export function AttachmentsModal({ expenseId, description, onClose }: Attachment
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 24 }}
-          transition={{ duration: 0.2, ease: [0.32, 0.72, 0, 1] }}
-          className="w-full max-w-sm overflow-hidden rounded-t-[24px] sm:max-w-2xl sm:rounded-[20px]"
+          transition={{ duration: MOTION_S.layer, ease: EASE }}
+          className="w-full max-w-sm overflow-hidden rounded-t-[20px] sm:max-w-2xl sm:rounded-[16px]"
           style={{ background: 'var(--bg-card-inner)', maxHeight: '85dvh' }}
           onClick={e => e.stopPropagation()}
         >

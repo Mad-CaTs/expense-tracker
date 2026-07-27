@@ -127,9 +127,17 @@ const POS_STYLE: Record<Pos, React.CSSProperties> = {
   'hidden-r': { transform: 'translateX(200px) scale(0.7)', opacity: 0, zIndex: 1, pointerEvents: 'none' },
 }
 
-/** Curva ease-out fuerte: arranca rápido, se siente inmediata al soltar el gesto. */
-const EASE_OUT = 'cubic-bezier(0.23, 1, 0.32, 1)'
-const DURATION = 260
+/** Curva del deslizamiento entre billeteras.
+ *  La anterior (0.23, 1, 0.32, 1 — ease-out-quint) gastaba ~80% del recorrido
+ *  en el primer tercio del tiempo: en móvil el giro terminaba antes de que el
+ *  dedo se levantara y no se percibía. Esta arranca con algo de aceleración y
+ *  frena largo, como el paginado de iOS: el mismo recorrido se LEE. */
+const EASE_OUT = 'cubic-bezier(0.32, 0.72, 0, 1)'
+const DURATION = 460
+
+/** El indicador de posición sigue al gesto, no al giro: más corto para que el
+ *  punto ya esté puesto cuando la billetera todavía está acomodándose. */
+const DOT_DURATION = 260
 
 const SWIPE_THRESHOLD = 45
 
@@ -191,7 +199,7 @@ export function WalletLeatherCarousel({ onOpenActive }: WalletLeatherCarouselPro
       <div className="flex min-h-[calc(100vh-190px)] flex-col items-center justify-center gap-6">
         <div className="h-4 w-28 animate-pulse rounded-full" style={{ background: 'var(--skeleton-from)' }} />
         <div
-          className="animate-pulse rounded-[28px]"
+          className="animate-pulse rounded-[22px]"
           style={{ width: 260, height: 215, background: 'var(--skeleton-from)' }}
         />
       </div>
@@ -255,9 +263,13 @@ export function WalletLeatherCarousel({ onOpenActive }: WalletLeatherCarouselPro
                 ...base,
                 // reduced-motion: sin desplazamiento ni escala, solo opacidad
                 transform: reduce ? 'none' : `${base.transform}${press}`,
+                // El hundido de presión responde al dedo (120ms); el giro entre
+                // billeteras es el que necesita leerse largo.
                 transition: reduce
                   ? `opacity ${DURATION}ms ${EASE_OUT}`
-                  : `transform ${DURATION}ms ${EASE_OUT}, opacity ${DURATION}ms ${EASE_OUT}, filter ${DURATION}ms ${EASE_OUT}`,
+                  : press
+                    ? `transform 120ms ease-out, opacity ${DURATION}ms ${EASE_OUT}, filter ${DURATION}ms ${EASE_OUT}`
+                    : `transform ${DURATION}ms ${EASE_OUT}, opacity ${DURATION}ms ${EASE_OUT}, filter ${DURATION}ms ${EASE_OUT}`,
               }}
               onPointerDown={() => { if (!isActive) setPressed(i) }}
               onPointerLeave={() => setPressed(null)}
@@ -293,7 +305,7 @@ export function WalletLeatherCarousel({ onOpenActive }: WalletLeatherCarouselPro
                 height: 6,
                 width: i === current ? 16 : 6,
                 background: i === current ? 'var(--accent)' : 'var(--border-strong)',
-                transition: reduce ? 'none' : `width ${DURATION}ms ${EASE_OUT}, background ${DURATION}ms ${EASE_OUT}`,
+                transition: reduce ? 'none' : `width ${DOT_DURATION}ms ${EASE_OUT}, background ${DOT_DURATION}ms ${EASE_OUT}`,
               }}
             />
           ))}
