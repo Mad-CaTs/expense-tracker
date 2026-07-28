@@ -1,12 +1,15 @@
 'use client'
 
 import React from 'react'
+import { useRouter } from 'next/navigation'
 import { ArrowLeft, ChevronRight, Search, Wallet as WalletIcon } from 'lucide-react'
 
 import { CATEGORY_ICON_MAP } from '@/lib/utils/categoryIcons'
 import { useBudgets } from '@/lib/hooks/useBudgets'
 import { useCategories } from '@/lib/hooks/useCategories'
 import { useRecurring } from '@/lib/hooks/useRecurring'
+import { MOTION } from '@/lib/utils/motion'
+import { useFilterStore } from '@/stores/filterStore'
 import type { Wallet } from '@/types'
 
 import { useWalletMovements, type WalletMovement } from './useWalletMovements'
@@ -33,10 +36,14 @@ function WalletFrameStrip({
   stripRef,
   slotRef,
   adoptedCard,
+  restored,
 }: {
   stripRef: React.Ref<HTMLDivElement>
   slotRef: React.Ref<HTMLDivElement>
   adoptedCard: { html: string; clipPath: string } | null
+  /** La adoptada nace oculta y la revela el motor del vuelo (.is-on). Al
+   *  restaurar desde la URL no hay vuelo, así que se revela desde aquí. */
+  restored?: boolean
 }) {
   return (
     <div ref={stripRef} className="wd-strip">
@@ -45,7 +52,7 @@ function WalletFrameStrip({
       <div ref={slotRef} className="wd-card-slot">
         {adoptedCard && (
           <div
-            className="wd-static-card"
+            className={`wd-static-card${restored ? ' is-on' : ''}`}
             style={{ clipPath: adoptedCard.clipPath }}
             dangerouslySetInnerHTML={{ __html: adoptedCard.html }}
           />
@@ -70,6 +77,7 @@ function AccessCard({
   iconTint,
   chevron,
   wide,
+  onClick,
 }: {
   title: string
   caption: string
@@ -77,10 +85,12 @@ function AccessCard({
   iconTint?: string
   chevron?: boolean
   wide?: boolean
+  onClick?: () => void
 }) {
   return (
     <button
       type="button"
+      onClick={onClick}
       className={`liquid-glass relative flex min-w-0 flex-1 cursor-pointer items-center rounded-[20px] text-left transition-transform active:scale-[0.985] ${wide ? 'gap-3' : 'gap-2'}`}
       style={{ paddingLeft: wide ? 18 : 8, paddingRight: wide ? 18 : 3 }}
     >
@@ -151,6 +161,9 @@ function MovementRow({ movement }: { movement: WalletMovement }) {
 export interface WalletDetailPanelProps {
   wallet: Wallet
   adoptedCard: { html: string; clipPath: string } | null
+  /** true cuando el detalle se restauró desde la URL: no hubo vuelo que revelara
+   *  la tarjeta adoptada, así que el panel la muestra por su cuenta. */
+  restored?: boolean
   onBack: () => void
   panelRef: React.Ref<HTMLDivElement>
   stripRef: React.Ref<HTMLDivElement>
@@ -163,19 +176,38 @@ export interface WalletDetailPanelProps {
  * Panel del detalle de una billetera: página ESTÁTICA (marco + accesos fijos);
  * solo la lista de movimientos scrollea, emergiendo del bolsillo del dock.
  */
-export function WalletDetailPanel({ wallet, adoptedCard, onBack, panelRef, stripRef, slotRef, onScrollElReady }: WalletDetailPanelProps) {
+export function WalletDetailPanel({ wallet, adoptedCard, restored, onBack, panelRef, stripRef, slotRef, onScrollElReady }: WalletDetailPanelProps) {
   const [query, setQuery] = React.useState('')
   const { movements } = useWalletMovements(wallet.id)
   const { data: categories = [] } = useCategories()
   const { data: recurring = [] } = useRecurring(wallet.id)
   const { data: budgets = [] } = useBudgets(wallet.id)
 
+  const router = useRouter()
+  const setWalletId = useFilterStore((s) => s.setWalletId)
+  const [leaving, setLeaving] = React.useState(false)
+
+  /**
+   * Navega a un listado con una salida visible: sin esto el push era
+   * instantáneo y la pantalla cambiaba de golpe.
+   *
+   * `scoped` sincroniza el wallet en el filterStore — /budgets y /recurring
+   * filtran por ahí, no por la URL, y sin fijarlo abrirían en la billetera que
+   * quedó de antes en vez de la que se está viendo.
+   */
+  function navigate(path: string, scoped: boolean) {
+    if (leaving) return
+    if (scoped) setWalletId(wallet.id)
+    setLeaving(true)
+    window.setTimeout(() => router.push(path), MOTION.layer)
+  }
+
   const visible = query.trim()
     ? movements.filter((m) => m.description.toLowerCase().includes(query.trim().toLowerCase()))
     : movements
 
   return (
-    <div ref={panelRef} className="wd-panel">
+    <div ref={panelRef} className={`wd-panel${leaving ? ' is-leaving' : ''}${restored ? ' is-restored' : ''}`}>
       <div className="flex flex-none items-center pb-3 pt-4">
         {/* Mismo estilo que el avatar de la top-bar: liquid-glass, h-12, redondo
             y tinta neutra — no un botón de acento, es la misma pieza de chrome. */}
@@ -190,7 +222,7 @@ export function WalletDetailPanel({ wallet, adoptedCard, onBack, panelRef, strip
         </button>
       </div>
 
-      <WalletFrameStrip stripRef={stripRef} slotRef={slotRef} adoptedCard={adoptedCard} />
+      <WalletFrameStrip stripRef={stripRef} slotRef={slotRef} adoptedCard={adoptedCard} restored={restored} />
 
       <div className="wd-access flex flex-none flex-col pb-3">
         {/* El wd-reveal va en un wrapper, NO en el botón: si vive en el propio
@@ -204,6 +236,7 @@ export function WalletDetailPanel({ wallet, adoptedCard, onBack, panelRef, strip
             title="Categorías"
             caption={`${categories.length} activas`}
             icon={<WalletAccessIcon name="categorias" />}
+            onClick={() => navigate('/categories', false)}
           />
         </div>
         <div className="wd-reveal wd-reveal-2 flex gap-3">
@@ -212,12 +245,14 @@ export function WalletDetailPanel({ wallet, adoptedCard, onBack, panelRef, strip
             title="Frecuentes"
             caption={`${recurring.length} activas`}
             icon={<WalletAccessIcon name="frecuentes" />}
+            onClick={() => navigate('/recurring', true)}
           />
           <AccessCard
             chevron
             title="Presupuestos"
             caption={`${budgets.length} activas`}
             icon={<WalletAccessIcon name="presupuesto" />}
+            onClick={() => navigate('/budgets', true)}
           />
         </div>
       </div>

@@ -26,6 +26,10 @@ export const MOTION = {
   layer: 300,
   /** Recorrido que hay que poder seguir con la vista: carruseles, paginado. */
   travel: 460,
+  /** Vuelta a una pantalla completa que se reconstruye (detalle de wallet desde
+   *  un listado): más lenta que `travel` porque entra la vista entera, no un
+   *  elemento — a 300ms en móvil no se distinguía de un corte. */
+  restore: 620,
 } as const
 
 /** Las mismas duraciones en segundos, para framer-motion. */
@@ -34,4 +38,5 @@ export const MOTION_S = {
   tint: MOTION.tint / 1000,
   layer: MOTION.layer / 1000,
   travel: MOTION.travel / 1000,
+  restore: MOTION.restore / 1000,
 } as const

@@ -82,6 +82,7 @@
   --dur-tint: 180ms;   /* color/opacidad en el sitio: hover, estado activo */
   --dur-layer: 300ms;  /* aparición de una capa: sheets, modales */
   --dur-travel: 460ms; /* recorrido que se sigue con la vista: carruseles */
+  --dur-restore: 620ms; /* vuelta al detalle desde un listado: pantalla completa */
 }
 
 /* ── Light mode (Cool Gray) ── */
@@ -826,6 +827,47 @@ select:focus-visible,
 /* traspaso entrada → scroll: en flow-live el rAF manda (sin transiciones) */
 .wd-panel.wd-flow .wd-flow-el { transition: opacity 0.3s ease, transform 0.3s ease, filter 0.3s ease; }
 .wd-panel.wd-flow-live .wd-flow-el { transition: none; }
+
+/* Salida hacia un listado (Categorías / Frecuentes / Presupuestos): sin esto el
+   push era instantáneo. Solo opacidad — el panel es fixed y su geometría la
+   miden las capas del vuelo; moverlo con transform rompería el anclaje.
+   El selector repite .is-settled: esa regla (0-3-0) fija opacity:1 y le gana a
+   un .wd-panel.is-leaving suelto (0-2-0), que por eso no se veía. */
+.wd-screen.is-settled .wd-panel.is-leaving,
+.wd-panel.is-leaving {
+  opacity: 0;
+  transition: opacity var(--dur-layer) var(--ease-sys);
+  pointer-events: none;
+}
+
+/* Vuelta desde un listado: el panel entra completo (marco incluido) en vez de
+   aparecer de golpe. Las cards y la lista NO necesitan regla propia: ya las
+   anima .wd-reveal cuando el screen recibe .is-seated — basta con que ese
+   estado llegue un frame después del montaje (ver setRestoreSeated).
+
+   Duración propia (--dur-restore), NO --dur-layer: a 300ms en móvil el retorno
+   apenas se distinguía de un corte. Tampoco se alarga .wd-reveal, que es
+   compartida con el vuelo de apertura y desincronizaría el encaje. */
+@keyframes wd-restore {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+.wd-panel.is-restored {
+  animation: wd-restore var(--dur-restore) var(--ease-sys) backwards;
+}
+/* Las cards y la lista acompañan al panel: su .wd-reveal se alarga y escalona
+   SOLO en el retorno, sin tocar la de la apertura. */
+.wd-panel.is-restored .wd-reveal {
+  transition-duration: var(--dur-restore);
+}
+.wd-screen.is-seated .wd-panel.is-restored .wd-reveal-2 { transition-delay: 0.1s; }
+.wd-screen.is-seated .wd-panel.is-restored .wd-reveal-3 { transition-delay: 0.18s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .wd-screen.is-settled .wd-panel.is-leaving,
+  .wd-panel.is-leaving { transition-duration: 1ms; }
+  .wd-panel.is-restored { animation: none; }
+}
 
 /* ── capas fx del vuelo (viewport-fixed; el dock cubre la bottom-nav z-30) ── */
 .wd-fx { position: fixed; inset: 0; pointer-events: none; }
