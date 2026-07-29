@@ -80,7 +80,8 @@
   --ease-sys: cubic-bezier(0.32, 0.72, 0, 1);
   --dur-press: 120ms;  /* hundido de un botón: responde al dedo */
   --dur-tint: 180ms;   /* color/opacidad en el sitio: hover, estado activo */
-  --dur-layer: 300ms;  /* aparición de una capa: sheets, modales */
+  --dur-layer: 300ms;  /* aparición de una capa: modales, expansiones */
+  --dur-sheet: 420ms;  /* bottom sheet: recorre el alto de la pantalla */
   --dur-travel: 460ms; /* recorrido que se sigue con la vista: carruseles */
   --dur-restore: 620ms; /* vuelta al detalle desde un listado: pantalla completa */
 }
@@ -231,6 +232,14 @@ button.input-wrapper:focus:not([data-state="closed"]),
   border-radius: 12px;
   transition: border-color var(--dur-tint) var(--ease-sys);
 }
+
+/* Buscador sobre cristal (listas de movimientos): --text-placeholder (#3c424d en
+   oscuro) es un gris pensado para fondos planos y sobre liquid-glass queda casi
+   invisible. Se sube a --text-muted, que sigue leyéndose como secundario. */
+.search-input::placeholder {
+  color: var(--text-muted);
+  opacity: 1;
+}
 .input-borderless:focus,
 .input-borderless:focus-within {
   border-color: var(--accent-light) !important;
@@ -298,13 +307,67 @@ textarea::placeholder {
    respondiendo a taps (bottom nav incluida) aunque esté hidratando/renderizando.
    El escalonado se parametriza con --enter-i; `backwards` mantiene el estado
    inicial durante el delay y devuelve el control a estilos inline al terminar. */
+/* SOLO opacidad, sin transform.
+   Un ancestro con `transform` crea un containing block nuevo: cualquier
+   `position: sticky` que cuelgue de él (los SubPageHeader de /categories,
+   /budgets y /recurring) se recalcula en cada frame y da un salto al terminar,
+   cuando el transform vuelve a `none`. Se leía como un rebote de la cabecera.
+   Es el mismo motivo por el que el detalle de wallet neutraliza esta clase. */
 @keyframes page-enter {
-  from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: none; }
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 .page-enter {
-  /* 0.18s ease-out entraba de golpe: la curva del sistema, con recorrido legible. */
-  animation: page-enter 0.3s var(--ease-sys) both;
+  /* Corta (0.22s) A PROPÓSITO: es el telón de la página, no la entrada del
+     contenido. Sus hijos con .enter-pop animan su propia opacidad 0→1 con
+     stagger, y dos opacidades anidadas se MULTIPLICAN — al terminar la del
+     padre, las tarjetas saltaban a opacidad plena de golpe (parpadeo).
+     Terminando antes de que el stagger avance, el contenido manda el ritmo. */
+  animation: page-enter 0.22s var(--ease-sys) both;
+}
+
+/* ── Navegación entre una lista y su detalle (categorías → movimientos) ──
+   Reusa el MISMO gesto que la tarjeta de categoría (.enter-pop): sube con un
+   leve scale y remata con overshoot. No se inventa una curva nueva — la
+   pantalla entra como entra la tarjeta que la abrió.
+   La salida es su inversa, y corre ANTES del push (ver useSubPageExit). */
+/* El gesto (translate + scale) va en el CONTENIDO, no en el contenedor: el
+   contenedor sostiene un SubPageHeader sticky y un transform ahí lo haría
+   rebotar (ver page-enter). El header entra solo con opacidad. */
+.subpage-in > :not(.subpage-header) {
+  animation: enter-pop 0.62s cubic-bezier(0.22, 1.36, 0.32, 1) backwards;
+}
+.subpage-in > .subpage-header {
+  animation: page-enter 0.22s var(--ease-sys) both;
+}
+.subpage-out {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-layer) var(--ease-sys);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .subpage-in { animation: none; }
+  .subpage-out { transition-duration: 1ms; transform: none; }
+}
+
+/* ── Bottom sheet ──
+   En CSS y no en framer: la convención del proyecto es entradas por compositor
+   y framer solo para interacción. Animado por JS, cada frame de este panel
+   —con su preview, 12 iconos y 10 fichas— pasa por el hilo principal.
+   `translate3d` fuerza capa propia; `will-change` solo mientras dura. */
+@keyframes sheet-in  { from { transform: translate3d(0, 100%, 0); } to { transform: translate3d(0, 0, 0); } }
+@keyframes sheet-out { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(0, 100%, 0); } }
+.sheet-in  { animation: sheet-in  var(--dur-sheet) var(--ease-sys) both; will-change: transform; }
+.sheet-out { animation: sheet-out var(--dur-sheet) var(--ease-sys) both; will-change: transform; }
+
+/* Asentado: libera la capa promovida. No hay efecto que encender acá — el panel
+   se ve igual durante todo el recorrido, que es lo que hace que no se note
+   ningún cambio a mitad de camino. */
+.sheet-settled { will-change: auto; }
+
+@media (prefers-reduced-motion: reduce) {
+  .sheet-in, .sheet-out { animation-duration: 1ms; }
 }
 
 /* Equivale al spring(260, 24) de entrada: ease-out con ligero overshoot */
@@ -506,6 +569,31 @@ select:focus-visible,
 .wallet-blob.b3 { animation: wb3 17s ease-in-out infinite; }
 .wallet-blob.b4 { animation: wb4 11s ease-in-out infinite; }
 
+/* Tono ATENUADO de las superficies de color (categorías, presupuestos y el
+   carrusel de billeteras de /expenses): color como tinte (ver categoryAura) y
+   foco más difuso — un spot marcado por tarjeta hace vibrar la pantalla cuando
+   hay varias juntas. El blur sigue viviendo en cada blob, nunca en el
+   contenedor: ahí obligaría a compositar toda la capa en móvil. */
+.aura-soft .wallet-blob {
+  filter: blur(52px) saturate(1.05);
+  opacity: 0.85;
+}
+
+/* Aurora CONGELADA mientras un contenedor se desplaza.
+   Un blob combina blur de 52px, mix-blend-mode y una animación infinita: dentro
+   de un panel en movimiento el navegador recompone esas capas en cada frame
+   (el blend obliga además a releer el fondo). Congelarlos durante el recorrido
+   devuelve el deslizamiento a fotogramas plenos, y nadie percibe que la aurora
+   se detuvo 400ms. */
+/* SOLO se pausa la animación: un blob quieto es idéntico a uno en movimiento
+   durante 400ms, así que el ahorro es invisible. NO se toca el blend ni la
+   opacidad — cambiarlos ahorra algo más, pero el salto al restituirlos se ve
+   mucho más que el trabado que evitan. */
+.is-sliding .wallet-blob {
+  animation-play-state: paused;
+}
+
+
 @keyframes wb1 { 0%,100% { transform: translate(-5%,-5%)  scale(1);    } 50% { transform: translate(45%,35%)  scale(1.35); } }
 @keyframes wb2 { 0%,100% { transform: translate(55%,-10%) scale(1.1);  } 50% { transform: translate(10%,40%)  scale(0.9);  } }
 @keyframes wb3 { 0%,100% { transform: translate(20%,55%)  scale(1);    } 50% { transform: translate(60%,5%)   scale(1.3);  } }
@@ -592,6 +680,10 @@ select:focus-visible,
   --lg-sheen: linear-gradient(180deg, rgba(255,255,255,.09), transparent);
   --lg-ic-grad: linear-gradient(160deg, rgba(255,255,255,.10), rgba(255,255,255,.035));
   --lg-ic-border: rgba(255,255,255,.10);
+  /* velo para paneles GRANDES de cristal (sheets): el blur difumina las formas
+     pero no baja el color, y sobre el grid de categorías el fondo se seguía
+     distinguiendo. No se usa en las cards chicas, que no lo necesitan. */
+  --lg-veil: rgba(20,20,22,.97);
   /* anillo que separa avatares solapados sobre cristal (antes: color sólido de la card) */
   --lg-avatar-ring: rgba(28,28,30,.72);
 }
@@ -603,6 +695,7 @@ select:focus-visible,
   --lg-sheen: linear-gradient(180deg, rgba(255,255,255,.55), transparent);
   --lg-ic-grad: linear-gradient(160deg, rgba(255,255,255,.85), rgba(255,255,255,.55));
   --lg-ic-border: rgba(15,23,42,.06);
+  --lg-veil: rgba(250,251,253,.97);
   --lg-avatar-ring: rgba(255,255,255,.86);
 }
 
@@ -720,7 +813,11 @@ select:focus-visible,
   background-color: #15151c; /* fondo bajo la imagen metálica teñida */
   box-shadow: inset 0 0 0 0.045em rgba(0, 0, 0, 0.45),
               inset 0 0.045em 0 rgba(255, 255, 255, 0.18), inset 0 0 0 0.045em rgba(255, 255, 255, 0.05);
-  padding: 0.53em 0.84em;
+  /* El padding superior iguala el `top` del chip (0.55em): con 0.36em la
+     etiqueta arrancaba por encima de los iconos de la derecha y el bloque se
+     veía desnivelado. El inferior queda corto porque el monto creció a 1.28em
+     y su línea base rozaba la boca del bolsillo. */
+  padding: 0.55em 0.84em 0.36em;
   color: #fff;
 }
 /* iluminación radial suave desde arriba-derecha (propuesta C) */
@@ -730,18 +827,21 @@ select:focus-visible,
 }
 /* chip dorado + ondas contactless (propuesta B). Todo en em: escala con el vuelo. */
 .wd-cf-chip {
-  position: absolute; z-index: 2; right: 2.1em; top: 0.6em;
-  width: 1.2em; height: 0.92em; border-radius: 0.18em;
+  position: absolute; z-index: 2; right: 2.5em; top: 0.55em;
+  width: 1.55em; height: 1.19em; border-radius: 0.22em;
   background: linear-gradient(145deg, #e8d9a8 0%, #c9b273 38%, #f0e6c0 60%, #b99f5e 100%);
   box-shadow: inset 0 0 0 0.03em rgba(0, 0, 0, 0.28), 0 0.03em 0.07em rgba(0, 0, 0, 0.3);
 }
 .wd-cf-chip::before, .wd-cf-chip::after { content: ''; position: absolute; background: rgba(0, 0, 0, 0.26); }
-.wd-cf-chip::before { left: 0; right: 0; top: 50%; height: 0.03em; }
-.wd-cf-chip::after { top: 0.14em; bottom: 0.14em; left: 34%; width: 0.03em; }
+.wd-cf-chip::before { left: 0; right: 0; top: 50%; height: 0.04em; }
+.wd-cf-chip::after { top: 0.18em; bottom: 0.18em; left: 34%; width: 0.04em; }
 .wd-cf-wave {
-  position: absolute; z-index: 2; right: 0.72em; top: 0.72em;
-  width: 0.68em; height: 0.68em; color: #fff; opacity: 0.8;
+  position: absolute; z-index: 2; right: 0.7em; top: 0.72em;
+  width: 0.88em; height: 0.88em; color: #fff; opacity: 0.8;
 }
+/* Anclado ARRIBA a propósito: en el detalle la tarjeta vive metida en el
+   bolsillo y solo asoma su banda superior (el clip corta a la altura de la
+   boca). Centrar el monto lo escondería tras el cuero. */
 .wd-cf-content { position: relative; z-index: 1; display: block; }
 
 .wd-cf-label {
@@ -749,12 +849,21 @@ select:focus-visible,
   font-family: var(--font-sans);
   font-size: 0.42em; font-weight: 600; letter-spacing: 0.14em;
   color: rgba(255, 255, 255, 0.78); text-transform: uppercase;
+  /* El interlineado por defecto (~1.5) es lo que más separa a este cuerpo. */
+  line-height: 1.25;
 }
+
+/* Sin la etiqueta "Saldo disponible": el monto es el único dato de la tarjeta y
+   se lee solo, así que ocupa el espacio que ella dejó. */
 .wd-cf-amount {
   display: block;
   font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: 0.92em; font-weight: 700; letter-spacing: -0.01em;
-  font-variant-numeric: tabular-nums; margin-top: 0.14em;
+  font-size: 1.28em; font-weight: 700; letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  /* Casi pegado al label: un respiro mínimo para que no se toquen, medido en em
+     del propio cuerpo (1.28em) — ~0.05em reales. */
+  margin-top: 0.04em;
+  line-height: 1.05;
 }
 .wd-cf-amount small { font-size: 0.6em; font-weight: 700; opacity: 0.85; margin-right: 0.13em; }
 
@@ -871,6 +980,13 @@ select:focus-visible,
 
 /* ── capas fx del vuelo (viewport-fixed; el dock cubre la bottom-nav z-30) ── */
 .wd-fx { position: fixed; inset: 0; pointer-events: none; }
+/* Las capas de cuero viven en <body>, fuera del panel: sin esto seguían a plena
+   opacidad mientras el panel se desvanecía hacia un listado y desaparecían de
+   golpe al desmontar — se leía como un parpadeo. Acompañan la salida. */
+body.wd-leaving .wd-fx {
+  opacity: 0;
+  transition: opacity var(--dur-layer) var(--ease-sys);
+}
 .wd-fx-under { z-index: 6; } /* cuero trasero: bajo el panel (z10) -> la lista tapa su franja superior y entra por la boca */
 .wd-fx-over  { z-index: 40; perspective: 1100px; }
 .wd-fx-leather { position: absolute; object-fit: contain; will-change: transform; }

@@ -9,9 +9,13 @@ import { TopBar } from '@/components/layout/TopBar'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
-  // Focused routes render fullscreen — no chrome (logo/topbar, sidebar, bottom nav)
+  // Focused routes render fullscreen — no chrome (logo/topbar, sidebar, bottom nav).
+  // Las subpáginas traen su propio ← en SubPageHeader: dejarles la top-bar apilaría
+  // dos cabeceras, y la bottom-nav invita a salir de una vista de detalle.
+  // El prefijo cubre las rutas anidadas (/categories/12) sin enumerarlas.
   const isFocusedRoute =
-    /\/(new|edit)$/.test(pathname) || pathname === '/categories' || pathname === '/budgets' || pathname === '/recurring'
+    /\/(new|edit)$/.test(pathname) ||
+    /^\/(categories|budgets|recurring)(\/|$)/.test(pathname)
 
   if (isFocusedRoute) {
     return (

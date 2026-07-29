@@ -187,6 +187,9 @@ export function WalletDetailPanel({ wallet, adoptedCard, restored, onBack, panel
   const setWalletId = useFilterStore((s) => s.setWalletId)
   const [leaving, setLeaving] = React.useState(false)
 
+  // Si la marca sobreviviera al desmontaje, al volver el cuero quedaría oculto.
+  React.useEffect(() => () => document.body.classList.remove('wd-leaving'), [])
+
   /**
    * Navega a un listado con una salida visible: sin esto el push era
    * instantáneo y la pantalla cambiaba de golpe.
@@ -199,6 +202,9 @@ export function WalletDetailPanel({ wallet, adoptedCard, restored, onBack, panel
     if (leaving) return
     if (scoped) setWalletId(wallet.id)
     setLeaving(true)
+    // Las capas de cuero del dock viven en <body>, no en el panel: se les avisa
+    // para que se desvanezcan junto con él (ver body.wd-leaving en globals.css).
+    document.body.classList.add('wd-leaving')
     window.setTimeout(() => router.push(path), MOTION.layer)
   }
 
@@ -268,14 +274,14 @@ export function WalletDetailPanel({ wallet, adoptedCard, restored, onBack, panel
             className="liquid-glass-ic mt-3 flex items-center gap-2 rounded-2xl px-3.5"
             style={{ height: 42 }}
           >
-            <Search size={16} className="flex-none" style={{ color: 'var(--text-placeholder)' }} />
+            <Search size={16} className="flex-none" style={{ color: 'var(--text-muted)' }} />
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               type="text"
               placeholder="Buscar movimiento"
               autoComplete="off"
-              className="min-w-0 flex-1 bg-transparent text-[13.5px] outline-none"
+              className="search-input min-w-0 flex-1 bg-transparent text-[13.5px] outline-none"
               style={{ color: 'var(--text-primary)' }}
             />
           </div>

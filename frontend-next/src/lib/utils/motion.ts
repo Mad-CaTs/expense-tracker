@@ -22,8 +22,12 @@ export const MOTION = {
   press: 120,
   /** Cambios de color/opacidad en el sitio: hover, estado activo. */
   tint: 180,
-  /** Aparición o cierre de una capa: sheets, modales, backdrops. */
+  /** Aparición o cierre de una capa: modales, expansiones, backdrops. */
   layer: 300,
+  /** Bottom sheet que recorre el alto de la pantalla: a `layer` el panel salta
+   *  en vez de deslizarse — el recorrido es mucho mayor que el de una capa que
+   *  solo aparece en el sitio. */
+  sheet: 420,
   /** Recorrido que hay que poder seguir con la vista: carruseles, paginado. */
   travel: 460,
   /** Vuelta a una pantalla completa que se reconstruye (detalle de wallet desde
@@ -37,6 +41,7 @@ export const MOTION_S = {
   press: MOTION.press / 1000,
   tint: MOTION.tint / 1000,
   layer: MOTION.layer / 1000,
+  sheet: MOTION.sheet / 1000,
   travel: MOTION.travel / 1000,
   restore: MOTION.restore / 1000,
 } as const

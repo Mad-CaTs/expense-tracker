@@ -61,6 +61,10 @@ export function WalletsScreen() {
   const searchParams = useSearchParams()
   const { data: wallets = [] } = useWallets()
   const restoredFor = useRef<string | null>(null)
+  // useWalletFlight devuelve un objeto nuevo por render: como dependencia del
+  // efecto de restauración lo re-dispararía en cada uno.
+  const flightRef = useRef(flight)
+  useEffect(() => { flightRef.current = flight }, [flight])
 
   /**
    * El wallet abierto vive en la URL (?w=<id>). Sin esto el detalle era estado
@@ -120,6 +124,16 @@ export function WalletsScreen() {
       setAdoptedCard({
         html: cardFaceHTML(wallet.color ?? '#4ade80', Number(wallet.balance), adopted.widthPx),
         clipPath: adopted.clipPath,
+      })
+
+      // El cuero del dock lo crea el vuelo; sin él la pantalla quedaba flotando
+      // sin la billetera inferior. Se monta ya anclado, sin animación.
+      flightRef.current.mountSeated({
+        screen,
+        panel,
+        strip,
+        slot,
+        leatherSrc: LEATHER_SRC[themeForColor(wallet.color)],
       })
 
       // Recién ahora: el panel ya pintó con las cards en su estado inicial, así

@@ -8,7 +8,7 @@ import { Plus } from 'lucide-react'
 import { BudgetCategoryIcon } from '@/components/features/budgets/BudgetCategoryIcon'
 import { BudgetSheet } from '@/components/features/budgets/BudgetSheet'
 import { useBudgets } from '@/lib/hooks/useBudgets'
-import { walletAura } from '@/lib/utils/cardVisuals'
+import { categoryAura } from '@/lib/utils/cardVisuals'
 import { useFilterStore } from '@/stores/filterStore'
 import type { Budget } from '@/types'
 
@@ -21,8 +21,8 @@ function BudgetMiniCard({ budget, index, onOpen }: { budget: Budget; index: numb
   const isOver = pctRaw > 100
   const color = budget.categoryColor ?? '#d4af37'
 
-  // Aurora derivada del color de la categoría (mismo mesh que los wallets)
-  const aura = walletAura(color)
+  // Aurora derivada del color de la categoría, en el tono atenuado de la app
+  const aura = categoryAura(color)
 
   return (
     <div
@@ -32,6 +32,7 @@ function BudgetMiniCard({ budget, index, onOpen }: { budget: Budget; index: numb
         maxWidth: '220px',
         height: '196px',
         boxShadow: '0 1px 3px rgba(0,0,0,0.14)',
+        scrollSnapAlign: 'start',
         ['--enter-i' as string]: index,
       }}
     >
@@ -41,7 +42,7 @@ function BudgetMiniCard({ budget, index, onOpen }: { budget: Budget; index: numb
         style={{ background: aura.base }}
       >
       {/* Aurora animada */}
-      <div className="wallet-aura" aria-hidden>
+      <div className="wallet-aura aura-soft" aria-hidden>
         <span className="wallet-blob b1" style={{ background: aura.blobs[0] }} />
         <span className="wallet-blob b2" style={{ background: aura.blobs[1] }} />
         <span className="wallet-blob b3" style={{ background: aura.blobs[2] }} />
@@ -135,7 +136,18 @@ export function BudgetCarousel() {
           // recorta también el overflow-y). El -mb del wrapper compensa el layout.
           <div
             className="flex gap-3 overflow-x-auto px-4 pb-6 pt-1"
-            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            style={{
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
+              // Mismo desplazamiento que el carrusel de wallets: allí cada
+              // tarjeta ocupa el ancho de la pantalla y el swipe SIEMPRE aterriza
+              // encuadrado. Acá entran dos por vista, así que ese encuadre hay
+              // que pedirlo — sin esto el scroll quedaba a mitad de tarjeta.
+              scrollSnapType: 'x mandatory',
+              // Descuenta el px-4 para que la tarjeta encaje contra el margen
+              // del contenido y no contra el borde del contenedor.
+              scrollPaddingLeft: '1rem',
+            }}
           >
             {budgets.map((b, i) => (
               <BudgetMiniCard key={b.id} budget={b} index={i} onOpen={() => setShowSheet(true)} />

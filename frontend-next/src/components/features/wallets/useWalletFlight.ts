@@ -88,6 +88,10 @@ interface FxState {
   docked: boolean
   flowOn: boolean
   seated: boolean
+  /** Montado por `mountSeated` (detalle restaurado): solo existen las capas de
+   *  cuero. No hay tarjeta fx ni clon del bolsillo, así que el cierre no puede
+   *  recorrer el camino inverso del vuelo. */
+  seatedOnly?: boolean
 }
 
 const rectOf = (el: Element): Rect => {
@@ -331,10 +335,22 @@ function walletAnimations(fx: FxState, dir: 'open' | 'close'): Animation[] {
 
 const finished = (anims: Animation[]) => Promise.allSettled(anims.map((a) => a.finished))
 
+/** Targets de `mountSeated`: no hay tarjeta de origen en el carrusel. */
+export interface SeatedTargets {
+  screen: HTMLElement
+  panel: HTMLElement
+  strip: HTMLElement
+  slot: HTMLElement
+  leatherSrc: string
+}
+
 export interface WalletFlightApi {
   /** `onSettled`: el marco aparece (la tarjeta se detiene). `onSeated`: la tarjeta
    *  ENCAJÓ — es el momento en que el resto del contenido debe entrar. */
   open: (targets: FlightTargets, onSettled: () => void, onSeated: () => void) => Promise<void>
+  /** Monta el cuero YA anclado al dock, sin vuelo. Para el detalle restaurado
+   *  desde la URL, donde no existe la tarjeta del carrusel desde la que volar. */
+  mountSeated: (targets: SeatedTargets) => void
   close: (onUnsettled: () => void) => Promise<void>
   bindScroll: (el: HTMLElement) => void
   isActive: () => boolean
@@ -469,6 +485,72 @@ export function useWalletFlight(reduceMotion: boolean): WalletFlightApi {
     [reduceMotion, startFlow],
   )
 
+  /**
+   * Detalle restaurado desde ?w=<id>: el cuero del dock lo crea `buildFx`
+   * durante el vuelo, así que sin vuelo la billetera inferior no existía y la
+   * pantalla quedaba flotando sobre el fondo.
+   *
+   * No se reconstruye el vuelo (mide una tarjeta de origen que ya no está): se
+   * monta solo la capa de cuero directamente en su posición final, la misma que
+   * alcanza `walletAnimations` al terminar — ancho del screen, anclada abajo y
+   * asomando `dockVisible`.
+   */
+  const mountSeated = useCallback((t: SeatedTargets) => {
+    if (fxRef.current) return
+
+    const screenR = rectOf(t.screen)
+    const h = window.innerHeight
+    const visible = dockVisible(h)
+    // La imagen conserva su relación de aspecto al escalar al ancho del screen.
+    const natural = { w: 260, h: 215 }
+    const width = screenR.width
+    const height = (natural.h / natural.w) * width
+    const top = h - visible
+
+    const style = `left:${Math.round(screenR.left)}px;top:${Math.round(top)}px;width:${Math.round(width)}px;height:${Math.round(height)}px;`
+
+    const under = document.createElement('div')
+    under.className = 'wd-fx wd-fx-under'
+    under.innerHTML = `<img class="wd-fx-leather back" src="${t.leatherSrc}" alt="" style="${style}">`
+
+    const over = document.createElement('div')
+    over.className = 'wd-fx wd-fx-over'
+    over.innerHTML = `<img class="wd-fx-leather front" src="${t.leatherSrc}" alt="" style="${style}">`
+
+    document.body.append(under, over)
+
+    const dest = measureSettled(t.panel, t.slot)
+    const destH = dest.width * FLAT_RATIO
+
+    fxRef.current = {
+      seatedOnly: true,
+      targets: { ...t, walletEl: over, cardEl: over, tint: '', balance: 0 },
+      under,
+      over,
+      // No hay tarjeta fx ni clon del bolsillo: en este modo la tarjeta visible
+      // es la adoptada del panel y el bolsillo es el real. `close` lo contempla.
+      fxCard: null as unknown as HTMLDivElement,
+      stripFront: null as unknown as HTMLDivElement,
+      leathers: [
+        under.querySelector('.wd-fx-leather'),
+        over.querySelector('.wd-fx-leather.front'),
+      ] as HTMLImageElement[],
+      wRect: { left: screenR.left, top, width, height },
+      card: { left: 0, top: 0, width: dest.width, height: destH },
+      dest: { ...dest, height: destH },
+      tuck: { drop: 0, clipFrom: 0, clipTo: 0 },
+      // Ya está a escala final: el cuero se montó con el tamaño del dock, así
+      // que el factor es 1 y dockDy/applyFlow miden sobre la caja real.
+      dockScale: 1,
+      tuckAnims: [],
+      dockAnims: [],
+      docked: true,
+      flowOn: false,
+      seated: true,
+    }
+    startFlow(true)
+  }, [startFlow])
+
   const close = useCallback(
     async (onUnsettled: () => void) => {
       const fx = fxRef.current
@@ -476,6 +558,27 @@ export function useWalletFlight(reduceMotion: boolean): WalletFlightApi {
       stopFlow()
       fx.docked = false
       if (scrollElRef.current) scrollElRef.current.scrollTop = 0
+
+      // Detalle restaurado: solo hay cuero anclado. Reproducir el cierre del
+      // vuelo reventaría (no existen fxCard ni stripFront) — el cuero se retira
+      // hacia abajo y se limpia.
+      if (fx.seatedOnly) {
+        onUnsettled()
+        if (!reduceMotion) {
+          await finished(
+            fx.leathers.map((el) =>
+              el.animate(
+                [{ transform: 'translateY(0)' }, { transform: `translateY(${fx.wRect.height}px)` }],
+                { duration: WALLET_CLOSE_MS, easing: EASE_FLIGHT, fill: 'forwards' },
+              ),
+            ),
+          )
+        }
+        fx.under.remove()
+        fx.over.remove()
+        fxRef.current = null
+        return
+      }
       // Relevo inverso en el mismo tick: la fx (idéntica, sentada) reaparece y la
       // adoptada se esconde; después la fx sale de la ranura.
       fx.fxCard.style.visibility = ''
@@ -500,6 +603,7 @@ export function useWalletFlight(reduceMotion: boolean): WalletFlightApi {
 
   return {
     open,
+    mountSeated,
     close,
     bindScroll,
     isActive: () => fxRef.current !== null,

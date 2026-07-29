@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 
-import { AnimatePresence, motion } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { Plus, Wallet } from 'lucide-react'
 
 import { CategorySheet } from '@/components/features/categories/CategorySheet'
@@ -88,15 +88,14 @@ export function CategorySelector({ type, categories, selectedId, error, onSelect
       </div>
 
       {/* Category sheet — quick create */}
-      <AnimatePresence>
-        {showSheet && (
-          <CategorySheet
-            type={type}
-            onClose={() => setShowSheet(false)}
-            onCreated={onCreated}
-          />
-        )}
-      </AnimatePresence>
+      {/* El sheet anima su propia salida por CSS (ver `closing`). */}
+      {showSheet && (
+        <CategorySheet
+          type={type}
+          onClose={() => setShowSheet(false)}
+          onCreated={onCreated}
+        />
+      )}
     </>
   )
 }

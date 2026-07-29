@@ -9,6 +9,7 @@ import { BudgetCard } from '@/components/features/budgets/BudgetCard'
 import { BudgetForm } from '@/components/features/budgets/BudgetForm'
 import { BudgetOverview } from '@/components/features/budgets/BudgetOverview'
 import { SmartEmptyBudgets } from '@/components/features/budgets/SmartEmptyBudgets'
+import { useSubPageExit } from '@/components/features/shared/useSubPageExit'
 import { SubPageHeader } from '@/components/layout/SubPageHeader'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { SuccessDialog } from '@/components/ui/SuccessDialog'
@@ -19,6 +20,7 @@ import { useCategoryBreakdown } from '@/lib/hooks/useReports'
 import { useFilterStore } from '@/stores/filterStore'
 
 export default function BudgetsPage() {
+  const { exitClass, goBack } = useSubPageExit()
   const activeWalletId = useFilterStore((s) => s.walletId)
   const { data, isLoading } = useBudgets(activeWalletId)
   const deleteBudget = useDeleteBudget()
@@ -42,9 +44,10 @@ export default function BudgetsPage() {
   }
 
   return (
-    <div className="mx-auto min-h-[100dvh] max-w-3xl">
+    <div className={`mx-auto min-h-[100dvh] max-w-3xl ${exitClass}`}>
       <SubPageHeader
         title="Presupuestos"
+        onBack={goBack}
         action={
           <motion.button
             onClick={() => setShowForm((v) => !v)}

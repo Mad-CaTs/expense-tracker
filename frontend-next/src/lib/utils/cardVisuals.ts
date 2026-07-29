@@ -25,6 +25,10 @@ function hexToHsl(hex: string): { h: number; s: number; l: number } {
   return { h, s: s * 100, l: l * 100 }
 }
 
+// SIN USO desde 2026-07-28: todas las superficies con aurora pasaron al tono
+// atenuado de `categoryAura`. Se conserva como referencia del calibrado
+// original ("V7 Contraluz") por si se quiere volver a un foco más intenso.
+//
 // Paleta de "aurora" animada MONOCROMÁTICA derivada del color del wallet (estilo skylrk):
 // un único tono (el del wallet) que varía solo en luminosidad — base casi-negra → glow
 // brillante. Sin tonos análogos: el wallet azul fluye solo en azules, etc.
@@ -47,6 +51,60 @@ export function walletAura(color: string): { base: string; blobs: [string, strin
     `hsl(${h} ${s}% 12%)`,                     // sombra profunda
   ]
   return { base, blobs }
+}
+
+/**
+ * Aurora ATENUADA — variante suave de `walletAura`, adoptada como tono por
+ * defecto de las superficies de color de la app: tarjetas de categoría, de
+ * presupuesto y el carrusel de billeteras de /expenses.
+ *
+ * El foco original (saturación topeada en 82%, l:54%) sobre base casi negra
+ * domina la tarjeta y, con varias juntas, hace vibrar la pantalla. Acá el tope
+ * baja a 52% y el foco a l:40%, de modo que el color se lea como TINTE de la
+ * superficie y no como un bloque. El blur mayor va en CSS (.aura-soft), para que
+ * el degradado sea niebla y no un spot marcado.
+ */
+export function categoryAura(color: string): { base: string; blobs: [string, string, string, string] } {
+  let hsl: { h: number; s: number; l: number }
+  try {
+    hsl = hexToHsl(color)
+  } catch {
+    hsl = { h: 45, s: 65, l: 50 }
+  }
+  const h = Math.round(hsl.h)
+  const s = Math.max(30, Math.min(Math.round(hsl.s), 52))
+  const focus = 40
+  return {
+    base: `hsl(${h} ${Math.round(s * 0.6)}% 8%)`,
+    blobs: [
+      `hsl(${h} ${s}% ${Math.round(focus * 0.3)}%)`,        // penumbra
+      `hsl(${h} ${s}% ${focus}%)`,                          // foco
+      `hsl(${h} ${Math.max(s - 18, 20)}% ${focus + 6}%)`,   // halo
+      `hsl(${h} ${s}% ${Math.round(focus * 0.22)}%)`,       // sombra
+    ],
+  }
+}
+
+/**
+ * Muestra de color tal como se PERCIBE en la tarjeta.
+ *
+ * Los presets son hex saturados (#ef4444, #3b82f6…), pero las tarjetas los
+ * pintan a través de `categoryAura`, que topea la saturación en 52% y baja la
+ * luminosidad: elegir un rojo intenso devolvía una tarjeta apagada. Esta función
+ * aplica la misma transformación para que el swatch anticipe el resultado.
+ */
+export function categorySwatch(color: string): string {
+  let hsl: { h: number; s: number; l: number }
+  try {
+    hsl = hexToHsl(color)
+  } catch {
+    hsl = { h: 45, s: 65, l: 50 }
+  }
+  const h = Math.round(hsl.h)
+  const s = Math.max(30, Math.min(Math.round(hsl.s), 52))
+  // Algo por encima del foco (40%) para que la ficha se lea como color pleno y
+  // no como la penumbra de la tarjeta.
+  return `hsl(${h} ${s}% 46%)`
 }
 
 // Hue + saturación de un color de categoría, para la aurora animada de los segmentos

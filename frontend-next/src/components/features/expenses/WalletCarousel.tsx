@@ -8,7 +8,7 @@ import { Eye, EyeOff, History, Plus, TrendingDown, TrendingUp } from 'lucide-rea
 
 import { WalletSheet } from '@/components/features/expenses/WalletSheet'
 import { useWallets } from '@/lib/hooks/useWallets'
-import { walletAura } from '@/lib/utils/cardVisuals'
+import { categoryAura } from '@/lib/utils/cardVisuals'
 import { EASE, MOTION_S } from '@/lib/utils/motion'
 import type { Wallet } from '@/types'
 
@@ -42,8 +42,8 @@ function WalletCard({
   const pct = initial !== 0 ? ((diff / Math.abs(initial)) * 100).toFixed(1) : null
   const positive = diff >= 0
 
-  // Aurora animada derivada del color del wallet (mesh gradient en movimiento)
-  const aura = walletAura(wallet.color ?? '#d4af37')
+  // Aurora animada derivada del color del wallet, en el tono atenuado de la app
+  const aura = categoryAura(wallet.color ?? '#d4af37')
 
   // Spring-based tilt — only on pointer devices, decorative
   const cardRef = useRef<HTMLDivElement>(null)
@@ -95,7 +95,7 @@ function WalletCard({
         style={{ background: aura.base }}
       >
         {/* Aurora animada (blobs difuminados) */}
-        <div className="wallet-aura" aria-hidden>
+        <div className="wallet-aura aura-soft" aria-hidden>
           <span className="wallet-blob b1" style={{ background: aura.blobs[0] }} />
           <span className="wallet-blob b2" style={{ background: aura.blobs[1] }} />
           <span className="wallet-blob b3" style={{ background: aura.blobs[2] }} />

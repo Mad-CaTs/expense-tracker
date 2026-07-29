@@ -7,6 +7,7 @@ import { Plus, X } from 'lucide-react'
 
 import { RecurringCard } from '@/components/features/recurring/RecurringCard'
 import { RecurringForm } from '@/components/features/recurring/RecurringForm'
+import { useSubPageExit } from '@/components/features/shared/useSubPageExit'
 import { SubPageHeader } from '@/components/layout/SubPageHeader'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -15,6 +16,7 @@ import { useDeleteRecurring, useRecurring, useToggleRecurring } from '@/lib/hook
 import { useFilterStore } from '@/stores/filterStore'
 
 export default function RecurringPage() {
+  const { exitClass, goBack } = useSubPageExit()
   const activeWalletId = useFilterStore((s) => s.walletId)
   const { data, isLoading } = useRecurring(activeWalletId)
   const toggleRecurring = useToggleRecurring()
@@ -25,9 +27,10 @@ export default function RecurringPage() {
   const [expandedId, setExpandedId] = useState<number | null>(null)
 
   return (
-    <div className="mx-auto max-w-3xl">
+    <div className={`mx-auto max-w-3xl ${exitClass}`}>
       <SubPageHeader
         title="Recurrentes"
+        onBack={goBack}
         action={
           <motion.button
             onClick={() => setShowForm((v) => !v)}
