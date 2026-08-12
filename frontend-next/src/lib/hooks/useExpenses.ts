@@ -1,3 +1,5 @@
+import { useCallback } from 'react'
+
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import {
@@ -25,32 +27,41 @@ export function useExpense(id: number) {
   })
 }
 
-export function useCreateExpense() {
+/**
+ * La invalidación NO va en `onSuccess`: refrescar ahí recalcula el resumen
+ * mientras el aviso de éxito todavía no se vio, así que el total cambia detrás
+ * del modal. Se expone `refresh` para que el contenedor lo dispare al descartar
+ * el aviso, y el número recorra a la vista.
+ */
+function useMovementMutation<TVars, TData>(fn: (vars: TVars) => Promise<TData>, keys: string[]) {
   const qc = useQueryClient()
-  return useMutation({
-    mutationFn: createExpense,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['expenses'] }),
-  })
+  const mutation = useMutation({ mutationFn: fn })
+  const refresh = useCallback(() => {
+    keys.forEach((key) => qc.invalidateQueries({ queryKey: [key] }))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [qc])
+  return { ...mutation, refresh }
+}
+
+const EXPENSE_KEYS = ['expenses', 'wallets', 'reports']
+
+export function useCreateExpense() {
+  return useMovementMutation(createExpense, EXPENSE_KEYS)
 }
 
 export function useUpdateExpense() {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: ({
+  return useMovementMutation(
+    ({
       id,
       data,
     }: {
       id: number
       data: Pick<Expense, 'description' | 'amount' | 'date' | 'notes'> & { categoryId: number }
     }) => updateExpense(id, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['expenses'] }),
-  })
+    EXPENSE_KEYS,
+  )
 }
 
 export function useDeleteExpense() {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: deleteExpense,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['expenses'] }),
-  })
+  return useMovementMutation(deleteExpense, EXPENSE_KEYS)
 }

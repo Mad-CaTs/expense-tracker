@@ -5,11 +5,12 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Check, X } from 'lucide-react'
 
+import { COLOR_PRESETS } from '@/components/features/shared/colorPresets'
 import { useCreateWallet, useUpdateWallet } from '@/lib/hooks/useWallets'
+import { categorySwatch } from '@/lib/utils/cardVisuals'
 import type { Wallet } from '@/types'
 import { BackgroundPicker } from './BackgroundPicker'
 
-const COLOR_PRESETS = ['#d4af37', '#ef4444', '#3b82f6', '#22c55e', '#f97316', '#a855f7', '#ec4899', '#14b8a6']
 
 interface WalletFormProps {
   wallet?: Wallet            // presente → edición
@@ -72,19 +73,24 @@ export function WalletForm({ wallet, onDone, onSaved }: WalletFormProps) {
       )}
 
       <div className="flex flex-wrap gap-1.5">
-        {COLOR_PRESETS.map((c) => (
-          <button
-            key={c}
-            onClick={() => setColor(c)}
-            className="h-6 w-6 rounded-full transition-transform"
-            style={{
-              background: c,
-              boxShadow: color === c ? `0 0 0 2px var(--bg-subtle), 0 0 0 3.5px ${c}` : 'none',
-              transform: color === c ? 'scale(1.1)' : 'scale(1)',
-            }}
-            aria-label={c}
-          />
-        ))}
+        {COLOR_PRESETS.map((c) => {
+          // La ficha muestra el color ATENUADO (el que tendrá la tarjeta);
+          // el valor guardado sigue siendo el hex del preset.
+          const shown = categorySwatch(c)
+          return (
+            <button
+              key={c}
+              onClick={() => setColor(c)}
+              className="h-6 w-6 rounded-full transition-transform"
+              style={{
+                background: shown,
+                boxShadow: color === c ? `0 0 0 2px var(--bg-subtle), 0 0 0 3.5px ${shown}` : 'none',
+                transform: color === c ? 'scale(1.1)' : 'scale(1)',
+              }}
+              aria-label={c}
+            />
+          )
+        })}
       </div>
 
       <BackgroundPicker value={backgroundId} onChange={setBackgroundId} />

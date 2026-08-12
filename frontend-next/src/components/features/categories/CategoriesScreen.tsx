@@ -7,7 +7,8 @@ import { Plus } from 'lucide-react'
 import { useSubPageExit } from '@/components/features/shared/useSubPageExit'
 import { SubPageHeader } from '@/components/layout/SubPageHeader'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
-import { useDeleteCategory } from '@/lib/hooks/useCategories'
+import { SuccessDialog } from '@/components/ui/SuccessDialog'
+import { useCreateCategory, useDeleteCategory, useUpdateCategory } from '@/lib/hooks/useCategories'
 import type { Category, CategoryType } from '@/types'
 
 import { CategoriesHero } from './CategoriesHero'
@@ -47,7 +48,7 @@ function GridSkeleton() {
   return (
     <div className="grid grid-cols-2 gap-[11px] px-4">
       {Array.from({ length: 6 }).map((_, i) => (
-        <div key={i} className="h-[114px] animate-pulse rounded-[20px]" style={{ background: 'var(--skeleton-from)' }} />
+        <div key={i} className="h-[172px] animate-pulse rounded-[20px]" style={{ background: 'var(--skeleton-from)' }} />
       ))}
     </div>
   )
@@ -66,6 +67,13 @@ export function CategoriesScreen() {
   const { cards, isLoading, total, topCategory, movementCount } = useCategoryCards(activeType)
 
   const deleteCategory = useDeleteCategory()
+  // Solo por su `refresh`: las mutaciones viven en el sheet, pero el refresco
+  // debe correr al descartar el aviso para que el hero recorra a la vista.
+  const createCategory = useCreateCategory()
+  const updateCategory = useUpdateCategory()
+
+  const [saved, setSaved] = useState<{ name: string; action: 'create' | 'edit' } | null>(null)
+  const [deletedName, setDeletedName] = useState<string | null>(null)
   const [editing, setEditing] = useState<Category | null>(null)
   const [creating, setCreating] = useState(false)
   const [deleteId, setDeleteId] = useState<number | null>(null)
@@ -109,7 +117,7 @@ export function CategoriesScreen() {
         <h2 className="text-[15.5px] font-extrabold tracking-[-0.02em]" style={{ color: 'var(--text-primary)' }}>
           Todas
         </h2>
-        <span className="text-[11.5px] font-semibold" style={{ color: 'var(--text-placeholder)' }}>
+        <span className="text-[11.5px] font-semibold" style={{ color: 'var(--text-tertiary)' }}>
           {isLoading ? ' ' : `${cards.length} activa${cards.length === 1 ? '' : 's'}`}
         </span>
       </div>
@@ -161,7 +169,10 @@ export function CategoriesScreen() {
         <CategorySheet
           type={activeType}
           category={editing ?? undefined}
+          usage={editing ? cards.find((c) => c.id === editing.id) : undefined}
           onClose={() => { setEditing(null); setCreating(false) }}
+          onDone={(name) => setSaved({ name, action: 'create' })}
+          onSaved={(name) => setSaved({ name, action: 'edit' })}
           onDelete={(id) => setDeleteId(id)}
         />
       )}
@@ -173,8 +184,37 @@ export function CategoriesScreen() {
           ? 'Los gastos asociados perderán su categoría.'
           : 'Los ingresos asociados perderán su categoría.'}
         confirmLabel="Eliminar"
-        onConfirm={() => { if (deleteId != null) deleteCategory.mutate(deleteId); setDeleteId(null) }}
+        onConfirm={() => {
+          if (deleteId == null) return
+          const name = cards.find((c) => c.id === deleteId)?.name ?? ''
+          deleteCategory.mutate(deleteId, { onSuccess: () => setDeletedName(name) })
+          setDeleteId(null)
+        }}
         onCancel={() => setDeleteId(null)}
+      />
+
+      {/* El refresh corre al descartar: así el total del hero recorre a la vista
+          en vez de haber cambiado detrás del modal. */}
+      <SuccessDialog
+        open={saved != null}
+        title={saved?.action === 'create' ? 'Categoría creada' : 'Cambios guardados'}
+        description={saved
+          ? saved.action === 'create'
+            ? `"${saved.name}" ya está disponible para tus movimientos.`
+            : `"${saved.name}" se actualizó correctamente.`
+          : undefined}
+        onClose={() => {
+          setSaved(null)
+          createCategory.refresh()
+          updateCategory.refresh()
+        }}
+      />
+
+      <SuccessDialog
+        open={deletedName != null}
+        title="Categoría eliminada"
+        description={deletedName ? `"${deletedName}" ya no está disponible.` : undefined}
+        onClose={() => { setDeletedName(null); deleteCategory.refresh() }}
       />
     </div>
   )

@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react'
 
+import { byRecent } from '@/components/features/shared/movementOrder'
 import { useExpenses } from '@/lib/hooks/useExpenses'
 import { useIncomes } from '@/lib/hooks/useIncomes'
 
@@ -13,6 +14,9 @@ export interface WalletMovement {
   /** Negativo = gasto, positivo = ingreso. */
   amount: number
   date: string
+  /** Id del recurso. Autoincremental, así que a mayor id más reciente: es el
+   *  desempate cuando varios movimientos comparten fecha. */
+  id: number
   categoryName: string
   categoryIcon?: string
   categoryColor?: string
@@ -20,7 +24,8 @@ export interface WalletMovement {
 
 /**
  * Feed unificado de movimientos de una billetera: gastos e ingresos mezclados
- * y ordenados por fecha descendente (los dos recursos viven en hooks separados).
+ * y ordenados del más reciente al más antiguo (los dos recursos viven en hooks
+ * separados).
  */
 export function useWalletMovements(walletId: number) {
   const expenses = useExpenses({ period: 'CUSTOM', walletId, page: 0, size: PAGE_SIZE })
@@ -31,6 +36,7 @@ export function useWalletMovements(walletId: number) {
     for (const e of expenses.data?.content ?? []) {
       out.push({
         key: `e-${e.id}`,
+        id: e.id,
         description: e.description,
         amount: -Math.abs(e.amount),
         date: e.date,
@@ -42,6 +48,7 @@ export function useWalletMovements(walletId: number) {
     for (const i of incomes.data?.content ?? []) {
       out.push({
         key: `i-${i.id}`,
+        id: i.id,
         description: i.description ?? 'Ingreso',
         amount: Math.abs(i.amount),
         date: i.date,
@@ -50,7 +57,7 @@ export function useWalletMovements(walletId: number) {
         categoryColor: i.categoryColor,
       })
     }
-    return out.sort((a, b) => b.date.localeCompare(a.date) || a.key.localeCompare(b.key))
+    return out.sort(byRecent)
   }, [expenses.data, incomes.data])
 
   return { movements, isLoading: expenses.isLoading || incomes.isLoading }

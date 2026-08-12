@@ -2,8 +2,9 @@
 
 import React from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, ChevronRight, Search, Wallet as WalletIcon } from 'lucide-react'
+import { ArrowLeft, Search, Wallet as WalletIcon } from 'lucide-react'
 
+import { AccessCard } from '@/components/features/shared/AccessCard'
 import { CATEGORY_ICON_MAP } from '@/lib/utils/categoryIcons'
 import { useBudgets } from '@/lib/hooks/useBudgets'
 import { useCategories } from '@/lib/hooks/useCategories'
@@ -14,6 +15,7 @@ import type { Wallet } from '@/types'
 
 import { useWalletMovements, type WalletMovement } from './useWalletMovements'
 import { WalletAccessIcon } from './WalletAccessIcon'
+import { categorySwatch } from '@/lib/utils/cardVisuals'
 
 const STRIP_SRC = '/wallets/budget-strip.webp'
 
@@ -69,74 +71,13 @@ function WalletFrameStrip({
   )
 }
 
-/** Card de acceso (Categorías / Frecuentes / Presupuestos), estilo /expenses. */
-function AccessCard({
-  title,
-  caption,
-  icon,
-  iconTint,
-  chevron,
-  wide,
-  onClick,
-}: {
-  title: string
-  caption: string
-  icon: React.ReactNode
-  iconTint?: string
-  chevron?: boolean
-  wide?: boolean
-  onClick?: () => void
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`liquid-glass relative flex min-w-0 flex-1 cursor-pointer items-center rounded-[20px] text-left transition-transform active:scale-[0.985] ${wide ? 'gap-3' : 'gap-2'}`}
-      style={{ paddingLeft: wide ? 18 : 8, paddingRight: wide ? 18 : 3 }}
-    >
-      {/* Icono SIEMPRE a la izquierda y con marco cuadrado: las tres cards
-          comparten el mismo lenguaje, la ancha solo escala el contenedor. */}
-      <span
-        className={`flex flex-none items-center justify-center${iconTint ? '' : ' liquid-glass-ic'} ${wide ? 'h-10 w-10 rounded-[12px]' : 'h-[28px] w-[28px] rounded-[9px]'}`}
-        style={iconTint ? { background: `${iconTint}21`, color: iconTint } : { color: 'var(--text-primary)' }}
-      >
-        {icon}
-      </span>
-      <span className="min-w-0 flex-1">
-        {/* En las estrechas el título baja a 14px: "Presupuestos" es el caso
-            límite (97px medidos) y a 360px solo entra con estas métricas. */}
-        <span
-          className={`block truncate font-bold tracking-[-0.02em] ${wide ? 'text-[15px]' : 'text-[14px]'}`}
-          style={{ color: 'var(--text-primary)' }}
-        >
-          {title}
-        </span>
-        <span
-          className={`mt-0.5 block truncate ${wide ? 'text-[11.5px]' : 'text-[11px]'}`}
-          style={{ color: 'var(--text-placeholder)' }}
-        >
-          {caption}
-        </span>
-      </span>
-      {/* El chevron se encoge en las estrechas para no robarle ancho al título. */}
-      {chevron && (
-        <ChevronRight
-          size={wide ? 18 : 14}
-          className={`flex-none ${wide ? 'ml-1' : '-mr-0.5'}`}
-          style={{ color: 'var(--text-muted)' }}
-        />
-      )}
-    </button>
-  )
-}
-
 function MovementRow({ movement }: { movement: WalletMovement }) {
   const Icon = movement.categoryIcon ? (CATEGORY_ICON_MAP[movement.categoryIcon] ?? WalletIcon) : WalletIcon
   const color = movement.categoryColor && movement.categoryColor !== '#000000' ? movement.categoryColor : '#8a93a4'
   return (
     <div className="wd-mv-item wd-flow-el flex items-center gap-3 rounded-2xl px-3.5 py-[11px]">
       <span className="flex h-[38px] w-[38px] flex-none items-center justify-center rounded-full" style={{ background: `${color}1f` }}>
-        <Icon size={16} style={{ color }} strokeWidth={1.8} />
+        <Icon size={16} style={{ color: categorySwatch(color) }} strokeWidth={1.8} />
       </span>
       <span className="min-w-0 flex-1">
         <span className="block truncate text-[13.5px] font-semibold" style={{ color: 'var(--text-primary)' }}>
@@ -150,7 +91,9 @@ function MovementRow({ movement }: { movement: WalletMovement }) {
         <span className="mono-amount block text-[13px] font-bold tracking-[-0.01em] tabular-nums" style={{ color: 'var(--text-primary)' }}>
           {formatAmount(movement.amount)}
         </span>
-        <time className="block text-[10.5px]" style={{ color: 'var(--text-placeholder)' }}>
+        {/* --text-tertiary y no --text-placeholder: la fecha es un dato de la
+            fila, y el tono de relleno no se leía sobre el cristal. */}
+        <time className="block text-[10.5px]" style={{ color: 'var(--text-tertiary)' }}>
           {movementDay(movement.date)}
         </time>
       </span>
@@ -291,7 +234,7 @@ export function WalletDetailPanel({ wallet, adoptedCard, restored, onBack, panel
             <MovementRow key={m.key} movement={m} />
           ))}
           {visible.length === 0 && (
-            <p className="px-4 py-6 text-[12.5px]" style={{ color: 'var(--text-placeholder)' }}>
+            <p className="px-4 py-6 text-[12.5px]" style={{ color: 'var(--text-muted)' }}>
               Sin movimientos{query ? ' para esa búsqueda' : ''}.
             </p>
           )}

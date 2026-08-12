@@ -28,12 +28,20 @@ export const MOTION = {
    *  en vez de deslizarse — el recorrido es mucho mayor que el de una capa que
    *  solo aparece en el sitio. */
   sheet: 420,
+  /** Cambio de paso dentro de un sheet. Más lento que `layer` porque el panel
+   *  queda quieto y solo viaja el contenido: sin el arrastre del contenedor,
+   *  una duración corta se lee como un corte. */
+  step: 460,
   /** Recorrido que hay que poder seguir con la vista: carruseles, paginado. */
   travel: 460,
   /** Vuelta a una pantalla completa que se reconstruye (detalle de wallet desde
    *  un listado): más lenta que `travel` porque entra la vista entera, no un
    *  elemento — a 300ms en móvil no se distinguía de un corte. */
   restore: 620,
+  /** Cifra que recorre hasta su valor (ver AnimatedAmount). Acompasada con
+   *  `enter-pop` (0.84s): con una duración menor el número terminaba de contar
+   *  mientras la tarjeta todavía estaba entrando. */
+  count: 840,
 } as const
 
 /** Las mismas duraciones en segundos, para framer-motion. */
@@ -42,6 +50,8 @@ export const MOTION_S = {
   tint: MOTION.tint / 1000,
   layer: MOTION.layer / 1000,
   sheet: MOTION.sheet / 1000,
+  step: MOTION.step / 1000,
   travel: MOTION.travel / 1000,
   restore: MOTION.restore / 1000,
+  count: MOTION.count / 1000,
 } as const

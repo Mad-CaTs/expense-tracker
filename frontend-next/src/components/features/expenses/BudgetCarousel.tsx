@@ -1,14 +1,14 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 
-import { AnimatePresence } from 'framer-motion'
-import { Plus } from 'lucide-react'
+import { History, Plus } from 'lucide-react'
 
 import { BudgetCategoryIcon } from '@/components/features/budgets/BudgetCategoryIcon'
 import { BudgetSheet } from '@/components/features/budgets/BudgetSheet'
 import { useBudgets } from '@/lib/hooks/useBudgets'
-import { categoryAura } from '@/lib/utils/cardVisuals'
+import { categoryAura, categorySwatch } from '@/lib/utils/cardVisuals'
 import { useFilterStore } from '@/stores/filterStore'
 import type { Budget } from '@/types'
 
@@ -20,6 +20,9 @@ function BudgetMiniCard({ budget, index, onOpen }: { budget: Budget; index: numb
   const pct = Math.min(pctRaw, 100)
   const isOver = pctRaw > 100
   const color = budget.categoryColor ?? '#d4af37'
+  // El icono sobre el círculo blanco usa el tono atenuado, igual que el resto
+  // de la app: el hex crudo del preset ahí se ve fluorescente.
+  const iconColor = categorySwatch(color)
 
   // Aurora derivada del color de la categoría, en el tono atenuado de la app
   const aura = categoryAura(color)
@@ -68,7 +71,7 @@ function BudgetMiniCard({ budget, index, onOpen }: { budget: Budget; index: numb
           className="mt-[11px] flex h-9 w-9 items-center justify-center rounded-full bg-white"
           style={{ boxShadow: '0 2px 6px rgba(0,0,0,0.15)' }}
         >
-          <span style={{ color, lineHeight: 0 }}>
+          <span style={{ color: iconColor, lineHeight: 0 }}>
             <BudgetCategoryIcon name={budget.categoryIcon} size={19} />
           </span>
         </div>
@@ -98,15 +101,16 @@ function BudgetMiniCard({ budget, index, onOpen }: { budget: Budget; index: numb
         </p>
       </div>
 
-      {/* FAB */}
+      {/* Lleva a los movimientos de la categoría, igual que "Historial" en la
+          tarjeta de billetera: desde el resumen se va al detalle. */}
       <button
         type="button"
         onClick={onOpen}
-        aria-label={`Editar presupuesto de ${budget.categoryName ?? 'categoría'}`}
+        aria-label={`Ver movimientos de ${budget.categoryName ?? 'la categoría'}`}
         className="absolute bottom-[13px] right-[13px] z-[3] flex h-[34px] w-[34px] items-center justify-center rounded-full text-white transition-transform active:scale-90"
         style={{ background: 'rgba(255,255,255,0.22)', backdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,0.3)' }}
       >
-        <Plus size={17} strokeWidth={2.4} />
+        <History size={16} strokeWidth={2.2} />
       </button>
       </div>
     </div>
@@ -114,6 +118,7 @@ function BudgetMiniCard({ budget, index, onOpen }: { budget: Budget; index: numb
 }
 
 export function BudgetCarousel() {
+  const router = useRouter()
   const walletId = useFilterStore((s) => s.walletId)
   const { data: budgets = [] } = useBudgets(walletId)
   const [showSheet, setShowSheet] = useState(false)
@@ -150,15 +155,22 @@ export function BudgetCarousel() {
             }}
           >
             {budgets.map((b, i) => (
-              <BudgetMiniCard key={b.id} budget={b} index={i} onOpen={() => setShowSheet(true)} />
+              <BudgetMiniCard
+                key={b.id}
+                budget={b}
+                index={i}
+                // Al historial de la categoría, no a la lista de presupuestos:
+                // el icono promete movimientos y eso es lo que hay detrás.
+                onOpen={() => { if (b.categoryId) router.push(`/categories/${b.categoryId}`) }}
+              />
             ))}
           </div>
         )}
       </div>
 
-      <AnimatePresence>
-        {showSheet && <BudgetSheet onClose={() => setShowSheet(false)} />}
-      </AnimatePresence>
+      {/* Sin AnimatePresence: el sheet anima su salida por CSS y retrasa el
+          onClose hasta que termina (ver `closing` en BudgetSheet). */}
+      {showSheet && <BudgetSheet onClose={() => setShowSheet(false)} />}
     </>
   )
 }

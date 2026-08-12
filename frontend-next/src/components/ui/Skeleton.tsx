@@ -23,15 +23,3 @@ export function ExpenseRowSkeleton() {
   )
 }
 
-export function BudgetCardSkeleton() {
-  return (
-    <div className="flex flex-col gap-3 rounded-2xl p-5" style={{ background: 'var(--bg-input)' }}>
-      <div className="flex justify-between">
-        <Skeleton className="h-4 w-24" />
-        <Skeleton className="h-4 w-16" />
-      </div>
-      <Skeleton className="h-2 w-full rounded-full" />
-      <Skeleton className="h-3 w-20" />
-    </div>
-  )
-}

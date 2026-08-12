@@ -149,6 +149,26 @@ export interface CategoryBreakdown {
 
 export type RecurringFrequency = 'MONTHLY' | 'WEEKLY' | 'YEARLY'
 
+/** PENDING: espera decisión · PAID: confirmada, generó un gasto ·
+ *  SKIPPED: rechazada, queda como deuda pagable. */
+export type OccurrenceStatus = 'PENDING' | 'PAID' | 'SKIPPED'
+
+export interface RecurringOccurrence {
+  id: number
+  recurringId: number
+  dueDate: string
+  status: OccurrenceStatus
+  amount: number
+  expenseId?: number
+  description: string
+  categoryId?: number
+  categoryName?: string
+  categoryColor?: string
+  categoryIcon?: string
+  walletId?: number
+  walletName?: string
+}
+
 export interface RecurringExpense {
   id: number
   categoryId: number

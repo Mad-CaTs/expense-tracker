@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react'
 
+import { byRecent } from '@/components/features/shared/movementOrder'
 import { useExpenses } from '@/lib/hooks/useExpenses'
 import { useIncomes } from '@/lib/hooks/useIncomes'
 import type { CategoryType } from '@/types'
@@ -25,10 +26,12 @@ export interface CategoryMovement {
   /** Negativo = gasto, positivo = ingreso. */
   amount: number
   date: string
+  /** Id del recurso: desempata los que comparten fecha (a mayor id, más nuevo). */
+  id: number
 }
 
 /**
- * Movimientos de una categoría, ordenados por fecha descendente.
+ * Movimientos de una categoría, del más reciente al más antiguo.
  *
  * Gastos e ingresos viven en endpoints separados y con capacidades distintas:
  * /expenses filtra por categoryId en el backend, /incomes NO lo acepta, así que
@@ -55,20 +58,22 @@ export function useCategoryMovements(categoryId: number, categoryName: string, t
         .filter((i) => i.categoryName === categoryName)
         .map((i) => ({
           key: `i-${i.id}`,
+          id: i.id,
           description: i.description ?? 'Ingreso',
           amount: Math.abs(i.amount),
           date: i.date,
         }))
-        .sort((a, b) => b.date.localeCompare(a.date) || a.key.localeCompare(b.key))
+        .sort(byRecent)
     }
     return (expenses.data?.content ?? [])
       .map((e) => ({
         key: `e-${e.id}`,
+        id: e.id,
         description: e.description,
         amount: -Math.abs(e.amount),
         date: e.date,
       }))
-      .sort((a, b) => b.date.localeCompare(a.date) || a.key.localeCompare(b.key))
+      .sort(byRecent)
   }, [isIncome, expenses.data, incomes.data, categoryName])
 
   return {

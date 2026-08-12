@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 
+import { motion } from 'framer-motion'
 import { Trash2 } from 'lucide-react'
 
 import { useCreateCategory, useUpdateCategory } from '@/lib/hooks/useCategories'
@@ -10,25 +11,39 @@ import { CATEGORY_ICON_MAP } from '@/lib/utils/categoryIcons'
 import { MOTION } from '@/lib/utils/motion'
 import type { Category, CategoryType } from '@/types'
 
-import { COLOR_PRESETS, ICON_LABELS, ICON_OPTIONS } from './categoryConstants'
+import { COLOR_PRESETS } from '@/components/features/shared/colorPresets'
+
+import { ICON_LABELS, ICON_OPTIONS } from './categoryConstants'
 
 export interface CategorySheetProps {
   type: CategoryType
   /** Ausente: crear. Presente: editar esa categoría. */
   category?: Category
+  /** Uso del mes de esa categoría, para que el preview muestre su estado real
+   *  en vez de una tarjeta en cero que no se parece a la que se está editando. */
+  usage?: { total: number; percentage: number }
   onClose: () => void
+  /** Inmediato al crear: CategorySelector lo usa para seleccionar la nueva. */
   onCreated?: (category: Category) => void
+  /** Nombre guardado, YA cerrado el sheet: para el aviso de éxito al editar. */
   onSaved?: (name: string) => void
+  /** Nombre creado, YA cerrado el sheet: para el aviso de éxito al crear. */
+  onDone?: (name: string) => void
   onDelete?: (id: number) => void
 }
 
 /** Tarjeta que se actualiza con lo que se está eligiendo. */
-function Preview({ name, icon, color }: { name: string; icon: string; color: string }) {
+function Preview({ name, icon, color, total, percentage }: {
+  name: string; icon: string; color: string
+  /** Gastado en el mes: 0 al crear, lo real al editar. */
+  total: number
+  percentage: number
+}) {
   const Icon = CATEGORY_ICON_MAP[icon] ?? CATEGORY_ICON_MAP.ellipsis
   const aura = categoryAura(color)
   return (
     <div
-      className="relative mb-4 flex h-[110px] flex-col justify-between overflow-hidden rounded-[20px] p-[14px]"
+      className="relative mb-4 flex h-[132px] flex-col overflow-hidden rounded-[20px]"
       style={{ background: aura.base }}
     >
       <span className="wallet-aura aura-soft" aria-hidden>
@@ -37,25 +52,39 @@ function Preview({ name, icon, color }: { name: string; icon: string; color: str
         <span className="wallet-blob b3" style={{ background: aura.blobs[2] }} />
         <span className="wallet-blob b4" style={{ background: aura.blobs[3] }} />
       </span>
+
       {/* Sobre la aurora, --text-placeholder no contrasta: va en blanco tenue. */}
       <span className="absolute right-[13px] top-3 z-[2] text-[9px] font-bold uppercase tracking-[0.1em]" style={{ color: 'rgba(255,255,255,0.55)' }}>
         Vista previa
       </span>
-      <span className="relative z-[1] flex h-8 w-8 items-center justify-center rounded-[10px]" style={{ background: 'rgba(255,255,255,0.18)' }}>
-        <Icon size={15} style={{ color: '#fff' }} strokeWidth={1.9} />
-      </span>
-      <span className="relative z-[1] block">
+
+      {/* El icono va en el FLUJO, no en absolute: el bloque de abajo crece
+          hacia arriba y con un nombre de dos líneas se le montaría encima.
+          Círculo blanco con el icono a color, como en el grid. */}
+      <span className="relative z-[1] flex flex-1 items-start px-[14px] pt-3">
         <span
-          className="block truncate text-[13.5px] font-extrabold tracking-[-0.02em]"
-          style={{ color: 'rgba(255,255,255,0.82)' }}
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-white"
+          style={{ boxShadow: '0 2px 6px rgba(0,0,0,0.15)' }}
         >
+          <Icon size={17} style={{ color: categorySwatch(color) }} strokeWidth={1.9} />
+        </span>
+      </span>
+
+      <span className="relative z-[1] block px-[14px] pb-[14px] text-white">
+        <span className="mb-2 block truncate text-[14.5px] font-extrabold tracking-[-0.01em]" style={{ textShadow: '0 1px 8px rgba(0,0,0,0.2)' }}>
           {name.trim() || 'Nueva categoría'}
         </span>
         <span
-          className="mono-amount mt-0.5 block text-[17px] font-extrabold tracking-[-0.02em] tabular-nums"
-          style={{ color: '#fff', textShadow: '0 1px 18px rgba(0,0,0,0.25)' }}
+          className="mono-amount block text-[20px] font-extrabold leading-none tracking-[-0.02em] tabular-nums"
+          style={{ textShadow: '0 1px 10px rgba(0,0,0,0.25)' }}
         >
-          S/ 0
+          S/{total.toLocaleString('es-PE', { maximumFractionDigits: 0 })}
+        </span>
+        <span className="mt-[11px] block h-[6px] overflow-hidden rounded-full" style={{ background: 'rgba(255,255,255,0.25)' }}>
+          <span
+            className="block h-full rounded-full"
+            style={{ width: `${Math.min(percentage, 100)}%`, background: '#fff' }}
+          />
         </span>
       </span>
     </div>
@@ -70,7 +99,7 @@ function Preview({ name, icon, color }: { name: string; icon: string; color: str
  * Sin `category` funciona como creador — así lo usa CategorySelector desde el
  * formulario de gastos.
  */
-export function CategorySheet({ type, category, onClose, onCreated, onSaved, onDelete }: CategorySheetProps) {
+export function CategorySheet({ type, category, usage, onClose, onCreated, onSaved, onDone, onDelete }: CategorySheetProps) {
   const create = useCreateCategory()
   const update = useUpdateCategory()
   const editing = category != null
@@ -124,12 +153,21 @@ export function CategorySheet({ type, category, onClose, onCreated, onSaved, onD
     const payload = { name: trimmed, icon, color, type }
     if (editing) {
       await update.mutateAsync({ id: category.id, data: payload })
-      onSaved?.(trimmed)
+      close()
+      // El aviso espera a que el sheet termine de salir: encimarlo sobre el
+      // formulario abierto apila dos capas y no se lee qué pasó.
+      window.setTimeout(() => onSaved?.(trimmed), MOTION.sheet)
     } else {
       const created = await create.mutateAsync(payload)
+      // Inmediato: CategorySelector lo usa para seleccionar lo recién creado en
+      // el formulario de gastos, y ahí un retraso se sentiría como un cuelgue.
       onCreated?.(created)
+      // Sin `onDone` no hay aviso que esperar (así lo usa CategorySelector),
+      // así que la lista se refresca ya: si no, la nueva categoría no aparece.
+      if (!onDone) create.refresh()
+      close()
+      window.setTimeout(() => onDone?.(trimmed), MOTION.sheet)
     }
-    close()
   }
 
   const heading = editing
@@ -155,7 +193,7 @@ export function CategorySheet({ type, category, onClose, onCreated, onSaved, onD
       {/* El sheet ES cristal, como las cards de la página: al abrirse se lee
           como una capa más de /categories y no como un diálogo pegado encima. */}
       <div
-        className={`liquid-glass max-h-[88dvh] w-full max-w-sm rounded-t-[24px] border-b-0 sm:max-w-md sm:rounded-[24px] ${closing ? 'sheet-out' : 'sheet-in'} ${sliding ? 'is-sliding overflow-hidden' : 'sheet-settled overflow-y-auto'}`}
+        className={`liquid-glass max-h-[88dvh] w-full max-w-sm select-none rounded-t-[24px] border-b-0 sm:max-w-md sm:rounded-[24px] ${closing ? 'sheet-out' : 'sheet-in'} ${sliding ? 'is-sliding overflow-hidden' : 'sheet-settled overflow-y-auto'}`}
         // Muy por encima de los 22px de .liquid-glass (calibrados para cards
         // chicas): un panel de este tamaño necesita difusión fuerte para que el
         // grid de colores detrás deje de ser reconocible.
@@ -192,7 +230,7 @@ export function CategorySheet({ type, category, onClose, onCreated, onSaved, onD
             {heading}
           </p>
 
-          <Preview name={name} icon={icon} color={color} />
+          <Preview name={name} icon={icon} color={color} total={usage?.total ?? 0} percentage={usage?.percentage ?? 0} />
 
           <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.1em]" style={{ color: 'var(--text-placeholder)' }}>
             Nombre
@@ -216,16 +254,25 @@ export function CategorySheet({ type, category, onClose, onCreated, onSaved, onD
               const Icon = CATEGORY_ICON_MAP[ic] ?? CATEGORY_ICON_MAP.ellipsis
               const on = icon === ic
               return (
-                <button
+                <motion.button
                   key={ic}
                   type="button"
+                  whileTap={{ scale: 0.95 }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                   onClick={() => setIcon(ic)}
                   title={ICON_LABELS[ic]}
                   className={`flex h-10 w-10 cursor-pointer items-center justify-center rounded-[13px] transition-colors${on ? '' : ' liquid-glass-ic'}`}
                   style={on ? { background: `${accent}22`, boxShadow: `0 0 0 1.5px ${accent}` } : undefined}
                 >
-                  <Icon size={17} style={{ color: on ? accent : 'var(--text-muted)' }} strokeWidth={1.9} />
-                </button>
+                  <Icon
+                    size={17}
+                    strokeWidth={1.9}
+                    style={{
+                      color: on ? accent : 'var(--text-muted)',
+                      transition: 'color var(--dur-tint) var(--ease-sys)',
+                    }}
+                  />
+                </motion.button>
               )
             })}
           </div>
@@ -241,11 +288,13 @@ export function CategorySheet({ type, category, onClose, onCreated, onSaved, onD
               // el valor guardado sigue siendo el hex del preset.
               const shown = categorySwatch(c)
               return (
-                <button
+                <motion.button
                   key={c}
                   type="button"
+                  whileTap={{ scale: 0.9 }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                   onClick={() => setColor(c)}
-                  className="h-[34px] w-[34px] cursor-pointer rounded-[12px] transition-transform active:scale-90"
+                  className="h-[34px] w-[34px] cursor-pointer rounded-[12px]"
                   style={{
                     background: shown,
                     boxShadow: color === c ? `0 0 0 2px var(--bg-base), 0 0 0 4px ${shown}` : 'none',
@@ -258,33 +307,39 @@ export function CategorySheet({ type, category, onClose, onCreated, onSaved, onD
 
           <div className="mt-[18px] flex gap-2.5">
             {editing && onDelete && (
-              <button
+              <motion.button
                 type="button"
+                whileTap={{ scale: 0.95 }}
+                transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                 onClick={() => { onDelete(category.id); close() }}
                 aria-label="Eliminar categoría"
-                className="flex h-12 w-12 flex-none cursor-pointer items-center justify-center rounded-full transition-transform active:scale-95"
+                className="flex h-12 w-12 flex-none cursor-pointer items-center justify-center rounded-full"
                 style={{ background: 'rgba(239,68,68,0.12)', color: 'var(--danger)' }}
               >
                 <Trash2 size={17} />
-              </button>
+              </motion.button>
             )}
-            <button
+            <motion.button
               type="button"
+              whileTap={{ scale: 0.97 }}
+              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
               onClick={close}
-              className="liquid-glass-ic h-12 flex-1 cursor-pointer rounded-full text-[14px] font-extrabold transition-transform active:scale-[0.97]"
+              className="liquid-glass-ic h-12 flex-1 cursor-pointer rounded-full text-[14px] font-extrabold"
               style={{ color: 'var(--text-secondary)' }}
             >
               Cancelar
-            </button>
-            <button
+            </motion.button>
+            <motion.button
               type="button"
+              whileTap={{ scale: 0.97 }}
+              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
               onClick={handleSubmit}
               disabled={pending}
-              className="h-12 flex-1 cursor-pointer rounded-full text-[14px] font-extrabold transition-transform active:scale-[0.97] disabled:opacity-50"
+              className="h-12 flex-1 cursor-pointer rounded-full text-[14px] font-extrabold disabled:opacity-50"
               style={{ background: 'var(--accent-light)', color: 'var(--bg-base)' }}
             >
               {pending ? 'Guardando...' : editing ? 'Guardar' : 'Crear'}
-            </button>
+            </motion.button>
           </div>
         </div>
       </div>

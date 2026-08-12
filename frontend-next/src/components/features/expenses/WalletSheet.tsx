@@ -5,13 +5,10 @@ import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { X } from 'lucide-react'
 
+import { COLOR_PRESETS } from '@/components/features/shared/colorPresets'
 import { useCreateWallet } from '@/lib/hooks/useWallets'
+import { categorySwatch } from '@/lib/utils/cardVisuals'
 import { EASE, MOTION_S } from '@/lib/utils/motion'
-
-const COLOR_PRESETS = [
-  '#d4af37', '#ef4444', '#3b82f6', '#22c55e',
-  '#f97316', '#a855f7', '#ec4899', '#14b8a6',
-]
 
 interface WalletSheetProps {
   onClose: () => void
@@ -105,20 +102,25 @@ export function WalletSheet({ onClose }: WalletSheetProps) {
               Color
             </label>
             <div className="flex flex-wrap gap-2">
-              {COLOR_PRESETS.map((c) => (
-                <button
-                  key={c}
-                  type="button"
-                  onClick={() => setColor(c)}
-                  className="h-7 w-7 rounded-full transition-transform"
-                  style={{
-                    background: c,
-                    boxShadow: color === c ? `0 0 0 2px var(--bg-card-inner), 0 0 0 3.5px ${c}` : 'none',
-                    transform: color === c ? 'scale(1.15)' : 'scale(1)',
-                  }}
-                  aria-label={c}
-                />
-              ))}
+              {COLOR_PRESETS.map((c) => {
+                // La ficha muestra el color ATENUADO (el que tendrá la tarjeta);
+                // el valor guardado sigue siendo el hex del preset.
+                const shown = categorySwatch(c)
+                return (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => setColor(c)}
+                    className="h-7 w-7 rounded-full transition-transform"
+                    style={{
+                      background: shown,
+                      boxShadow: color === c ? `0 0 0 2px var(--bg-card-inner), 0 0 0 3.5px ${shown}` : 'none',
+                      transform: color === c ? 'scale(1.15)' : 'scale(1)',
+                    }}
+                    aria-label={c}
+                  />
+                )
+              })}
             </div>
           </div>
 

@@ -5,6 +5,7 @@ import { preload } from 'react-dom'
 
 import { useReducedMotion } from 'framer-motion'
 
+import { WalletBalanceAmount } from '@/components/features/wallets/WalletBalanceAmount'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { useWallets } from '@/lib/hooks/useWallets'
 import { categoryHueSat } from '@/lib/utils/cardVisuals'
@@ -27,10 +28,6 @@ export function themeForColor(color?: string): LeatherTheme {
   if (h >= 75 && h <= 175) return 'green'
   if (h >= 30 && h < 75) return 'tan'
   return 'brown'
-}
-
-function formatBalance(n: number) {
-  return n.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
 /** Los nombres llegan como el usuario los escribió ("AHORROS"). Se muestran legibles. */
@@ -222,7 +219,9 @@ export function WalletLeatherCarousel({ onOpenActive }: WalletLeatherCarouselPro
   return (
     <div className="flex min-h-[calc(100vh-190px)] flex-col">
       {/* Identidad de la billetera activa. El nombre manda; el saldo lo sigue.
-          Sin animación: es un dato financiero que se lee, no un adorno.
+          El saldo recorre hasta su nuevo valor cuando cambia (registrar un
+          gasto, un ingreso, una transferencia), no al deslizar entre
+          billeteras — ver WalletBalanceAmount.
           aria-live: al deslizar, el lector de pantalla anuncia el cambio. */}
       <div className="pt-5 pb-1 text-center" aria-live="polite" aria-atomic="true">
         <p className="text-[15px] font-semibold tracking-[-0.01em]" style={{ color: 'var(--text-primary)' }}>
@@ -230,7 +229,7 @@ export function WalletLeatherCarousel({ onOpenActive }: WalletLeatherCarouselPro
         </p>
         <p className="mt-1.5 text-[40px] font-extrabold leading-none tracking-[-0.03em] tabular-nums" style={{ color: 'var(--text-primary)' }}>
           <small className="mr-1 text-[22px] font-bold" style={{ color: 'var(--text-tertiary)' }}>S/</small>
-          {formatBalance(Number(activeWallet.balance))}
+          <WalletBalanceAmount walletId={activeWallet.id} balance={Number(activeWallet.balance)} />
         </p>
       </div>
 

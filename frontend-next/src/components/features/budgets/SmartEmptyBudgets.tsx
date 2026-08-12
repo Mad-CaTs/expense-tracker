@@ -6,6 +6,7 @@ import { Plus, Wallet } from 'lucide-react'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { CATEGORY_ICON_MAP } from '@/lib/utils/categoryIcons'
 import type { CategoryBreakdown } from '@/types'
+import { categorySwatch } from '@/lib/utils/cardVisuals'
 
 interface SmartEmptyBudgetsProps {
   breakdown?: CategoryBreakdown[]
@@ -50,7 +51,7 @@ export function SmartEmptyBudgets({ breakdown, onPick }: SmartEmptyBudgetsProps)
               style={{ borderColor: 'var(--border-subtle)', background: 'var(--bg-card-inner)' }}
             >
               <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl" style={{ background: `${color}18` }}>
-                <Icon size={15} style={{ color }} strokeWidth={1.6} />
+                <Icon size={15} style={{ color: categorySwatch(color) }} strokeWidth={1.6} />
               </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-[13px] font-semibold" style={{ color: 'var(--text-primary)' }}>{b.categoryName}</p>

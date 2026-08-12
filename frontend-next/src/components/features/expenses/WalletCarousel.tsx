@@ -1,12 +1,14 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
 
 import { AnimatePresence, motion, useMotionValue, useSpring, useTransform } from 'framer-motion'
 // useTransform kept for rotateX/rotateY tilt
 import { Eye, EyeOff, History, Plus, TrendingDown, TrendingUp } from 'lucide-react'
 
 import { WalletSheet } from '@/components/features/expenses/WalletSheet'
+import { WalletBalanceAmount } from '@/components/features/wallets/WalletBalanceAmount'
 import { useWallets } from '@/lib/hooks/useWallets'
 import { categoryAura } from '@/lib/utils/cardVisuals'
 import { EASE, MOTION_S } from '@/lib/utils/motion'
@@ -14,10 +16,6 @@ import type { Wallet } from '@/types'
 
 // Logo de la app (asset local optimizado; antes bucket externo R2)
 const LOGO_URL = '/brand/logo.webp'
-
-function formatBalance(n: number) {
-  return n.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-}
 
 function WalletCard({
   wallet,
@@ -164,7 +162,14 @@ function WalletCard({
               className="text-[32px] font-bold leading-none tracking-[-0.03em] tabular-nums"
               style={{ color: '#fff', textShadow: '0 1px 18px rgba(0,0,0,0.25)' }}
             >
-              {hidden ? 'S/ ••••••' : `S/ ${formatBalance(balance)}`}
+              {hidden ? (
+                'S/ ••••••'
+              ) : (
+                <>
+                  S/{' '}
+                  <WalletBalanceAmount walletId={wallet.id} balance={balance} />
+                </>
+              )}
             </p>
 
             <button
@@ -206,6 +211,7 @@ interface WalletCarouselProps {
 }
 
 export function WalletCarousel({ selectedWalletId, onSelect }: WalletCarouselProps) {
+  const router = useRouter()
   const { data: wallets = [] } = useWallets()
   const [showSheet, setShowSheet] = useState(false)
   const [hidden, setHidden] = useState(false)
@@ -256,7 +262,9 @@ export function WalletCarousel({ selectedWalletId, onSelect }: WalletCarouselPro
                 index={i}
                 onToggleHidden={() => setHidden((v) => !v)}
                 onSelect={() => onSelect(selectedWalletId === w.id ? undefined : w.id)}
-                onShowMovements={() => onSelect(w.id)}
+                // Al detalle de la billetera en /wallets, donde vive su lista
+                // de movimientos: acá "Historial" solo filtraba la página.
+                onShowMovements={() => router.push(`/wallets?w=${w.id}`)}
               />
             </div>
           ))}

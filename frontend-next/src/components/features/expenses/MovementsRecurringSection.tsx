@@ -9,6 +9,7 @@ import { useCategoryBreakdown } from '@/lib/hooks/useReports'
 import { useRecurring } from '@/lib/hooks/useRecurring'
 import { useFilterStore } from '@/stores/filterStore'
 import type { CategoryBreakdown } from '@/types'
+import { categorySwatch } from '@/lib/utils/cardVisuals'
 
 const MONTHS_ES = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -179,7 +180,7 @@ function RecurringCard() {
                 ['--enter-i' as string]: i,
               }}
             >
-              <CategoryIcon name={r.categoryIcon || 'ellipsis'} size={19} color={color} />
+              <CategoryIcon name={r.categoryIcon || 'ellipsis'} size={19} color={categorySwatch(color)} />
             </div>
           )
         })}

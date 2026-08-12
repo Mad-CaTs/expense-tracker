@@ -4,6 +4,7 @@ import { ChevronDown, TrendingUp } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 
 import { CATEGORY_ICON_MAP } from '@/lib/utils/categoryIcons'
+import { categorySwatch } from '@/lib/utils/cardVisuals'
 import type { Income } from '@/types'
 
 interface IncomeRowProps {
@@ -51,7 +52,7 @@ export function IncomeRow({ income, onEdit, onDelete, index, expanded, onToggle 
             className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl"
             style={{ backgroundColor: `${color}18`, boxShadow: `0 0 0 1px ${color}22` }}
           >
-            <Icon size={14} style={{ color }} strokeWidth={1.6} />
+            <Icon size={14} style={{ color: categorySwatch(color) }} strokeWidth={1.6} />
           </div>
 
           <div className="flex min-w-0 flex-1">
@@ -100,7 +101,7 @@ export function IncomeRow({ income, onEdit, onDelete, index, expanded, onToggle 
                   <div>
                     <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.15em]" style={{ color: 'var(--text-placeholder)' }}>Categoría</p>
                     <p className="flex items-center gap-1.5" style={{ color: 'var(--text-secondary)' }}>
-                      <span className="h-2 w-2 rounded-full" style={{ background: color }} />
+                      <span className="h-2 w-2 rounded-full" style={{ background: categorySwatch(color) }} />
                       {income.categoryName}
                     </p>
                   </div>

@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 
 import { Search } from 'lucide-react'
 
+import { AnimatedAmount } from '@/components/features/shared/AnimatedAmount'
 import { useSubPageExit } from '@/components/features/shared/useSubPageExit'
 import { SubPageHeader } from '@/components/layout/SubPageHeader'
 import { useCategories } from '@/lib/hooks/useCategories'
@@ -11,6 +12,7 @@ import { categoryAura } from '@/lib/utils/cardVisuals'
 import { CATEGORY_ICON_MAP } from '@/lib/utils/categoryIcons'
 
 import { useCategoryMovements, type CategoryMovement } from './useCategoryMovements'
+import { categorySwatch } from '@/lib/utils/cardVisuals'
 
 /** Fecha corta de una fila: Hoy / Ayer / "7 jul". */
 function movementDay(iso: string): string {
@@ -33,13 +35,13 @@ function MovementRow({ movement, color, icon, categoryName }: { movement: Catego
   return (
     <div className="flex items-center gap-3 rounded-2xl px-3.5 py-[11px]">
       <span className="flex h-[38px] w-[38px] flex-none items-center justify-center rounded-full" style={{ background: `${color}1f` }}>
-        <Icon size={16} style={{ color }} strokeWidth={1.8} />
+        <Icon size={16} style={{ color: categorySwatch(color) }} strokeWidth={1.8} />
       </span>
       <span className="min-w-0 flex-1">
         <span className="block truncate text-[13.5px] font-semibold" style={{ color: 'var(--text-primary)' }}>
           {movement.description}
         </span>
-        <span className="mt-0.5 block truncate text-[11.5px]" style={{ color: 'var(--text-muted)' }}>
+        <span className="mt-0.5 block truncate text-[11.5px]" style={{ color: 'var(--text-tertiary)' }}>
           {categoryName}
         </span>
       </span>
@@ -47,7 +49,9 @@ function MovementRow({ movement, color, icon, categoryName }: { movement: Catego
         <span className="mono-amount block text-[13px] font-bold tracking-[-0.01em] tabular-nums" style={{ color: 'var(--text-primary)' }}>
           {formatAmount(movement.amount)}
         </span>
-        <time className="block text-[10.5px]" style={{ color: 'var(--text-placeholder)' }}>
+        {/* --text-tertiary y no --text-placeholder: la fecha es un dato de la
+            fila, y el tono de relleno no se leía sobre el cristal. */}
+        <time className="block text-[10.5px]" style={{ color: 'var(--text-tertiary)' }}>
           {movementDay(movement.date)}
         </time>
       </span>
@@ -108,7 +112,7 @@ export function CategoryMovementsScreen({ categoryId }: { categoryId: number }) 
             </p>
             <p className="mono-amount mt-[7px] text-[31px] font-extrabold leading-none tracking-[-0.03em] tabular-nums" style={{ color: '#fff', textShadow: '0 1px 18px rgba(0,0,0,0.25)' }}>
               <small className="mr-[5px] text-[18px] font-bold" style={{ color: 'rgba(255,255,255,0.7)' }}>S/</small>
-              {total.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              <AnimatedAmount value={total} animateOnMount />
             </p>
           </div>
           <span className="flex h-[42px] w-[42px] flex-none items-center justify-center rounded-[12px]" style={{ background: 'rgba(255,255,255,0.18)' }}>
@@ -153,7 +157,7 @@ export function CategoryMovementsScreen({ categoryId }: { categoryId: number }) 
               ))}
             </div>
           ) : visible.length === 0 ? (
-            <p className="px-4 py-8 text-center text-[12.5px]" style={{ color: 'var(--text-placeholder)' }}>
+            <p className="px-4 py-8 text-center text-[12.5px]" style={{ color: 'var(--text-muted)' }}>
               Sin movimientos{query ? ' para esa búsqueda' : ' en esta categoría'}.
             </p>
           ) : (

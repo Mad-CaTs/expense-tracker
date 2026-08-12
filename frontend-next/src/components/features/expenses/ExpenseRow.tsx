@@ -8,6 +8,7 @@ import { AttachmentsModal } from '@/components/features/expenses/AttachmentsModa
 import { CATEGORY_ICON_MAP } from '@/lib/utils/categoryIcons'
 import { EASE, MOTION_S } from '@/lib/utils/motion'
 import type { Expense } from '@/types'
+import { categorySwatch } from '@/lib/utils/cardVisuals'
 
 interface ExpenseRowProps {
   expense: Expense
@@ -61,7 +62,7 @@ export function ExpenseRow({ expense, onEdit, onDelete, index, expanded, onToggl
             className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl"
             style={{ backgroundColor: `${color}14`, boxShadow: `0 0 0 1px ${color}18` }}
           >
-            <Icon size={14} style={{ color }} strokeWidth={1.6} />
+            <Icon size={14} style={{ color: categorySwatch(color) }} strokeWidth={1.6} />
           </div>
 
           <div className="flex min-w-0 flex-1 items-center gap-2">
@@ -70,7 +71,7 @@ export function ExpenseRow({ expense, onEdit, onDelete, index, expanded, onToggl
             </p>
             <span
               className="hidden sm:inline-flex flex-shrink-0 rounded-full px-2 py-0.5 text-[9px] font-semibold tracking-wide"
-              style={{ background: `${color}15`, color }}
+              style={{ background: `${color}15`, color: categorySwatch(color) }}
             >
               {expense.categoryName}
             </span>
@@ -122,7 +123,7 @@ export function ExpenseRow({ expense, onEdit, onDelete, index, expanded, onToggl
                   </p>
                   <div className="flex items-center gap-1.5">
                     <div className="flex h-4 w-4 items-center justify-center rounded" style={{ background: `${color}20` }}>
-                      <Icon size={10} style={{ color }} strokeWidth={1.8} />
+                      <Icon size={10} style={{ color: categorySwatch(color) }} strokeWidth={1.8} />
                     </div>
                     <p style={{ color: 'var(--text-secondary)' }}>{expense.categoryName}</p>
                   </div>

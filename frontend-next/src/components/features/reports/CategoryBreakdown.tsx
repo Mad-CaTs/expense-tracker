@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion'
 
 import type { LinkedHighlightProps } from '@/components/features/reports/DistributionSection'
+import { categorySwatch } from '@/lib/utils/cardVisuals'
 import { getCategoryColor } from '@/lib/utils/categoryColors'
 
 const DIMMED_ROW_OPACITY = 0.45
@@ -20,7 +21,9 @@ export function CategoryBreakdown({ breakdown, activeIndex, onHover, onSelect }:
           <div className="flex flex-col gap-1">
             {breakdown.map((item, i) => {
               const { categoryName, total, percentage, count } = item
-              const color = getCategoryColor(item, i)
+              // Tono con el que ese color se ve en las tarjetas: el hex crudo del
+              // preset es más saturado que cualquier superficie de la app.
+              const color = categorySwatch(getCategoryColor(item, i))
               const isActive = activeIndex === i
               const isDimmed = activeIndex !== null && !isActive
               return (

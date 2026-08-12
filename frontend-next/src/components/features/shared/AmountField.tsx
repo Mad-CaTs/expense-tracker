@@ -24,15 +24,15 @@ export function AmountField({ label, inputId, value, activeColor, error, onChang
   const amountNum = parseFloat(value) || 0
 
   return (
-    <div className="flex flex-col items-center py-8">
-      <div className="mb-1 flex items-center gap-3">
-        <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
-          {label}
-        </p>
-        {error && (
-          <p className="text-[11px]" style={{ color: 'var(--danger)' }}>{error}</p>
-        )}
-      </div>
+    // Sobre cristal y no suelto en la página: el monto es el campo principal
+    // del paso 1 y necesita leerse como un control, no como un título.
+    <div
+      className="liquid-glass-ic flex flex-col items-center rounded-[20px] px-4 py-[18px]"
+      style={error ? { borderColor: 'var(--danger)' } : undefined}
+    >
+      <p className="mb-1.5 text-[10px] font-bold uppercase tracking-[0.1em]" style={{ color: 'var(--text-placeholder)' }}>
+        {label}
+      </p>
       <div className="relative" onClick={() => document.getElementById(inputId)?.focus()}>
         <input
           id={inputId}
@@ -55,12 +55,13 @@ export function AmountField({ label, inputId, value, activeColor, error, onChang
           initial={{ scale: 0.95, opacity: 0.6 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.08 }}
-          className="mono-amount text-[52px] font-extrabold leading-none tracking-[-0.03em]"
-          style={{ color: amountNum > 0 ? activeColor : 'var(--border-strong)' }}
+          className="mono-amount text-[40px] font-extrabold leading-none tracking-[-0.03em]"
+          style={{ color: amountNum > 0 ? activeColor : 'var(--text-placeholder)' }}
         >
           S/ {formatDisplay(value)}
         </motion.p>
       </div>
+      {error && <p className="mt-2 text-[11px]" style={{ color: 'var(--danger)' }}>{error}</p>}
     </div>
   )
 }

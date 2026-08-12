@@ -1,3 +1,5 @@
+import { useCallback } from 'react'
+
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { createIncome, deleteIncome, getIncome, getIncomes, updateIncome } from '@/lib/api/incomes'
@@ -19,35 +21,35 @@ export function useIncome(id: number) {
   })
 }
 
-export function useCreateIncome() {
+/**
+ * La invalidación NO va en `onSuccess`: refrescar ahí recalcula el resumen
+ * mientras el aviso de éxito todavía no se vio, así que el total cambia detrás
+ * del modal. Se expone `refresh` para que el contenedor lo dispare al descartar
+ * el aviso, y el número recorra a la vista.
+ */
+function useMovementMutation<TVars, TData>(fn: (vars: TVars) => Promise<TData>, keys: string[]) {
   const qc = useQueryClient()
-  return useMutation({
-    mutationFn: createIncome,
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['incomes'] })
-      qc.invalidateQueries({ queryKey: ['wallets'] })
-    },
-  })
+  const mutation = useMutation({ mutationFn: fn })
+  const refresh = useCallback(() => {
+    keys.forEach((key) => qc.invalidateQueries({ queryKey: [key] }))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [qc])
+  return { ...mutation, refresh }
+}
+
+const INCOME_KEYS = ['incomes', 'wallets', 'reports']
+
+export function useCreateIncome() {
+  return useMovementMutation(createIncome, INCOME_KEYS)
 }
 
 export function useUpdateIncome() {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Omit<Income, 'id'> }) => updateIncome(id, data),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['incomes'] })
-      qc.invalidateQueries({ queryKey: ['wallets'] })
-    },
-  })
+  return useMovementMutation(
+    ({ id, data }: { id: number; data: Omit<Income, 'id'> }) => updateIncome(id, data),
+    INCOME_KEYS,
+  )
 }
 
 export function useDeleteIncome() {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: deleteIncome,
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['incomes'] })
-      qc.invalidateQueries({ queryKey: ['wallets'] })
-    },
-  })
+  return useMovementMutation(deleteIncome, INCOME_KEYS)
 }

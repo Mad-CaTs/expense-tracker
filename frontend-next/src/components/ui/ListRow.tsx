@@ -4,6 +4,7 @@ import type { ReactNode } from 'react'
 
 import { motion } from 'framer-motion'
 import type { LucideIcon } from 'lucide-react'
+import { categorySwatch } from '@/lib/utils/cardVisuals'
 
 interface ListRowProps {
   Icon?: LucideIcon
@@ -21,6 +22,7 @@ interface ListRowProps {
 
 /** Fila canónica: [ícono coloreado] título + subtítulo tenue · trailing. Sin bordes. */
 export function ListRow({ Icon, renderIcon, color, title, subtitle, trailing, onClick, index = 0 }: ListRowProps) {
+  const stroke = color.startsWith('#') ? categorySwatch(color) : color
   return (
     <motion.button
       type="button"
@@ -33,11 +35,14 @@ export function ListRow({ Icon, renderIcon, color, title, subtitle, trailing, on
       onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--bg-hover)' }}
       onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}
     >
+      {/* El fondo necesita el hex para concatenar el alfa; el trazo usa el tono
+          atenuado de la app. Con un token CSS (`var(--accent)`) no hay hex que
+          convertir, así que se deja pasar tal cual. */}
       <div
         className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-[var(--r-sm)]"
-        style={{ background: `${color}14`, color }}
+        style={{ background: `${color}14`, color: stroke }}
       >
-        {renderIcon ?? (Icon ? <Icon size={16} style={{ color }} strokeWidth={1.7} /> : null)}
+        {renderIcon ?? (Icon ? <Icon size={16} style={{ color: stroke }} strokeWidth={1.7} /> : null)}
       </div>
 
       <div className="min-w-0 flex-1">
