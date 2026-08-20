@@ -7,7 +7,8 @@ export function SubPageHeader({
   action,
   onBack,
 }: {
-  title: string
+  /** Omitirlo deja solo el ←, para pantallas que ya se nombran solas. */
+  title?: string
   action?: React.ReactNode
   /** Permite animar la salida antes de navegar (ver useSubPageExit). */
   onBack: () => void
@@ -28,9 +29,11 @@ export function SubPageHeader({
         >
           <ArrowLeft size={20} />
         </button>
-        <h1 className="text-[19px] font-extrabold tracking-[-0.01em]" style={{ color: 'var(--text-primary)' }}>
-          {title}
-        </h1>
+        {title && (
+          <h1 className="text-[19px] font-extrabold tracking-[-0.01em]" style={{ color: 'var(--text-primary)' }}>
+            {title}
+          </h1>
+        )}
       </div>
       {action && <div>{action}</div>}
     </header>

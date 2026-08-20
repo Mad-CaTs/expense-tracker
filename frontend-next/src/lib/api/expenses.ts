@@ -22,7 +22,7 @@ function periodToRange(period: string): { from: string; to: string } {
       mon.setDate(now.getDate() - day + 1)
       return { from: fmt(mon), to: today }
     }
-    default: // MONTHLY
+    default:
       return { from: `${now.getFullYear()}-${pad(now.getMonth() + 1)}-01`, to: today }
   }
 }

@@ -19,7 +19,6 @@ interface TransferSheetProps {
   wallets: Wallet[]
   presetFromId?: number
   onDone: () => void
-  /** Resumen de lo transferido, para el aviso de éxito del contenedor. */
   onSaved?: (summary: TxSummary) => void
 }
 
@@ -38,7 +37,6 @@ export function TransferSheet({ wallets, presetFromId, onDone, onSaved }: Transf
 
   const { step, stepDir, goNext, goBack, goTo } = useFormSteps(2)
 
-  /** Paso 1: monto y las dos cuentas. El resto es opcional. */
   function validateStep1(): boolean {
     if (!fromId || !toId) { setError('Selecciona origen y destino'); return false }
     if (fromId === toId) { setError('Origen y destino no pueden ser iguales'); return false }
@@ -49,8 +47,6 @@ export function TransferSheet({ wallets, presetFromId, onDone, onSaved }: Transf
   }
 
   async function handleSubmit() {
-    // Los dos pasos, no solo el visible: se puede volver al paso 1 y vaciar un
-    // campo antes de avanzar de nuevo.
     if (!validateStep1()) { goTo(1); return }
     if (!date) { setError('Selecciona una fecha'); return }
     const amt = parseFloat(amount)
@@ -71,9 +67,6 @@ export function TransferSheet({ wallets, presetFromId, onDone, onSaved }: Transf
             <AmountField
               label="Monto a transferir"
               inputId="transfer-amount-input"
-              // Neutro y no rojo/verde: una transferencia no suma ni resta
-              // patrimonio, solo lo mueve entre cuentas.
-              activeColor="var(--text-primary)"
               value={amount}
               error={error && error.includes('Monto') ? error : undefined}
               onChange={(v) => { setAmount(v); setError('') }}

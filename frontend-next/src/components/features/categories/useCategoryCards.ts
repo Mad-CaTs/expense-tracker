@@ -26,26 +26,11 @@ export interface CategoryCardsResult {
   movementCount: number
 }
 
-/**
- * Combina las categorías con el gasto del mes.
- *
- * El breakdown SOLO devuelve categorías con movimientos, así que las que no
- * gastaron no aparecen ahí: si se leyera solo de esa fuente, el grid perdería
- * justamente las que van atenuadas. La lista de categorías manda y el breakdown
- * se cruza por nombre, con 0 por defecto.
- *
- * Orden: primero las que gastaron (de mayor a menor), después las sin uso
- * alfabéticamente — así el grid arranca por lo que importa y las vacías caen
- * al final sin desordenarse entre sí.
- */
 export function useCategoryCards(type: CategoryType): CategoryCardsResult {
   const { data: categories = [], isLoading: loadingCategories } = useCategories()
   const { from, to } = useMemo(() => monthRange(), [])
   const { data: breakdown, isLoading: loadingBreakdown } = useCategoryBreakdown({ period: 'CUSTOM', from, to, txType: type })
 
-  // AMBAS consultas: con solo las categorías el grid se pintaba entero en S/ 0 y
-  // atenuado, y al llegar el breakdown se recoloreaba y reordenaba de golpe —
-  // se veía como un temblor al entrar a la pantalla.
   const isLoading = loadingCategories || loadingBreakdown
 
   return useMemo(() => {

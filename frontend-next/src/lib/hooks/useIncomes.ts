@@ -21,18 +21,12 @@ export function useIncome(id: number) {
   })
 }
 
-/**
- * La invalidación NO va en `onSuccess`: refrescar ahí recalcula el resumen
- * mientras el aviso de éxito todavía no se vio, así que el total cambia detrás
- * del modal. Se expone `refresh` para que el contenedor lo dispare al descartar
- * el aviso, y el número recorra a la vista.
- */
+
 function useMovementMutation<TVars, TData>(fn: (vars: TVars) => Promise<TData>, keys: string[]) {
   const qc = useQueryClient()
   const mutation = useMutation({ mutationFn: fn })
   const refresh = useCallback(() => {
     keys.forEach((key) => qc.invalidateQueries({ queryKey: [key] }))
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [qc])
   return { ...mutation, refresh }
 }

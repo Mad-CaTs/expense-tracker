@@ -24,20 +24,9 @@ export function useSheetClose(): () => void {
   return close
 }
 
-/** Arrastre hacia abajo que cierra el sheet, en px o en velocidad. */
 const DISMISS_DISTANCE = 120
 const DISMISS_VELOCITY = 0.55
 
-/**
- * Bottom sheet. La entrada y la salida corren por CSS (`sheet-in`/`sheet-out`),
- * no por framer: la convención del proyecto es animar por compositor y dejar
- * framer para la interacción. Animado por JS, cada frame de un panel de este
- * tamaño —con sus campos, chips y selectores— pasa por el hilo principal y el
- * despliegue se siente con lag.
- *
- * El arrastre para descartar sí es interacción, así que se maneja a mano con
- * eventos de puntero y `transform` directo sobre el nodo.
- */
 export function Sheet({ onClose, title, children }: SheetProps) {
   const panel = useRef<HTMLDivElement>(null)
   const startY = useRef(0)
@@ -48,7 +37,6 @@ export function Sheet({ onClose, title, children }: SheetProps) {
   const [sliding, setSliding] = useState(true)
   const exitTimer = useRef<number | null>(null)
 
-  // `sliding` nace en true: acá solo hay que apagarlo al aterrizar.
   useEffect(() => {
     const t = window.setTimeout(() => setSliding(false), MOTION.sheet)
     return () => {
@@ -57,7 +45,6 @@ export function Sheet({ onClose, title, children }: SheetProps) {
     }
   }, [])
 
-  /** El desmontaje espera a que la salida termine. */
   const close = useCallback(() => {
     if (exitTimer.current !== null) return
     setSliding(true)
@@ -72,7 +59,6 @@ export function Sheet({ onClose, title, children }: SheetProps) {
   }, [close])
 
   function onPointerDown(e: React.PointerEvent) {
-    // Solo desde el handle: dentro del formulario el gesto vertical es scroll.
     if (!(e.target as HTMLElement).closest('[data-sheet-handle]')) return
     dragging.current = true
     startY.current = e.clientY
@@ -83,7 +69,6 @@ export function Sheet({ onClose, title, children }: SheetProps) {
   function onPointerMove(e: React.PointerEvent) {
     if (!dragging.current || !panel.current) return
     const dy = Math.max(0, e.clientY - startY.current)
-    // transform directo: sin pasar por React, el arrastre sigue al dedo.
     panel.current.style.transform = `translate3d(0, ${dy}px, 0)`
   }
 
@@ -118,7 +103,6 @@ export function Sheet({ onClose, title, children }: SheetProps) {
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
-        // Mismo material que los sheets de categorías y frecuentes.
         className={`liquid-glass relative flex max-h-[92dvh] w-full max-w-md flex-col rounded-t-[24px] border-b-0 ${closing ? 'sheet-out' : 'sheet-in'} ${sliding ? 'is-sliding overflow-hidden' : 'sheet-settled overflow-hidden'}`}
         style={{
           backdropFilter: 'none',

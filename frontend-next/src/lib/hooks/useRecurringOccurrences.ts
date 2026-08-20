@@ -16,15 +16,6 @@ export function usePendingOccurrences() {
   })
 }
 
-/**
- * Confirmar genera un gasto y rechazar deja deuda: ambas mutaciones invalidan
- * también gastos y billeteras, cuyo saldo se deriva de esos movimientos.
- *
- * La invalidación NO va en `onSuccess`: refrescar ahí saca la ocurrencia de la
- * lista en el acto y desmonta su tarjeta, así que no hay tiempo de mostrar qué
- * se resolvió. Se expone `refresh` para que la pantalla lo dispare cuando su
- * animación de salida haya terminado.
- */
 function useOccurrenceMutation(fn: (id: number) => Promise<unknown>) {
   const qc = useQueryClient()
   const mutation = useMutation({ mutationFn: fn })
@@ -33,8 +24,6 @@ function useOccurrenceMutation(fn: (id: number) => Promise<unknown>) {
     qc.invalidateQueries({ queryKey: ['recurring'] })
     qc.invalidateQueries({ queryKey: ['expenses'] })
     qc.invalidateQueries({ queryKey: ['wallets'] })
-    // Confirmar genera un gasto, así que el breakdown por categoría —el que
-    // alimenta los totales de /categories y /expenses— también queda viejo.
     qc.invalidateQueries({ queryKey: ['reports'] })
   }, [qc])
 

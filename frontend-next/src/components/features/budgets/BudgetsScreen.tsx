@@ -40,18 +40,8 @@ function currentMonthRange() {
   }
 }
 
-/**
- * Pantalla de presupuestos: hero con el límite del mes y grid de tarjetas
- * ordenado por consumo, para que lo que está por reventar quede arriba.
- *
- * Cada tarjeta ofrece dos acciones sobre el mismo elemento —toque corto abre los
- * movimientos de la categoría, presión sostenida abre el editor del límite—,
- * igual que en /categories.
- */
 export function BudgetsScreen() {
-  // Se llega desde el carrusel de /expenses con `?focus=<id>`: ese presupuesto
-  // se centra en pantalla, porque la lista los muestra todos y encontrarlo a
-  // ojo derrota el propósito de haber tocado uno concreto.
+
   const focusId = Number(useSearchParams().get('focus')) || null
   const focusCard = useRef<HTMLDivElement>(null)
   const { exitClass, open, goBack } = useSubPageExit()
@@ -77,7 +67,6 @@ export function BudgetsScreen() {
   const { from, to } = currentMonthRange()
   const { data: breakdown } = useCategoryBreakdown({ period: 'CUSTOM', from, to, txType: 'EXPENSE' })
 
-  // Lo más consumido primero: un presupuesto al 127% importa más que uno al 17%.
   const items = [...(budgets ?? [])].sort((a, b) => (b.percentage ?? 0) - (a.percentage ?? 0))
 
   return (
@@ -112,8 +101,6 @@ export function BudgetsScreen() {
       ) : (
         <div className="grid grid-cols-2 gap-[11px] px-4">
           {items.map((b, i) => (
-            // El wrapper existe solo para el ref de enfoque; `[&>button]:w-full`
-            // hace que la tarjeta ocupe la celda entera del grid.
             <div
               key={b.id}
               ref={b.id === focusId ? focusCard : undefined}
@@ -121,8 +108,6 @@ export function BudgetsScreen() {
             >
               <BudgetGridCard
                 budget={b}
-                // +1: el hero ocupa el primer lugar del stagger, así la
-                // secuencia continúa en vez de reiniciarse.
                 index={i + 1}
                 onOpen={() => { if (b.categoryId) open(`/categories/${b.categoryId}`) }}
                 onEdit={() => setEditing(b)}

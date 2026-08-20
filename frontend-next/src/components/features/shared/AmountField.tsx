@@ -8,7 +8,6 @@ interface AmountFieldProps {
   label: string
   inputId: string
   value: string
-  activeColor: string
   error?: string
   onChange: (value: string) => void
 }
@@ -20,12 +19,10 @@ function formatDisplay(val: string): string {
   return n.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
-export function AmountField({ label, inputId, value, activeColor, error, onChange }: AmountFieldProps) {
+export function AmountField({ label, inputId, value, error, onChange }: AmountFieldProps) {
   const amountNum = parseFloat(value) || 0
 
   return (
-    // Sobre cristal y no suelto en la página: el monto es el campo principal
-    // del paso 1 y necesita leerse como un control, no como un título.
     <div
       className="liquid-glass-ic flex flex-col items-center rounded-[20px] px-4 py-[18px]"
       style={error ? { borderColor: 'var(--danger)' } : undefined}
@@ -56,7 +53,12 @@ export function AmountField({ label, inputId, value, activeColor, error, onChang
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.08 }}
           className="mono-amount text-[40px] font-extrabold leading-none tracking-[-0.03em]"
-          style={{ color: amountNum > 0 ? activeColor : 'var(--text-placeholder)' }}
+          // El acento de la app, no un color por tipo de operación: antes gasto
+          // iba en rojo e ingreso en verde, repitiendo lo que ya dice el título
+          // ("Nuevo gasto" / "Nuevo ingreso"). `--accent-light` es el mismo
+          // token del botón principal, así que el monto y la acción que lo
+          // confirma hablan igual — azul marino en claro, blanco en oscuro.
+          style={{ color: amountNum > 0 ? 'var(--accent-light)' : 'var(--text-placeholder)' }}
         >
           S/ {formatDisplay(value)}
         </motion.p>

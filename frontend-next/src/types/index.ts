@@ -203,6 +203,8 @@ export interface LoginResponse {
   accessToken: string
   refreshToken: string
   mustChangePassword: boolean
+  /** false mientras el usuario no haya terminado el onboarding. */
+  onboardingCompleted: boolean
   username: string
   user: User
 }

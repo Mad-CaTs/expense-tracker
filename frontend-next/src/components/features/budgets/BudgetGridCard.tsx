@@ -7,28 +7,15 @@ import { NEAR_LIMIT_PCT } from '@/components/features/budgets/BudgetsHero'
 import { categoryAura, categorySwatch } from '@/lib/utils/cardVisuals'
 import type { Budget } from '@/types'
 
-/** Milisegundos de presión sostenida que abren el editor. */
 const HOLD_MS = 550
 
 export interface BudgetGridCardProps {
   budget: Budget
   index: number
-  /** Toque corto: ver los movimientos de la categoría. */
   onOpen: () => void
-  /** Presión sostenida: editar el límite. */
   onEdit: () => void
 }
 
-/**
- * Tarjeta de presupuesto del grid: mismo lenguaje que CategoryCard —aurora
- * derivada del color de la categoría y texto en blanco— para que un presupuesto
- * se reconozca como la categoría a la que pertenece.
- *
- * Lo que la diferencia es que el dato central es consumo contra un límite. Los
- * tres estados se leen en la barra: blanco al día, ámbar cerca del límite,
- * rosado pálido al excederlo, más una píldora que lo nombra — el color solo no
- * distingue "99%" de "127%".
- */
 export function BudgetGridCard({ budget, index, onOpen, onEdit }: BudgetGridCardProps) {
   const spent = budget.spent ?? 0
   const amount = budget.amount ?? 0
@@ -40,8 +27,6 @@ export function BudgetGridCard({ budget, index, onOpen, onEdit }: BudgetGridCard
   const color = budget.categoryColor ?? '#d4af37'
 
   const aura = categoryAura(color)
-  // El icono sobre el círculo blanco usa el tono atenuado, igual que el resto
-  // de la app: el hex crudo del preset ahí se ve fluorescente.
   const iconColor = categorySwatch(color)
   const barColor = isOver ? '#ffd9d0' : isNear ? '#ffe0a3' : '#fff'
 
@@ -65,16 +50,10 @@ export function BudgetGridCard({ budget, index, onOpen, onEdit }: BudgetGridCard
     timer.current = window.setTimeout(() => {
       fired.current = true
       clear()
-      // Al abrirse el editor el puntero SIGUE abajo: el menú contextual se
-      // dispararía al soltar, y para entonces el objetivo ya no es la tarjeta
-      // sino el sheet, así que su onContextMenu no alcanza. Se suprime a nivel
-      // documento por una ventana corta, hasta que el gesto se complete.
+
       const block = (e: Event) => e.preventDefault()
       document.addEventListener('contextmenu', block, true)
-      // Y lo mismo con la selección: el gesto de sostener arrastra una, y el
-      // sheet monta con el puntero abajo, así que el navegador la extiende
-      // hasta su título. `select-none` acá no alcanza — el texto que termina
-      // resaltado es el del sheet, que todavía no existía al empezar.
+
       const deselect = () => window.getSelection()?.removeAllRanges()
       document.addEventListener('selectionchange', deselect, true)
       window.setTimeout(() => {
@@ -87,7 +66,6 @@ export function BudgetGridCard({ budget, index, onOpen, onEdit }: BudgetGridCard
   }
 
   function onClick() {
-    // El click posterior a un long-press ya fue atendido por onEdit.
     if (fired.current) {
       fired.current = false
       return
@@ -107,9 +85,6 @@ export function BudgetGridCard({ budget, index, onOpen, onEdit }: BudgetGridCard
       aria-label={`${budget.categoryName ?? 'Categoría'}. Toca para ver movimientos, mantén para editar el límite.`}
       className="enter-pop relative flex min-h-[172px] cursor-pointer select-none flex-col justify-end overflow-hidden rounded-[20px] text-left transition-transform active:scale-[0.985]"
       style={{
-        // Mantener presionado ES, para el navegador, el gesto que abre el menú
-        // contextual y arrastra una selección. Como acá ese gesto significa
-        // "editar", hay que desactivar ambas respuestas nativas.
         WebkitTouchCallout: 'none',
         background: aura.base,
         boxShadow: '0 1px 3px rgba(0,0,0,0.14)',

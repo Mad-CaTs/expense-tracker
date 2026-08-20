@@ -24,8 +24,6 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    // data-scroll-behavior: Next 16 ya no anula scroll-behavior:smooth al navegar;
-    // sin este atributo cada cambio de ruta haría un scroll animado al top.
     <html
       lang="es"
       className={`${interSans.variable} ${geistMono.variable} h-full dark`}

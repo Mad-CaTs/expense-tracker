@@ -18,9 +18,10 @@ export function useReportSummary(filters: ReportFilters) {
   })
 }
 
-export function useCategoryBreakdown(filters: ReportFilters) {
+export function useCategoryBreakdown(filters: ReportFilters, options?: { requireWallet?: boolean }) {
   return useQuery({
     queryKey: ['reports', 'by-category', filters],
     queryFn: () => getCategoryBreakdown(filters),
+    enabled: options?.requireWallet ? filters.walletId != null : true,
   })
 }

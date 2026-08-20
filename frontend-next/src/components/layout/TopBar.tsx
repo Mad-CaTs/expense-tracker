@@ -5,7 +5,9 @@ import { useEffect, useRef, useState } from 'react'
 
 import { AnimatePresence } from 'framer-motion'
 
+import { useStoredUsername } from '@/components/features/shared/useStoredUsername'
 import { DropdownMenu } from '@/components/ui/DropdownMenu'
+import { Plus } from 'lucide-react'
 
 /** Iconos Solar Bold del menú (inline, currentColor). */
 function UserCircleIcon() {
@@ -24,20 +26,35 @@ function LogoutIcon() {
   )
 }
 
-/** Título contextual por ruta (el Home muestra el saludo en su lugar). */
 const PAGE_TITLES: Record<string, string> = {
   '/wallets': 'Billeteras',
   '/reports': 'Reportes',
   '/settings': 'Configuración',
 }
 
+function HeaderAction({ pathname }: { pathname: string }) {
+  const router = useRouter()
+
+  if (pathname === '/wallets') {
+    return (
+      <button
+        onClick={() => router.push('/wallets/new')}
+        className="liquid-glass flex h-12 w-12 flex-shrink-0 cursor-pointer items-center justify-center rounded-full transition-transform active:scale-95"
+        style={{ color: 'var(--text-primary)' }}
+        aria-label="Nueva billetera"
+      >
+        <Plus size={20} strokeWidth={2.4} />
+      </button>
+    )
+  }
+
+  return null
+}
+
 export function TopBar() {
   const router = useRouter()
   const pathname = usePathname()
-  // Lazy init: lee localStorage una vez (guard de SSR), sin useEffect+setState.
-  const [username] = useState(() =>
-    typeof window !== 'undefined' ? (localStorage.getItem('auth_username') ?? '') : ''
-  )
+  const username = useStoredUsername()
   const [profileOpen, setProfileOpen] = useState(false)
   const profileRef = useRef<HTMLDivElement>(null)
 
@@ -109,6 +126,8 @@ export function TopBar() {
           )}
         </AnimatePresence>
       </div>
+
+      <HeaderAction pathname={pathname} />
     </header>
   )
 }

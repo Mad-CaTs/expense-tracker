@@ -5,7 +5,6 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 
 import { BudgetCategoryIcon } from '@/components/features/budgets/BudgetCategoryIcon'
-import { WalletSelector } from '@/components/features/shared/WalletSelector'
 import { useCategories } from '@/lib/hooks/useCategories'
 import { useBudgets, useCreateBudget } from '@/lib/hooks/useBudgets'
 import { useWallets } from '@/lib/hooks/useWallets'
@@ -82,14 +81,6 @@ function Preview({ category, limit }: { category?: Category; limit: number }) {
   )
 }
 
-/**
- * Alta de presupuestos. Mismo lenguaje que BudgetLimitSheet: cristal, preview
- * en vivo y cierre animado por CSS.
- *
- * Un paso, no dos: son tres decisiones cortas —categoría, límite y cuenta— y
- * partirlas obligaría a un ida y vuelta para ver la tarjeta que se está
- * armando, que es justamente lo que el preview resuelve.
- */
 export function BudgetSheet({ presetCategoryName, onClose, onCreated }: BudgetSheetProps) {
   const { data: categories } = useCategories('EXPENSE')
   const { data: wallets = [] } = useWallets()
@@ -97,12 +88,10 @@ export function BudgetSheet({ presetCategoryName, onClose, onCreated }: BudgetSh
   const createBudget = useCreateBudget()
   const activeWalletId = useFilterStore((s) => s.walletId)
 
-  // `null` = intacto por el usuario, así la sugerencia puede resolverse cuando
-  // las categorías lleguen (son asíncronas y el sheet monta antes). En cuanto
-  // se toca un chip, la elección manda aunque haya preset.
   const [pickedCategoryId, setPickedCategoryId] = useState<string | null>(null)
   const [amount, setAmount] = useState('')
-  const [walletId, setWalletId] = useState(activeWalletId ? String(activeWalletId) : '')
+
+  const walletId = String(activeWalletId ?? wallets[0]?.id ?? '')
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   const presetId = presetCategoryName
@@ -110,8 +99,6 @@ export function BudgetSheet({ presetCategoryName, onClose, onCreated }: BudgetSh
     : ''
   const categoryId = pickedCategoryId ?? presetId
 
-  /** Cubre el recorrido del panel y apaga lo caro mientras dura: la aurora del
-   *  preview combina blur, blend y animación infinita (ver .is-sliding). */
   const [sliding, setSliding] = useState(true)
   const [closing, setClosing] = useState(false)
   const exitTimer = useRef<number | null>(null)
@@ -124,8 +111,6 @@ export function BudgetSheet({ presetCategoryName, onClose, onCreated }: BudgetSh
     }
   }, [])
 
-  /** El desmontaje espera a que la salida termine: sin framer, AnimatePresence
-   *  no retiene el árbol y el panel desaparecería de golpe. */
   const close = useCallback(() => {
     if (exitTimer.current !== null) return
     setSliding(true)
@@ -155,7 +140,7 @@ export function BudgetSheet({ presetCategoryName, onClose, onCreated }: BudgetSh
     const errs: Record<string, string> = {}
     if (!categoryId) errs.categoryId = 'Selecciona una categoría'
     if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) errs.amount = 'Monto inválido'
-    if (wallets.length > 0 && !walletId) errs.walletId = 'Selecciona una cuenta'
+    if (!walletId) errs.amount = 'Crea una billetera antes de presupuestar'
     if (Object.keys(errs).length) { setErrors(errs); return }
 
     await createBudget.mutateAsync({
@@ -164,12 +149,10 @@ export function BudgetSheet({ presetCategoryName, onClose, onCreated }: BudgetSh
       amount: Number(amount),
     })
     const name = selectedCategory?.name ?? ''
-    // Sin quien levante el aviso, la lista se refresca acá mismo: si no, el
-    // presupuesto recién creado no aparecería.
+
     if (!onCreated) createBudget.refresh()
     close()
-    // El aviso espera a que el sheet termine de salir: encimarlo sobre el
-    // formulario abierto apila dos capas y no se lee qué pasó.
+
     window.setTimeout(() => onCreated?.(name), MOTION.sheet)
   }
 
@@ -246,8 +229,6 @@ export function BudgetSheet({ presetCategoryName, onClose, onCreated }: BudgetSh
               inputMode="decimal"
               value={amount}
               onChange={(e) => {
-                // Solo dígitos y un punto: el teclado decimal de Android deja
-                // escribir comas y letras sueltas.
                 const clean = e.target.value.replace(/[^\d.]/g, '')
                 setAmount(clean)
                 setErrors((err) => ({ ...err, amount: '' }))
@@ -255,20 +236,10 @@ export function BudgetSheet({ presetCategoryName, onClose, onCreated }: BudgetSh
               placeholder="0.00"
               autoComplete="off"
               className="mono-amount w-full bg-transparent text-[26px] font-extrabold tracking-[-0.02em] tabular-nums outline-none"
-              // Blanco siempre: teñirlo con el color de la categoría hacía que
-              // el mismo campo cambiara de color al elegir otra, y con los
-              // tonos oscuros del preset la cifra perdía legibilidad.
               style={{ color: Number(amount) > 0 ? 'var(--text-primary)' : 'var(--text-placeholder)' }}
             />
           </div>
           {errors.amount && <p className="mt-1.5 text-[11px]" style={{ color: 'var(--danger)' }}>{errors.amount}</p>}
-
-          <WalletSelector
-            wallets={wallets}
-            selectedId={walletId}
-            error={errors.walletId}
-            onSelect={(id) => { setWalletId(id); setErrors((e) => ({ ...e, walletId: '' })) }}
-          />
 
           <div className="mt-5 flex gap-2">
             <motion.button

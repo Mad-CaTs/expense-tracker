@@ -18,23 +18,15 @@ function shortDate(iso: string): string {
 export interface RecurringRowProps {
   item: RecurringExpense
   onToggle: () => void
-  /** Presión sostenida sobre la fila: eliminar. Mismo gesto que /categories. */
   onDelete: () => void
 }
 
-/**
- * Regla recurrente. El switch reemplaza al acordeón: pausar era la acción
- * frecuente y estaba escondida a dos toques. Eliminar pasa a la presión
- * sostenida, el mismo gesto secundario que usan las tarjetas de categoría.
- */
+
 export function RecurringRow({ item, onToggle, onDelete }: RecurringRowProps) {
   const color = item.categoryColor ?? '#d4af37'
-  // Solo el trazo del icono: el fondo necesita el hex para el alfa `1f`.
   const tint = categorySwatch(color)
   const Icon = CATEGORY_ICON_MAP[item.categoryIcon ?? 'ellipsis'] ?? CATEGORY_ICON_MAP.ellipsis
 
-  // El toque corto sobre la fila no navega a ningún lado: la acción principal
-  // vive en el switch, así que solo se aprovecha la presión sostenida.
   const { holding, handlers, style } = useLongPress({ onPress: () => {}, onHold: onDelete })
 
   return (

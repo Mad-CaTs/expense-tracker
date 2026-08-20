@@ -29,6 +29,13 @@ public class AuthController {
         return authService.changePassword(userResolver.getCurrentUserId(), request);
     }
 
+    /** El cliente avisa que el usuario terminó el onboarding. */
+    @PostMapping("/complete-onboarding")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void completeOnboarding() {
+        authService.completeOnboarding(userResolver.getCurrentUserId());
+    }
+
     @PostMapping("/logout")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void logout() {

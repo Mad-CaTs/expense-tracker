@@ -15,7 +15,6 @@ import { MOTION } from '@/lib/utils/motion'
 import { useFilterStore } from '@/stores/filterStore'
 import type { RecurringFrequency } from '@/types'
 
-/** Resumen de lo creado, para el aviso de éxito de la pantalla. */
 export interface CreatedRecurring {
   description: string
   frequency: string
@@ -25,7 +24,6 @@ export interface CreatedRecurring {
 interface RecurringFormProps {
   open: boolean
   onClose: () => void
-  /** Se llama cuando el sheet YA terminó de cerrarse. */
   onCreated?: (summary: CreatedRecurring) => void
 }
 
@@ -39,17 +37,6 @@ function shortDate(iso: string): string {
   return new Date(iso + 'T12:00:00').toLocaleDateString('es-PE', { day: 'numeric', month: 'short' })
 }
 
-/**
- * Alta de un gasto frecuente, en dos pasos: QUÉ (descripción, categoría, monto)
- * y CUÁNDO (frecuencia e inicio).
- *
- * Se parte en dos porque son cinco campos: en un solo sheet el botón de crear
- * queda debajo del pliegue y hay que scrollear para llegar. Así cada paso entra
- * completo y la acción principal está siempre visible.
- *
- * La cuenta NO se elige: a /recurring se llega desde el detalle de una
- * billetera, que ya la fijó en el filterStore.
- */
 export function RecurringForm({ open, onClose, onCreated }: RecurringFormProps) {
   const activeWalletId = useFilterStore((s) => s.walletId)
   const { data: categories = [] } = useCategories('EXPENSE')
@@ -59,8 +46,7 @@ export function RecurringForm({ open, onClose, onCreated }: RecurringFormProps) 
   const today = new Date().toISOString().split('T')[0]
 
   const [step, setStep] = useState<1 | 2>(1)
-  /** Dirección del último cambio de paso, para que la entrada del contenido
-   *  venga del lado correcto. */
+
   const [stepDir, setStepDir] = useState<'fwd' | 'back'>('fwd')
   const [categoryId, setCategoryId] = useState('')
   const [amount, setAmount] = useState('')
@@ -74,8 +60,7 @@ export function RecurringForm({ open, onClose, onCreated }: RecurringFormProps) 
   const [closing, setClosing] = useState(false)
   const exitTimer = useRef<number | null>(null)
 
-  // `sliding` nace en true, así que acá solo hay que apagarlo al aterrizar:
-  // volver a encenderlo sería un setState síncrono dentro del efecto.
+
   useEffect(() => {
     if (!open) return
     const t = window.setTimeout(() => setSliding(false), MOTION.sheet)
@@ -140,21 +125,17 @@ export function RecurringForm({ open, onClose, onCreated }: RecurringFormProps) 
       frequency,
       startDate,
     })
-    // El aviso se muestra RECIÉN cuando el sheet terminó de salir: encimarlo
-    // sobre el formulario todavía abierto apila dos capas y no se lee qué pasó.
+
     const summary = {
       description: description.trim(),
       frequency: (FREQUENCIES.find((f) => f.value === frequency)?.label ?? '').toLowerCase(),
       startDate: new Date(startDate + 'T12:00:00').toLocaleDateString('es-PE', { day: 'numeric', month: 'long' }),
     }
     close()
-    // El aviso lo levanta la pantalla: al cerrarse, este formulario se desmonta
-    // (`open` pasa a false) y un diálogo suyo se iría con él.
+
     window.setTimeout(() => onCreated?.(summary), MOTION.sheet)
   }
 
-  // JSX y no un componente definido acá dentro: uno declarado durante el render
-  // es un tipo nuevo en cada pasada y React lo remonta con cada tecla.
   const PreviewIcon = CATEGORY_ICON_MAP[selected?.icon ?? 'ellipsis'] ?? CATEGORY_ICON_MAP.ellipsis
   const previewColor = selected?.color ?? '#8a93a4'
   const previewRow = (
@@ -259,9 +240,6 @@ export function RecurringForm({ open, onClose, onCreated }: RecurringFormProps) 
                       whileTap={{ scale: 0.95 }}
                       transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                       onClick={() => { setCategoryId(String(c.id)); setErrors((x) => ({ ...x, categoryId: '' })) }}
-                      // El fondo y el borde van SIEMPRE en style y no alternando
-                      // la clase `liquid-glass-ic`: un cambio de clase aplica sus
-                      // valores de golpe y no hay nada que transicionar.
                       className="flex h-10 cursor-pointer items-center gap-[7px] rounded-[13px] border px-3.5 text-[12.5px] font-bold transition-colors"
                       style={on
                         ? { background: `${color}22`, borderColor: tint, color: tint }

@@ -11,10 +11,9 @@ import { StepActions } from '@/components/features/shared/StepActions'
 import type { TxSummary } from '@/components/features/shared/txSummary'
 import { useFormSteps } from '@/components/features/shared/useFormSteps'
 import { NotesField } from '@/components/features/shared/NotesField'
-import { WalletSelector } from '@/components/features/shared/WalletSelector'
+import { useActiveWallet } from '@/lib/hooks/useActiveWallet'
 import { useCategories } from '@/lib/hooks/useCategories'
 import { useCreateIncome, useIncome, useUpdateIncome } from '@/lib/hooks/useIncomes'
-import { useWallets } from '@/lib/hooks/useWallets'
 import type { Income } from '@/types'
 
 interface IncomeFormProps {
@@ -38,7 +37,6 @@ function IncomeFormInner({ income, incomeId, onDone, onRequestDelete, onSaved }:
   const isEdit = incomeId != null && incomeId > 0
   const embedded = onDone != null
 
-  const { data: wallets } = useWallets()
   const { data: categories } = useCategories('INCOME')
   const createIncome = useCreateIncome()
   const updateIncome = useUpdateIncome()
@@ -48,7 +46,17 @@ function IncomeFormInner({ income, incomeId, onDone, onRequestDelete, onSaved }:
   const [date, setDate] = useState(
     income ? income.date.split('T')[0] : (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}` })()
   )
-  const [walletId, setWalletId] = useState(income?.walletId?.toString() ?? '')
+  /**
+   * La billetera viene del contexto, no se elige acá: para llegar a este
+   * formulario ya se eligió una en el carrusel de /expenses o en /wallets, y
+   * volver a preguntarlo mostraba una lista donde la primera opción era
+   * justamente la que el usuario acababa de escoger.
+   *
+   * Al EDITAR manda la del movimiento: cambiarla por la del filtro movería el
+   * gasto de billetera sin que nadie lo pidiera.
+   */
+  const activeWalletId = useActiveWallet()
+  const walletId = income?.walletId?.toString() ?? (activeWalletId?.toString() ?? '')
   const [categoryId, setCategoryId] = useState(income?.categoryId?.toString() ?? '')
   const [notes, setNotes] = useState(income?.notes ?? '')
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -68,16 +76,14 @@ function IncomeFormInner({ income, incomeId, onDone, onRequestDelete, onSaved }:
   /** Paso 2: cuenta y fecha. */
   function validateStep2(): boolean {
     const errs: Record<string, string> = {}
-    if (wallets && wallets.length > 0 && !walletId) errs.walletId = 'Selecciona una cuenta'
+    if (!walletId) errs.amount = 'Crea una billetera antes de registrar'
     if (!date) errs.date = 'Selecciona una fecha'
     setErrors(errs)
     return Object.keys(errs).length === 0
   }
 
   async function handleSubmit() {
-    // Los dos pasos, no solo el visible: se puede llegar acá y haber vaciado un
-    // campo del paso 1 antes de volver a avanzar. Si el que falla es del paso 1
-    // hay que volver allá, o el error quedaría en un campo fuera de vista.
+
     if (!validateStep1()) { goTo(1); return }
     if (!validateStep2()) return
     const payload = {
@@ -116,7 +122,6 @@ function IncomeFormInner({ income, incomeId, onDone, onRequestDelete, onSaved }:
               label="Monto del ingreso"
               inputId="income-amount-input"
               value={rawAmount}
-              activeColor="var(--success)"
               error={errors.amount}
               onChange={(v) => {
                 setRawAmount(v)
@@ -155,13 +160,6 @@ function IncomeFormInner({ income, incomeId, onDone, onRequestDelete, onSaved }:
           </>
         ) : (
           <>
-            <WalletSelector
-              wallets={wallets}
-              selectedId={walletId}
-              error={errors.walletId}
-              onSelect={(id) => { setWalletId(id); setErrors(e => ({ ...e, walletId: '' })) }}
-            />
-
             <DateField value={date} onChange={setDate} />
 
             <NotesField

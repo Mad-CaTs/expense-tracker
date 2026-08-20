@@ -4,16 +4,6 @@ import { useCallback, useEffect, useRef } from 'react'
 
 import { cardFaceHTML } from './cardFace'
 
-/**
- * Motor del vuelo carrusel → detalle (port del demo aprobado):
- * FASE A — la tarjeta sale de la ranura girando vuelta y media (termina DE FRENTE)
- *          y se detiene en HOVER, asomada en la boca del marco; la billetera baja
- *          al pie de la pantalla ocupándolo de extremo a extremo.
- * FASE B — el panel aparece alrededor de la tarjeta detenida (.is-settled).
- * FASE C — el ENCAJE: la tarjeta se desliza dentro de la ranura con el recorte
- *          inferior animado en sincronía exacta (anclado a la boca del bolsillo).
- * El cierre es el camino inverso completo.
- */
 
 const CARD_FLAT_SRC = '/wallets/card-flat.webp'
 const STRIP_SRC = '/wallets/budget-strip.webp'
@@ -32,31 +22,22 @@ const EASE_FLIGHT = 'cubic-bezier(0.55, 0.06, 0.13, 1)'
 const EASE_SPIN = 'cubic-bezier(0.6, 0.08, 0.18, 1)'
 const EASE_TUCK = 'cubic-bezier(0.23, 1, 0.32, 1)'
 
-/** Boca del bolsillo del marco (fracción del alto, medida sobre el asset). */
 const MOUTH_FRAC = 0.356
-/** Cuánto queda el borde inferior de la tarjeta DENTRO del marco en el hover. */
 const HOVER_INSET_PX = 18
 
-/** Dock: parte visible de la billetera anclada abajo — solo la ranura con su boca.
- *  PROPORCIONAL al alto de pantalla, no fijo: con un valor fijo, en pantallas de
- *  móvil (más altas y con menos área útil que el escritorio) la billetera se comía
- *  la lista y no se veían los movimientos. Se acota entre 92 y 128 px. */
 const DOCK_VISIBLE_FRAC = 0.135
 const DOCK_MIN = 92
 const DOCK_MAX = 128
 const dockVisible = (h: number) => Math.max(DOCK_MIN, Math.min(DOCK_MAX, h * DOCK_VISIBLE_FRAC))
 const SLOT_FRAC = 0.14
-/** Efecto "emerge del bolsillo" al scrollear la lista. */
 const FLOW_ZONE = 160
 const FLOW_P_AT_MOUTH = 0.55
 
 export interface FlightTargets {
-  /** Columna del detalle (coordenadas de viewport: las capas fx son fixed). */
   screen: HTMLElement
   panel: HTMLElement
   strip: HTMLElement
   slot: HTMLElement
-  /** Billetera activa del carrusel (cuero y tarjeta de origen). */
   walletEl: HTMLElement
   cardEl: HTMLElement
   leatherSrc: string
@@ -88,9 +69,6 @@ interface FxState {
   docked: boolean
   flowOn: boolean
   seated: boolean
-  /** Montado por `mountSeated` (detalle restaurado): solo existen las capas de
-   *  cuero. No hay tarjeta fx ni clon del bolsillo, así que el cierre no puede
-   *  recorrer el camino inverso del vuelo. */
   seatedOnly?: boolean
 }
 
@@ -106,12 +84,6 @@ const smooth = (v: number) => {
   return t * t * (3 - 2 * t)
 }
 
-/**
- * Geometría de la tarjeta ADOPTADA (la que queda montada en el marco): ancho del
- * hueco para su tipografía proporcional y recorte anclado a la boca del bolsillo.
- * Se calcula ANTES del vuelo: la adoptada se monta oculta y el motor la revela
- * en el mismo tick en que termina el encaje (React fuera del instante del relevo).
- */
 export function computeAdoptedCard(
   panel: HTMLElement,
   strip: HTMLElement,
@@ -127,7 +99,6 @@ export function computeAdoptedCard(
   }
 }
 
-/** Mide el hueco destino con el panel en su posición final (sin transform de entrada). */
 function measureSettled(panel: HTMLElement, el: Element): Rect {
   const prevTransition = panel.style.transition
   panel.style.transition = 'none'
@@ -142,7 +113,6 @@ function measureSettled(panel: HTMLElement, el: Element): Rect {
 function buildFx(t: FlightTargets): FxState {
   const wRect = rectOf(t.walletEl)
   const cRect = rectOf(t.cardEl)
-  // La tarjeta plana comparte ancho y esquina superior con la alargada del carrusel.
   const card: Rect = { left: cRect.left, top: cRect.top, width: cRect.width, height: cRect.width * FLAT_RATIO }
 
   const leatherStyle = `left:${wRect.left}px;top:${wRect.top}px;width:${wRect.width}px;height:${wRect.height}px;`
@@ -159,26 +129,19 @@ function buildFx(t: FlightTargets): FxState {
     `<div class="wd-face front">${cardFaceHTML(t.tint, t.balance, card.width)}</div>` +
     `</div></div>` +
     `<img class="wd-fx-leather front" src="${t.leatherSrc}" alt="" style="${leatherStyle}">`
-  // En body: las capas fx son position:fixed y se anclan al viewport. El sándwich
-  // (trasero < panel < frontal) se logra con el PANEL también fixed a pantalla
-  // completa durante el detalle (misma capa que las fx), no como hijo del screen.
   document.body.append(under, over)
 
   const dest = measureSettled(t.panel, t.slot)
   const stripR = measureSettled(t.panel, t.strip)
 
-  // Clon del bolsillo por ENCIMA de la tarjeta fx: la recorta al encajar.
   const stripFront = document.createElement('div')
   stripFront.className = 'wd-fx-strip-front wd-pocket-clip'
   stripFront.style.cssText = `left:${stripR.left}px;top:${stripR.top}px;width:${stripR.width}px;height:${stripR.height}px;`
-  // El clon debe ser PIXEL-IDÉNTICO al bolsillo real — incluido el logo tallado.
-  // Si no, al ocultarlo el logo "aparece" y el final se lee como un paso extra.
   stripFront.innerHTML =
     `<img src="${STRIP_SRC}" alt="">` +
     '<span class="wd-logo" aria-hidden="true"><i class="wd-logo-hl"></i><i class="wd-logo-ink"></i><i class="wd-logo-sh"></i></span>'
   over.appendChild(stripFront)
 
-  // Geometría del encaje, anclada a la línea de la boca (+12px, siempre tapada).
   const destH = dest.width * FLAT_RATIO
   const below = dest.top - stripR.top + destH - stripR.height
   const drop = Math.ceil(below + HOVER_INSET_PX)
@@ -224,17 +187,10 @@ function cardAnimations(fx: FxState, dir: 'open' | 'close'): Animation[] {
       [{ transform: 'translate(0,0) scale(1)' }, { transform: `translate(${dx}px, ${dy}px) scale(${scale})` }],
       opts(dur, EASE_FLIGHT),
     ),
-    // Vuelta y media: sale de espaldas (logo) y termina DE FRENTE (saldo).
     spin.animate([{ transform: 'rotateY(0deg)' }, { transform: 'rotateY(-540deg)' }], opts(dur, EASE_SPIN)),
   ]
 }
 
-/**
- * Re-ancla el encaje al hueco REAL en este instante (el panel ya está asentado):
- * cualquier deriva de layout ocurrida durante el vuelo (scrollbar del sistema,
- * swap de fuentes, datos que llegan) queda anulada — la tarjeta fx termina
- * EXACTAMENTE donde vive la adoptada y el relevo no puede verse como un salto.
- */
 function retargetToLiveSlot(fx: FxState): void {
   const dest = rectOf(fx.targets.slot)
   const stripR = rectOf(fx.targets.strip)
@@ -248,11 +204,6 @@ function retargetToLiveSlot(fx: FxState): void {
   fx.tuck = { drop, clipFrom: clipTo - drop / scale, clipTo }
 }
 
-/**
- * FASE C: keyframes explícitos por dirección (reverse invertiría el easing).
- * El transform usa keyframe único con ARRANQUE IMPLÍCITO (desde donde esté la
- * tarjeta ahora mismo): el deslizamiento nace sin costura desde el hover real.
- */
 function tuckAnimations(fx: FxState, dir: 'open' | 'close'): Animation[] {
   if (dir === 'open') retargetToLiveSlot(fx)
   const { card, dest, tuck, fxCard } = fx
@@ -268,8 +219,6 @@ function tuckAnimations(fx: FxState, dir: 'open' | 'close'): Animation[] {
     easing: EASE_TUCK,
     fill: 'forwards',
   }
-  // La sombra ambiental muere al entrar al bolsillo (y renace al salir): al asentarse
-  // la fx queda SIN sombra, idéntica a la adoptada — el relevo no cambia ni un píxel.
   const face = fxCard.querySelector('.wd-face.front') as HTMLElement
   const shadowOn = { filter: 'drop-shadow(0 5px 9px rgba(0, 0, 0, 0.3))' }
   const shadowOff = { filter: 'drop-shadow(0 1px 0px rgba(0, 0, 0, 0))' }
@@ -289,37 +238,24 @@ function tuckAnimations(fx: FxState, dir: 'open' | 'close'): Animation[] {
   return anims
 }
 
-/** Fondo ESTABLE de anclaje = alto del contenedor fx (`position:fixed; inset:0`),
- *  el mismo fondo al que se ancla el `.wd-panel`. NO usar `visualViewport.height`
- *  ni `innerHeight`: en iOS Safari cambian cuando la barra inferior aparece/oculta
- *  al scrollear, y hacían que la billetera del dock subiera y bajara. El contenedor
- *  fixed no se mueve con la barra → la billetera queda estática abajo del todo. */
 function anchorH(fx: FxState): number {
   return fx.under.getBoundingClientRect().height || window.innerHeight
 }
 
-/** Desplazamiento vertical del dock.
- *  La billetera se escala desde su borde INFERIOR (transformOrigin 50% 100%), así el
- *  crecimiento por la escala va hacia ARRIBA y el borde inferior queda donde lo
- *  posicionamos. Antes se escalaba desde arriba (50% 0%): el excedente de alto
- *  (215px → ~342px al escalar x1.6) se derramaba hacia abajo y empujaba la boca de
- *  la ranura fuera de la pantalla, mostrando el cuerpo entero en vez de la abertura.
- *  Colocamos el borde inferior de la billetera ESCALADA a (altoBilleteraEscalada −
- *  dockVisible) por debajo del fondo, de modo que solo asome `dockVisible`. */
 function dockDy(fx: FxState): number {
   const h = anchorH(fx)
   const scaledH = fx.wRect.height * fx.dockScale
-  const bottomY = h + (scaledH - dockVisible(h)) // dónde debe quedar el borde inferior
+  const bottomY = h + (scaledH - dockVisible(h))
   return bottomY - (fx.wRect.top + fx.wRect.height)
 }
 
 
 function walletAnimations(fx: FxState, dir: 'open' | 'close'): Animation[] {
   const screenR = rectOf(fx.targets.screen)
-  fx.dockScale = screenR.width / fx.wRect.width   // antes de dockDy: lo necesita
+  fx.dockScale = screenR.width / fx.wRect.width  
   const dy = dockDy(fx)
   fx.dockAnims = fx.leathers.map((el) => {
-    el.style.transformOrigin = '50% 100%'          // escala desde el borde inferior
+    el.style.transformOrigin = '50% 100%'
     return el.animate(
       [{ transform: 'translate(0,0) scale(1)' }, { transform: `translate(0, ${dy}px) scale(${fx.dockScale})` }],
       {
@@ -335,7 +271,6 @@ function walletAnimations(fx: FxState, dir: 'open' | 'close'): Animation[] {
 
 const finished = (anims: Animation[]) => Promise.allSettled(anims.map((a) => a.finished))
 
-/** Targets de `mountSeated`: no hay tarjeta de origen en el carrusel. */
 export interface SeatedTargets {
   screen: HTMLElement
   panel: HTMLElement
@@ -345,11 +280,7 @@ export interface SeatedTargets {
 }
 
 export interface WalletFlightApi {
-  /** `onSettled`: el marco aparece (la tarjeta se detiene). `onSeated`: la tarjeta
-   *  ENCAJÓ — es el momento en que el resto del contenido debe entrar. */
   open: (targets: FlightTargets, onSettled: () => void, onSeated: () => void) => Promise<void>
-  /** Monta el cuero YA anclado al dock, sin vuelo. Para el detalle restaurado
-   *  desde la URL, donde no existe la tarjeta del carrusel desde la que volar. */
   mountSeated: (targets: SeatedTargets) => void
   close: (onUnsettled: () => void) => Promise<void>
   bindScroll: (el: HTMLElement) => void
@@ -374,7 +305,6 @@ export function useWalletFlight(reduceMotion: boolean): WalletFlightApi {
   const applyFlow = useCallback(() => {
     const fx = fxRef.current
     if (!fx || !fx.flowOn) return
-    // Línea de emergencia = boca de la ranura del dock (anclado al borde inferior).
     const anchor = anchorH(fx)
     const slotY = anchor - dockVisible(anchor) + SLOT_FRAC * fx.wRect.height * fx.dockScale
     fx.targets.panel.querySelectorAll<HTMLElement>('.wd-flow-el').forEach((el) => {
@@ -419,8 +349,6 @@ export function useWalletFlight(reduceMotion: boolean): WalletFlightApi {
         () => {
           const fx = fxRef.current
           if (!fx || !fx.seated) return
-          // El "emerge del bolsillo" se enciende con el PRIMER gesto de scroll (sin
-          // transición: el propio movimiento lo enmascara) — nunca de forma autónoma.
           if (!fx.flowOn) startFlow(true)
           if (rafPending.current) return
           rafPending.current = true
@@ -441,9 +369,6 @@ export function useWalletFlight(reduceMotion: boolean): WalletFlightApi {
       fxRef.current = fx
       targets.walletEl.style.visibility = 'hidden'
 
-      // FINAL EN UN SOLO TICK: al terminar el encaje se revela la adoptada (reajustada
-      // al hueco real), se oculta la fx y se avisa a la pantalla (onSeated) para que
-      // entre el resto del contenido.
       const finishSeated = () => {
         const staticCard = fx.targets.panel.querySelector<HTMLElement>('.wd-static-card')
         if (staticCard) {
@@ -472,7 +397,6 @@ export function useWalletFlight(reduceMotion: boolean): WalletFlightApi {
         startFlow(true)
         return
       }
-      // FASE B se solapa: el panel empieza a aparecer antes de que la tarjeta se detenga.
       setTimeout(() => {
         onSettled()
         fx.stripFront.classList.add('is-settled')
@@ -485,23 +409,12 @@ export function useWalletFlight(reduceMotion: boolean): WalletFlightApi {
     [reduceMotion, startFlow],
   )
 
-  /**
-   * Detalle restaurado desde ?w=<id>: el cuero del dock lo crea `buildFx`
-   * durante el vuelo, así que sin vuelo la billetera inferior no existía y la
-   * pantalla quedaba flotando sobre el fondo.
-   *
-   * No se reconstruye el vuelo (mide una tarjeta de origen que ya no está): se
-   * monta solo la capa de cuero directamente en su posición final, la misma que
-   * alcanza `walletAnimations` al terminar — ancho del screen, anclada abajo y
-   * asomando `dockVisible`.
-   */
   const mountSeated = useCallback((t: SeatedTargets) => {
     if (fxRef.current) return
 
     const screenR = rectOf(t.screen)
     const h = window.innerHeight
     const visible = dockVisible(h)
-    // La imagen conserva su relación de aspecto al escalar al ancho del screen.
     const natural = { w: 260, h: 215 }
     const width = screenR.width
     const height = (natural.h / natural.w) * width
@@ -527,8 +440,6 @@ export function useWalletFlight(reduceMotion: boolean): WalletFlightApi {
       targets: { ...t, walletEl: over, cardEl: over, tint: '', balance: 0 },
       under,
       over,
-      // No hay tarjeta fx ni clon del bolsillo: en este modo la tarjeta visible
-      // es la adoptada del panel y el bolsillo es el real. `close` lo contempla.
       fxCard: null as unknown as HTMLDivElement,
       stripFront: null as unknown as HTMLDivElement,
       leathers: [
@@ -539,8 +450,6 @@ export function useWalletFlight(reduceMotion: boolean): WalletFlightApi {
       card: { left: 0, top: 0, width: dest.width, height: destH },
       dest: { ...dest, height: destH },
       tuck: { drop: 0, clipFrom: 0, clipTo: 0 },
-      // Ya está a escala final: el cuero se montó con el tamaño del dock, así
-      // que el factor es 1 y dockDy/applyFlow miden sobre la caja real.
       dockScale: 1,
       tuckAnims: [],
       dockAnims: [],
@@ -559,9 +468,6 @@ export function useWalletFlight(reduceMotion: boolean): WalletFlightApi {
       fx.docked = false
       if (scrollElRef.current) scrollElRef.current.scrollTop = 0
 
-      // Detalle restaurado: solo hay cuero anclado. Reproducir el cierre del
-      // vuelo reventaría (no existen fxCard ni stripFront) — el cuero se retira
-      // hacia abajo y se limpia.
       if (fx.seatedOnly) {
         onUnsettled()
         if (!reduceMotion) {
@@ -579,13 +485,11 @@ export function useWalletFlight(reduceMotion: boolean): WalletFlightApi {
         fxRef.current = null
         return
       }
-      // Relevo inverso en el mismo tick: la fx (idéntica, sentada) reaparece y la
-      // adoptada se esconde; después la fx sale de la ranura.
+
       fx.fxCard.style.visibility = ''
       fx.stripFront.style.visibility = ''
       fx.targets.panel.querySelector<HTMLElement>('.wd-static-card')?.classList.remove('is-on')
       if (!reduceMotion) await finished(tuckAnimations(fx, 'close'))
-      // El clip debe irse ANTES del vuelo de regreso (el pop lo tapa el clon del bolsillo).
       fx.tuckAnims.forEach((a) => a.cancel())
       fx.tuckAnims = []
       onUnsettled()

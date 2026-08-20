@@ -10,6 +10,7 @@ import { BudgetCarousel } from '@/components/features/expenses/BudgetCarousel'
 import { MovementsRecurringSection } from '@/components/features/expenses/MovementsRecurringSection'
 import { ActionIcon, type ActionIconName } from '@/components/features/expenses/ActionIcon'
 import { SectionHeader } from '@/components/ui/SectionHeader'
+import { useActiveWallet } from '@/lib/hooks/useActiveWallet'
 import { useFilterStore } from '@/stores/filterStore'
 import { useSheetStore } from '@/stores/sheetStore'
 
@@ -79,15 +80,16 @@ function QuickActions() {
 function ExpensesPageInner() {
   const router = useRouter()
   const storeFilters = useFilterStore()
+  const walletId = useActiveWallet()
 
-  function handleWalletSelect(id: number | undefined) {
+  function handleWalletSelect(id: number) {
     storeFilters.setWalletId(id)
     storeFilters.setPage(0)
   }
 
   return (
     <div className="mx-auto max-w-3xl pb-4">
-      <WalletCarousel selectedWalletId={storeFilters.walletId} onSelect={handleWalletSelect} />
+      <WalletCarousel selectedWalletId={walletId} onSelect={handleWalletSelect} />
 
       <QuickActions />
 

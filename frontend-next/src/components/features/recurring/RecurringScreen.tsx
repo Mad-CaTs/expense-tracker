@@ -111,8 +111,6 @@ export function RecurringScreen() {
               <RecurringRow
                 item={item}
                 onToggle={() => toggleRecurring.mutate(item.id, {
-                  // `item.active` es el estado ANTES del toggle: el aviso
-                  // describe el resultado, así que se invierte.
                   onSuccess: () => setToggled({ name: item.description, paused: item.active }),
                 })}
                 onDelete={() => setToDelete(item)}
@@ -165,8 +163,6 @@ export function RecurringScreen() {
         open={deleted != null}
         title="Frecuente eliminado"
         description={deleted ? `"${deleted}" ya no generará gastos.` : undefined}
-        // El refresh corre al descartar: así el total del hero recorre a la
-        // vista en vez de haber cambiado detrás del modal.
         onClose={() => { setDeleted(null); deleteRecurring.refresh() }}
       />
 

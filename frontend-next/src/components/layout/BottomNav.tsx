@@ -14,7 +14,6 @@ const NAV_ITEMS: { href: string; label: string; icon: NavIconName }[] = [
   { href: '/settings', label: 'Ajustes',  icon: 'cuenta'   },
 ]
 
-// Un único spring para pill, layout y label → todo se mueve al unísono (sin saltos)
 const SPRING = { type: 'spring' as const, stiffness: 420, damping: 38, mass: 0.9 }
 
 export function BottomNav() {

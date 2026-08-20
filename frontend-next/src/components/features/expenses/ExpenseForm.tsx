@@ -12,11 +12,10 @@ import { StepActions } from '@/components/features/shared/StepActions'
 import type { TxSummary } from '@/components/features/shared/txSummary'
 import { useFormSteps } from '@/components/features/shared/useFormSteps'
 import { NotesField } from '@/components/features/shared/NotesField'
-import { WalletSelector } from '@/components/features/shared/WalletSelector'
 import { uploadAttachment } from '@/lib/api/attachments'
+import { useActiveWallet } from '@/lib/hooks/useActiveWallet'
 import { useCategories } from '@/lib/hooks/useCategories'
 import { useCreateExpense, useExpense, useUpdateExpense } from '@/lib/hooks/useExpenses'
-import { useWallets } from '@/lib/hooks/useWallets'
 import { Expense } from '@/types'
 
 interface ExpenseFormProps {
@@ -41,7 +40,6 @@ function ExpenseFormInner({ expense, expenseId, onDone, onRequestDelete, onSaved
   const embedded = onDone != null
 
   const { data: categories } = useCategories('EXPENSE')
-  const { data: wallets } = useWallets()
   const createExpense = useCreateExpense()
   const updateExpense = useUpdateExpense()
 
@@ -51,7 +49,17 @@ function ExpenseFormInner({ expense, expenseId, onDone, onRequestDelete, onSaved
     expense ? expense.date.split('T')[0] : (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}` })()
   )
   const [categoryId, setCategoryId] = useState(expense ? expense.categoryId.toString() : '')
-  const [walletId, setWalletId] = useState(expense?.walletId?.toString() ?? '')
+  /**
+   * La billetera viene del contexto, no se elige acá: para llegar a este
+   * formulario ya se eligió una en el carrusel de /expenses o en /wallets, y
+   * volver a preguntarlo mostraba una lista donde la primera opción era
+   * justamente la que el usuario acababa de escoger.
+   *
+   * Al EDITAR manda la del movimiento: cambiarla por la del filtro movería el
+   * gasto de billetera sin que nadie lo pidiera.
+   */
+  const activeWalletId = useActiveWallet()
+  const walletId = expense?.walletId?.toString() ?? (activeWalletId?.toString() ?? '')
   const [notes, setNotes] = useState(expense?.notes ?? '')
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([])
@@ -72,16 +80,13 @@ function ExpenseFormInner({ expense, expenseId, onDone, onRequestDelete, onSaved
   /** Paso 2: cuenta y fecha. Se valida acá para no enviar y fallar en el server. */
   function validateStep2(): boolean {
     const errs: Record<string, string> = {}
-    if (wallets && wallets.length > 0 && !walletId) errs.walletId = 'Selecciona una cuenta'
+    if (!walletId) errs.amount = 'Crea una billetera antes de registrar'
     if (!date) errs.date = 'Selecciona una fecha'
     setErrors(errs)
     return Object.keys(errs).length === 0
   }
 
   async function handleSubmit() {
-    // Los dos pasos, no solo el visible: se puede llegar acá y haber vaciado un
-    // campo del paso 1 antes de volver a avanzar. Si el que falla es del paso 1
-    // hay que volver allá, o el error quedaría en un campo fuera de vista.
     if (!validateStep1()) { goTo(1); return }
     if (!validateStep2()) return
     const payload = {
@@ -96,12 +101,16 @@ function ExpenseFormInner({ expense, expenseId, onDone, onRequestDelete, onSaved
       await updateExpense.mutateAsync({ id: expenseId, data: payload })
       await Promise.all(pendingFiles.map(p => uploadAttachment(expenseId, p.file)))
     } else {
-      await createExpense.mutateAsync(payload)
+      // El id solo existe después de crear, así que los adjuntos se suben acá y
+      // no antes. Sin esto los archivos elegidos al registrar se descartaban en
+      // silencio: la sección ni siquiera se mostraba.
+      const created = await createExpense.mutateAsync(payload)
+      if (pendingFiles.length > 0 && created?.id) {
+        await Promise.all(pendingFiles.map(p => uploadAttachment(created.id, p.file)))
+      }
     }
     setPendingFiles([])
-    // El aviso lo levanta el contenedor: este formulario se desmonta al cerrar
-    // el sheet y un diálogo suyo se iría con él. Se reporta y se cierra en el
-    // mismo tirón; el contenedor decide cuándo mostrarlo.
+
     onSaved?.({
       kind: 'expense',
       edited: isEdit,
@@ -127,7 +136,6 @@ function ExpenseFormInner({ expense, expenseId, onDone, onRequestDelete, onSaved
               label="Monto del gasto"
               inputId="amount-keyboard-input"
               value={rawAmount}
-              activeColor="var(--danger)"
               error={errors.amount}
               onChange={(v) => {
                 setRawAmount(v)
@@ -164,13 +172,6 @@ function ExpenseFormInner({ expense, expenseId, onDone, onRequestDelete, onSaved
           </>
         ) : (
           <>
-            <WalletSelector
-              wallets={wallets}
-              selectedId={walletId}
-              error={errors.walletId}
-              onSelect={(id) => { setWalletId(id); setErrors(e => ({ ...e, walletId: '' })) }}
-            />
-
             <DateField value={date} onChange={setDate} />
 
             <NotesField
@@ -179,15 +180,14 @@ function ExpenseFormInner({ expense, expenseId, onDone, onRequestDelete, onSaved
               onChange={setNotes}
             />
 
-            {/* Adjuntos: solo en edición, porque necesitan el id del gasto. */}
-            {isEdit && expenseId && (
-              <AttachmentSection
-                expenseId={expenseId}
+            {/* También al crear: los archivos quedan pendientes y se suben en
+                cuanto el gasto tiene id (ver handleSubmit). */}
+            <AttachmentSection
+                expenseId={isEdit ? expenseId : undefined}
                 pendingFiles={pendingFiles}
                 onAddFiles={(files) => setPendingFiles(prev => [...prev, ...files])}
                 onRemovePending={(id) => setPendingFiles(prev => prev.filter(p => p.id !== id))}
               />
-            )}
 
             <StepActions
               nextLabel={isEdit ? 'Guardar' : 'Registrar'}

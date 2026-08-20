@@ -10,8 +10,6 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/Popover'
 import type { Category } from '@/types'
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
 export enum FinanceFilterType {
   FECHA = 'Fecha',
   CATEGORIA = 'Categoría',
@@ -39,7 +37,6 @@ export type FinanceFilter = {
   value: string[]
 }
 
-// ─── Height animation ──────────────────────────────────────────────────────────
 
 function AnimateChangeInHeight({ children }: { children: React.ReactNode }) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -64,7 +61,6 @@ function AnimateChangeInHeight({ children }: { children: React.ReactNode }) {
   )
 }
 
-// ─── Date preset helper ────────────────────────────────────────────────────────
 
 function datePresetToRange(preset: string): { from: string; to: string } | null {
   const now = new Date()
@@ -124,7 +120,6 @@ export function applyFinanceFilters(
   return result
 }
 
-// ─── Active filter chip ────────────────────────────────────────────────────────
 
 function FilterChip({
   filter,
@@ -143,7 +138,6 @@ function FilterChip({
 }) {
   const [open, setOpen] = useState(defaultOpen)
 
-  // Real values: exclude the sentinel
   const realValues = filter.value.filter(v => v !== '__open__')
 
   const label =
@@ -185,7 +179,6 @@ function FilterChip({
           style={{ background: 'var(--bg-card-inner)', boxShadow: 'var(--card-shadow)' }}
           onCloseAutoFocus={(e) => e.preventDefault()}
           onInteractOutside={(e) => {
-            // only close when clicking truly outside
             const target = e.target as HTMLElement
             if (!target.closest('[data-radix-popper-content-wrapper]')) setOpen(false)
           }}
@@ -266,7 +259,6 @@ function FilterChip({
   )
 }
 
-// ─── Main component ────────────────────────────────────────────────────────────
 
 interface FinanceFiltersProps {
   filters: FinanceFilter[]
@@ -291,7 +283,6 @@ export function FinanceFilters({ filters, setFilters, categories = [], excludeTx
   const activeTxType = filters.find(f => f.type === FinanceFilterType.TIPO)?.value[0]
   const isExpensesOnly = activeTxType === TxType.EXPENSE
 
-  // Only show Categoría chip when filtering by Gastos; also hide excluded filter types
   const activeFilters = (isExpensesOnly ? filters : filters.filter(f => f.type !== FinanceFilterType.CATEGORIA))
     .filter(f => !excludeFilterTypes.includes(f.type))
 

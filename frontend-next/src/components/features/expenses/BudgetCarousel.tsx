@@ -1,15 +1,13 @@
 'use client'
 
-import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 import { History, Plus } from 'lucide-react'
 
 import { BudgetCategoryIcon } from '@/components/features/budgets/BudgetCategoryIcon'
-import { BudgetSheet } from '@/components/features/budgets/BudgetSheet'
+import { useActiveWallet } from '@/lib/hooks/useActiveWallet'
 import { useBudgets } from '@/lib/hooks/useBudgets'
 import { categoryAura, categorySwatch } from '@/lib/utils/cardVisuals'
-import { useFilterStore } from '@/stores/filterStore'
 import type { Budget } from '@/types'
 
 function BudgetMiniCard({ budget, index, onOpen }: { budget: Budget; index: number; onOpen: () => void }) {
@@ -20,11 +18,8 @@ function BudgetMiniCard({ budget, index, onOpen }: { budget: Budget; index: numb
   const pct = Math.min(pctRaw, 100)
   const isOver = pctRaw > 100
   const color = budget.categoryColor ?? '#d4af37'
-  // El icono sobre el círculo blanco usa el tono atenuado, igual que el resto
-  // de la app: el hex crudo del preset ahí se ve fluorescente.
   const iconColor = categorySwatch(color)
 
-  // Aurora derivada del color de la categoría, en el tono atenuado de la app
   const aura = categoryAura(color)
 
   return (
@@ -117,40 +112,61 @@ function BudgetMiniCard({ budget, index, onOpen }: { budget: Budget; index: numb
   )
 }
 
+function BudgetGhostCard({ onCreate }: { onCreate: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onCreate}
+      className="liquid-glass enter-pop flex h-[196px] w-full max-w-[220px] flex-shrink-0 flex-col rounded-[20px] p-[15px] text-left transition-transform active:scale-[0.985]"
+      style={{ ['--enter-i' as string]: 0 }}
+    >
+      {/* El + arriba, donde la tarjeta real lleva el icono de categoría. */}
+      <span
+        className="liquid-glass-ic flex h-9 w-9 flex-none items-center justify-center rounded-full"
+        style={{ color: 'var(--text-secondary)' }}
+      >
+        <Plus size={17} strokeWidth={2} />
+      </span>
+
+      {/* mt-auto: el texto se apoya en el fondo, como en la tarjeta real. */}
+      <span className="mt-auto block">
+        <span className="mb-1.5 block text-[15px] font-bold leading-tight tracking-[-0.01em]" style={{ color: 'var(--text-secondary)' }}>
+          Nuevo<br />presupuesto
+        </span>
+        <span className="mb-3 block text-[11px] leading-[1.45]" style={{ color: 'var(--text-muted)' }}>
+          Pon un límite por categoría
+        </span>
+        {/* La barra vacía: el hueco que va a llenar el gasto. */}
+        <span
+          className="mr-[42px] block h-[6px] rounded-full"
+          style={{ background: 'var(--bg-hover)' }}
+        />
+      </span>
+    </button>
+  )
+}
+
 export function BudgetCarousel() {
   const router = useRouter()
-  const walletId = useFilterStore((s) => s.walletId)
-  const { data: budgets = [] } = useBudgets(walletId)
-  const [showSheet, setShowSheet] = useState(false)
+  const walletId = useActiveWallet()
+  const { data: budgets = [] } = useBudgets(walletId, { requireWallet: true })
 
   return (
     <>
       <div className="pt-2 -mb-3">
         {budgets.length === 0 ? (
-          <button
-            type="button"
-            onClick={() => setShowSheet(true)}
-            className="mx-4 flex w-[calc(100%-2rem)] flex-col items-center justify-center gap-1.5 rounded-[20px] border border-dashed py-8"
-            style={{ borderColor: 'var(--border-strong)', color: 'var(--text-placeholder)' }}
-          >
-            <Plus size={18} />
-            <span className="text-[11px] font-medium">Crea tu primer presupuesto</span>
-          </button>
+          <div className="flex px-4 pb-6 pt-1">
+            {/* A /budgets, no al sheet: crear el primero es entrar a la sección,
+                igual que hace el ⋯ de la cabecera. */}
+            <BudgetGhostCard onCreate={() => router.push('/budgets')} />
+          </div>
         ) : (
-          // pb amplio: la sombra necesita espacio dentro del área de scroll (overflow-x
-          // recorta también el overflow-y). El -mb del wrapper compensa el layout.
           <div
             className="flex gap-3 overflow-x-auto px-4 pb-6 pt-1"
             style={{
               scrollbarWidth: 'none',
               msOverflowStyle: 'none',
-              // Mismo desplazamiento que el carrusel de wallets: allí cada
-              // tarjeta ocupa el ancho de la pantalla y el swipe SIEMPRE aterriza
-              // encuadrado. Acá entran dos por vista, así que ese encuadre hay
-              // que pedirlo — sin esto el scroll quedaba a mitad de tarjeta.
               scrollSnapType: 'x mandatory',
-              // Descuenta el px-4 para que la tarjeta encaje contra el margen
-              // del contenido y no contra el borde del contenedor.
               scrollPaddingLeft: '1rem',
             }}
           >
@@ -159,18 +175,12 @@ export function BudgetCarousel() {
                 key={b.id}
                 budget={b}
                 index={i}
-                // Al historial de la categoría, no a la lista de presupuestos:
-                // el icono promete movimientos y eso es lo que hay detrás.
                 onOpen={() => { if (b.categoryId) router.push(`/categories/${b.categoryId}`) }}
               />
             ))}
           </div>
         )}
       </div>
-
-      {/* Sin AnimatePresence: el sheet anima su salida por CSS y retrasa el
-          onClose hasta que termina (ver `closing` en BudgetSheet). */}
-      {showSheet && <BudgetSheet onClose={() => setShowSheet(false)} />}
     </>
   )
 }

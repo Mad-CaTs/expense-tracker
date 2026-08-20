@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useSyncExternalStore } from 'react'
 
-type Theme = 'dark' | 'light'
+export type ThemePreference = 'light' | 'dark'
 
 const THEME_KEY = 'pockr-theme'
 
@@ -15,30 +15,28 @@ function subscribeTheme(listener: () => void) {
   }
 }
 
-function readStoredTheme(): Theme {
+function readStoredPreference(): ThemePreference {
   return localStorage.getItem(THEME_KEY) === 'light' ? 'light' : 'dark'
 }
 
-// En servidor e hidratación se rinde 'dark' (igual que el HTML prerenderizado);
-// useSyncExternalStore re-lee el valor guardado tras el mount, sin mismatch.
-function getServerTheme(): Theme {
+function getServerPreference(): ThemePreference {
   return 'dark'
 }
 
-function applyTheme(t: Theme) {
+function applyTheme(t: ThemePreference) {
   const root = document.documentElement
   root.classList.remove('dark', 'light')
   root.classList.add(t)
 }
 
 interface ThemeContextValue {
-  theme: Theme
-  toggle: () => void
+  preference: ThemePreference
+  setPreference: (next: ThemePreference) => void
 }
 
 const ThemeContext = createContext<ThemeContextValue>({
-  theme: 'dark',
-  toggle: () => {},
+  preference: 'dark',
+  setPreference: () => {},
 })
 
 export function useTheme() {
@@ -46,21 +44,20 @@ export function useTheme() {
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const theme = useSyncExternalStore(subscribeTheme, readStoredTheme, getServerTheme)
+  const preference = useSyncExternalStore(subscribeTheme, readStoredPreference, getServerPreference)
 
   useEffect(() => {
-    applyTheme(readStoredTheme())
+    applyTheme(readStoredPreference())
   }, [])
 
-  function toggle() {
-    const next: Theme = theme === 'dark' ? 'light' : 'dark'
+  function setPreference(next: ThemePreference) {
     localStorage.setItem(THEME_KEY, next)
     applyTheme(next)
     themeListeners.forEach((l) => l())
   }
 
   return (
-    <ThemeContext.Provider value={{ theme, toggle }}>
+    <ThemeContext.Provider value={{ preference, setPreference }}>
       {children}
     </ThemeContext.Provider>
   )

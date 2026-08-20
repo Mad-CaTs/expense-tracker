@@ -377,6 +377,30 @@ textarea::placeholder {
    ningún cambio a mitad de camino. */
 .sheet-settled { will-change: auto; }
 
+/* ── Panel anclado a su disparador ──
+   Los filtros no se despliegan desde abajo: nacen bajo el chip que los abrió,
+   así que el recorrido es corto y con origen arriba. Se anima opacity + escala
+   además del desplazamiento porque a 8px el movimiento solo no se percibe. */
+@keyframes anchor-in {
+  from { opacity: 0; transform: translate3d(0, -8px, 0) scale(0.97); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes anchor-out {
+  from { opacity: 1; transform: none; }
+  to   { opacity: 0; transform: translate3d(0, -8px, 0) scale(0.97); }
+}
+.anchor-in  { animation: anchor-in  var(--dur-layer) var(--ease-sys) both; transform-origin: top center; }
+.anchor-out { animation: anchor-out var(--dur-tint)  var(--ease-sys) both; transform-origin: top center; }
+
+/* El velo que hay detrás del panel solo funde: moverlo o escalarlo delataría
+   que es una capa y no el fondo real de la pantalla. */
+@keyframes backdrop-in  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes backdrop-out { from { opacity: 1; } to { opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .anchor-in, .anchor-out { animation-duration: 1ms; }
+}
+
 /* Pasos dentro de un sheet: el contenido viaja en horizontal mientras el panel
    queda quieto, así el gesto se distingue de la entrada (que es vertical).
    Recorrido corto — es un cambio de sección, no de pantalla. */
@@ -417,6 +441,26 @@ textarea::placeholder {
   /* Bezier con más rebote: el original era spring(260, 20), ζ≈0.62 → overshoot ~8% */
   animation: enter-pop-sm 0.68s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
   animation-delay: calc(var(--enter-i, 0) * 105ms);
+}
+
+/* ── Barrido del donut de ESTADÍSTICAS ──
+   Los radios aparecen en secuencia siguiendo el círculo, como una aguja que
+   recorre el anillo. Solo opacidad: la geometría de cada radio ya está
+   calculada y tocarla acá deformaría el anillo mientras entra.
+
+   El escalonado va en --spoke-i (índice del radio) por --spoke-step (el reparto
+   de --dur-travel entre todos), no en --enter-i: ese lo consume .enter-pop en
+   los contenedores y compartirlo mezclaría las dos escaleras.
+
+   Solo el fotograma inicial: sin un `to`, la animación termina devolviendo la
+   opacidad al atributo del elemento, que es el que marca el tramo atenuado
+   (0.25). Con `to { opacity: 1 }` el barrido pisaría ese atenuado. */
+@keyframes spoke-in {
+  from { opacity: 0; }
+}
+.spoke-in {
+  animation: spoke-in 160ms var(--ease-sys) backwards;
+  animation-delay: calc(var(--spoke-i, 0) * var(--spoke-step, 8ms));
 }
 
 /* Reveal izq→der de la barra segmentada de MOVIMIENTOS (clip-path + scaleX, GPU) */

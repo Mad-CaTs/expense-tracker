@@ -150,7 +150,8 @@ function PendingRow({ pending, onRemove }: PendingRowProps) {
 }
 
 interface AttachmentSectionProps {
-  expenseId: number
+  /** Ausente al crear: todavía no hay gasto, solo archivos pendientes. */
+  expenseId?: number
   pendingFiles: PendingFile[]
   onAddFiles: (files: PendingFile[]) => void
   onRemovePending: (id: string) => void
@@ -158,7 +159,8 @@ interface AttachmentSectionProps {
 
 export function AttachmentSection({ expenseId, pendingFiles, onAddFiles, onRemovePending }: AttachmentSectionProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const { data: existing = [], isLoading } = useAttachments(expenseId)
+  // Sin id no hay nada guardado que listar; el hook se desactiva solo con 0.
+  const { data: existing = [], isLoading } = useAttachments(expenseId ?? 0)
 
   const totalCount = existing.length + pendingFiles.length
 
@@ -217,7 +219,8 @@ export function AttachmentSection({ expenseId, pendingFiles, onAddFiles, onRemov
         </button>
       ) : (
         <div className="flex flex-col gap-1.5">
-          {existing.map(a => (
+          {/* Solo hay guardados si hay id: la lista viene de consultarlo. */}
+          {expenseId != null && existing.map(a => (
             <ExistingRow key={a.id} attachment={a} expenseId={expenseId} />
           ))}
           {pendingFiles.map(p => (

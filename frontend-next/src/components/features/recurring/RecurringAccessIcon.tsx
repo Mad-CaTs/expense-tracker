@@ -1,11 +1,8 @@
-/** Iconos Solar (inline SVG, currentColor) de las cards de acceso de
- *  /recurring. Misma familia que WalletAccessIcon y AccountIcon. */
 export type RecurringAccessIconName = 'por-confirmar'
 
 export function RecurringAccessIcon({ name, size = 20 }: { name: RecurringAccessIconName; size?: number }) {
   const common = { width: size, height: size, viewBox: '0 0 24 24', xmlns: 'http://www.w3.org/2000/svg' }
   switch (name) {
-    // solar:bell-bing-linear — campana con ondas: algo reclama tu atención.
     case 'por-confirmar':
     default:
       return (

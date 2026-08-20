@@ -18,15 +18,6 @@ import { MOTION } from '@/lib/utils/motion'
 import { CATEGORY_ICON_MAP } from '@/lib/utils/categoryIcons'
 import type { RecurringOccurrence } from '@/types'
 
-/**
- * "Vence hoy · 30 jul." o "Venció el 16 jul.".
- *
- * El verbo distingue lo que todavía está en fecha de lo atrasado: las
- * ocurrencias se generan el mismo día del vencimiento, así que el caso más
- * común al entrar es justamente el de hoy — etiquetarlo en pasado confundía.
- * El año solo aparece si cayó en otro (los pendientes no caducan y pueden
- * acumularse por meses).
- */
 function dueLabel(iso: string): string {
   const due = new Date(iso + 'T12:00:00')
   const today = new Date()
@@ -40,7 +31,6 @@ function dueLabel(iso: string): string {
   return isToday ? `Vence hoy · ${date}` : `Venció el ${date}`
 }
 
-/** Resultado de una decisión, para el aviso de éxito. */
 export interface OccurrenceOutcome {
   action: 'confirm' | 'reject'
   description: string
@@ -59,9 +49,6 @@ function OccurrenceCard({ item, onDone }: { item: RecurringOccurrence; onDone: (
     const mutation = action === 'confirm' ? confirm : reject
     mutation.mutate(item.id, {
       onSuccess: () => {
-        // Orden: la tarjeta se retira → aparece el aviso → al descartarlo se
-        // refresca (ver onClose del SuccessDialog). Refrescar antes desmontaría
-        // esta tarjeta en el acto y su salida no llegaría a verse.
         setLeaving(true)
         window.setTimeout(
           () => onDone({ action, description: item.description, amount: item.amount ?? 0 }),

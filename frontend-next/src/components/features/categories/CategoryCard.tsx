@@ -27,28 +27,12 @@ export interface CategoryCardProps {
   onEdit: () => void
 }
 
-/**
- * Tarjeta de categoría del grid: aurora derivada de su color (mismo lenguaje que
- * BudgetCarousel). Las categorías sin movimientos en el mes se atenúan y pierden
- * la aurora — siguen siendo editables, pero no compiten con las que sí gastaron.
- *
- * Interacción de dos niveles sobre el mismo elemento: toque corto abre los
- * movimientos (el uso frecuente), presión sostenida abre el editor. La barra
- * inferior se llena durante la presión para que el gesto sea visible mientras
- * ocurre.
- */
 export function CategoryCard({ category, index, onOpen, onEdit }: CategoryCardProps) {
   const { name, icon, color, total, count, percentage } = category
   const Icon = CATEGORY_ICON_MAP[icon] ?? CATEGORY_ICON_MAP.ellipsis
   const unused = total <= 0
 
-  // Aurora atenuada (ver categoryAura): mismo lenguaje que las tarjetas de
-  // wallet pero con el color como tinte, porque acá conviven muchas en un grid.
-  // Se mantiene en AMBOS temas — es una superficie de color propia, no una card
-  // del tema, y su texto va en blanco.
   const aura = categoryAura(color)
-  // El icono sobre el círculo blanco usa el tono atenuado, igual que el resto
-  // de la app: el hex crudo del preset ahí se ve fluorescente.
   const iconColor = categorySwatch(color)
 
   const [holding, setHolding] = React.useState(false)
@@ -71,16 +55,10 @@ export function CategoryCard({ category, index, onOpen, onEdit }: CategoryCardPr
     timer.current = window.setTimeout(() => {
       fired.current = true
       clear()
-      // Al abrirse el editor el puntero SIGUE abajo: el menú contextual se
-      // dispararía al soltar, y para entonces el objetivo ya no es la tarjeta
-      // sino el sheet, así que su onContextMenu no alcanza. Se suprime a nivel
-      // documento por una ventana corta, hasta que el gesto se complete.
+
       const block = (e: Event) => e.preventDefault()
       document.addEventListener('contextmenu', block, true)
-      // Y lo mismo con la selección: el gesto de sostener arrastra una, y el
-      // sheet monta con el puntero abajo, así que el navegador la extiende
-      // hasta su título. `select-none` acá no alcanza — el texto que termina
-      // resaltado es el del sheet, que todavía no existía al empezar.
+
       const deselect = () => window.getSelection()?.removeAllRanges()
       document.addEventListener('selectionchange', deselect, true)
       window.setTimeout(() => {
@@ -93,7 +71,6 @@ export function CategoryCard({ category, index, onOpen, onEdit }: CategoryCardPr
   }
 
   function onClick() {
-    // El click posterior a un long-press ya fue atendido por onEdit.
     if (fired.current) {
       fired.current = false
       return
@@ -113,15 +90,8 @@ export function CategoryCard({ category, index, onOpen, onEdit }: CategoryCardPr
       aria-label={`${name}. Toca para ver movimientos, mantén para editar.`}
       className={`enter-pop relative flex min-h-[172px] cursor-pointer select-none flex-col overflow-hidden rounded-[20px] text-left transition-transform active:scale-[0.985] ${unused ? 'opacity-50' : ''}`}
       style={{
-        // Mantener presionado ES, para el navegador, el gesto que abre el menú
-        // contextual y arrastra una selección. Como acá ese gesto significa
-        // "editar", hay que desactivar ambas respuestas nativas: `select-none`
-        // evita que se subraye el texto de la tarjeta y `touch-callout` impide
-        // el menú de iOS al sostener.
         WebkitTouchCallout: 'none',
         background: unused ? 'var(--bg-card-inner)' : aura.base,
-        // Sin aurora que las delimite, las atenuadas quedarían como manchas
-        // casi invisibles sobre el fondo: el borde las mantiene tarjeta.
         border: unused ? '1px solid var(--border-subtle)' : 'none',
         boxShadow: unused ? 'none' : '0 1px 3px rgba(0,0,0,0.14)',
         ['--enter-i' as string]: index,

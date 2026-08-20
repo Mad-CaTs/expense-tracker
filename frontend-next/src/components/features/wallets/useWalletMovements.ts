@@ -20,6 +20,10 @@ export interface WalletMovement {
   categoryName: string
   categoryIcon?: string
   categoryColor?: string
+  /** Qué formulario abre la fila al tocarla. */
+  kind: 'expense' | 'income'
+  /** Adjuntos confirmados; solo los gastos pueden tenerlos. */
+  attachmentCount?: number
 }
 
 /**
@@ -37,6 +41,8 @@ export function useWalletMovements(walletId: number) {
       out.push({
         key: `e-${e.id}`,
         id: e.id,
+        kind: 'expense',
+        attachmentCount: e.attachmentCount,
         description: e.description,
         amount: -Math.abs(e.amount),
         date: e.date,
@@ -49,6 +55,7 @@ export function useWalletMovements(walletId: number) {
       out.push({
         key: `i-${i.id}`,
         id: i.id,
+        kind: 'income',
         description: i.description ?? 'Ingreso',
         amount: Math.abs(i.amount),
         date: i.date,

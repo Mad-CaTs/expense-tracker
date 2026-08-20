@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 import { AnimatePresence, motion, useMotionValue, useSpring, useTransform } from 'framer-motion'
-// useTransform kept for rotateX/rotateY tilt
 import { Eye, EyeOff, History, Plus, TrendingDown, TrendingUp } from 'lucide-react'
 
 import { WalletSheet } from '@/components/features/expenses/WalletSheet'
@@ -14,7 +13,6 @@ import { categoryAura } from '@/lib/utils/cardVisuals'
 import { EASE, MOTION_S } from '@/lib/utils/motion'
 import type { Wallet } from '@/types'
 
-// Logo de la app (asset local optimizado; antes bucket externo R2)
 const LOGO_URL = '/brand/logo.webp'
 
 function WalletCard({
@@ -40,10 +38,8 @@ function WalletCard({
   const pct = initial !== 0 ? ((diff / Math.abs(initial)) * 100).toFixed(1) : null
   const positive = diff >= 0
 
-  // Aurora animada derivada del color del wallet, en el tono atenuado de la app
   const aura = categoryAura(wallet.color ?? '#d4af37')
 
-  // Spring-based tilt — only on pointer devices, decorative
   const cardRef = useRef<HTMLDivElement>(null)
   const rawX = useMotionValue(0)
   const rawY = useMotionValue(0)
@@ -65,7 +61,6 @@ function WalletCard({
     rawY.set(0)
   }
 
-  // Anillo de selección dorado; sin borde ni sombra cuando no está seleccionada
   const boxShadow = selected ? '0 0 0 2px var(--accent)' : 'none'
 
   return (
@@ -207,7 +202,7 @@ function AddWalletCard({ onClick, full = false }: { onClick: () => void; full?: 
 
 interface WalletCarouselProps {
   selectedWalletId?: number
-  onSelect: (id: number | undefined) => void
+  onSelect: (id: number) => void
 }
 
 export function WalletCarousel({ selectedWalletId, onSelect }: WalletCarouselProps) {
@@ -261,9 +256,7 @@ export function WalletCarousel({ selectedWalletId, onSelect }: WalletCarouselPro
                 hidden={hidden}
                 index={i}
                 onToggleHidden={() => setHidden((v) => !v)}
-                onSelect={() => onSelect(selectedWalletId === w.id ? undefined : w.id)}
-                // Al detalle de la billetera en /wallets, donde vive su lista
-                // de movimientos: acá "Historial" solo filtraba la página.
+                onSelect={() => onSelect(w.id)}
                 onShowMovements={() => router.push(`/wallets?w=${w.id}`)}
               />
             </div>

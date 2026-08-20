@@ -7,9 +7,8 @@ import { CalendarDays, ChevronDown } from 'lucide-react'
 import { DateWheelPicker, wheelPickerHeight } from '@/components/ui/DateWheelPicker'
 import { MOTION } from '@/lib/utils/motion'
 
-/** Alto de la rueda y el que ocupa desplegada, con su separación superior. */
 const WHEEL_HEIGHT = wheelPickerHeight('sm')
-const PANEL_GAP = 8 // mt-2
+const PANEL_GAP = 8
 const PANEL_HEIGHT = WHEEL_HEIGHT + PANEL_GAP
 
 interface DateFieldProps {
@@ -18,7 +17,6 @@ interface DateFieldProps {
   label?: string
 }
 
-/** "29 de julio de 2026": más legible que 29/07/2026 para confirmar un dato. */
 function formatDateLabel(d: string) {
   const parts = d.split('-')
   if (parts.length !== 3) return d
@@ -29,9 +27,6 @@ function formatDateLabel(d: string) {
 
 export function DateField({ value, onChange, label = 'Fecha' }: DateFieldProps) {
   const [showPicker, setShowPicker] = useState(false)
-  /** La rueda solo existe mientras se ve. Cerrada seguía montada con sus tres
-   *  columnas, sus listeners de `wheel` y sus effects corriendo en cada render
-   *  del formulario, pagando ese coste en cada tecla escrita en la nota. */
   const [mounted, setMounted] = useState(false)
   const unmountTimer = useRef<number | null>(null)
   const dateObj = new Date(value + 'T12:00:00')
@@ -47,17 +42,13 @@ export function DateField({ value, onChange, label = 'Fecha' }: DateFieldProps) 
     }
     if (showPicker) {
       setShowPicker(false)
-      // Se desmonta al terminar la salida, no antes: quitarla de golpe cortaría
-      // la animación de cierre.
       unmountTimer.current = window.setTimeout(() => {
         setMounted(false)
         unmountTimer.current = null
       }, MOTION.layer)
       return
     }
-    // Montar primero y abrir en el frame siguiente: en el mismo commit el
-    // navegador nunca llega a pintar el estado cerrado, y sin ese punto de
-    // partida no interpola — el panel aparecería puesto, sin animación.
+
     setMounted(true)
     requestAnimationFrame(() => setShowPicker(true))
   }

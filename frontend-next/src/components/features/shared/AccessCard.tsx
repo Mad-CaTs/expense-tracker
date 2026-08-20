@@ -7,27 +7,17 @@ export interface AccessCardProps {
   title: string
   caption: string
   icon: React.ReactNode
-  /** Tiñe el contenedor del icono; sin esto usa el cristal neutro. */
   iconTint?: string
   chevron?: boolean
-  /** Ocupa el ancho completo: escala icono y tipografía. */
   wide?: boolean
   onClick?: () => void
 }
 
-/**
- * Card de acceso a otra pantalla. Nació en el detalle de billetera (Categorías /
- * Frecuentes / Presupuestos) y vive acá desde que /recurring la reusa para sus
- * ocurrencias por confirmar.
- */
 export function AccessCard({ title, caption, icon, iconTint, chevron, wide, onClick }: AccessCardProps) {
   return (
     <button
       type="button"
       onClick={onClick}
-      // py por defecto para quien la use suelta. En el detalle de billetera lo
-      // pisa `.wd-access .liquid-glass` (mayor especificidad), que lo hace
-      // proporcional al alto para no comerse la lista en pantallas cortas.
       className={`liquid-glass relative flex min-w-0 flex-1 cursor-pointer items-center rounded-[20px] py-[13px] text-left transition-transform active:scale-[0.985] ${wide ? 'gap-3' : 'gap-2'}`}
       style={{ paddingLeft: wide ? 18 : 8, paddingRight: wide ? 18 : 3 }}
     >

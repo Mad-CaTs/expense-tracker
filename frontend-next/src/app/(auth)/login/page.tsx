@@ -7,6 +7,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { ONBOARDING_DONE_KEY } from '@/components/features/onboarding/onboardingState'
 import { login } from '@/lib/api/auth'
 
 export default function LoginPage() {
@@ -23,10 +24,16 @@ export default function LoginPage() {
     setError('')
     setLoading(true)
     try {
-      const { accessToken } = await login({ username, password })
+      const { accessToken, refreshToken, onboardingCompleted, mustChangePassword } = await login({ username, password })
       localStorage.setItem('auth_token', accessToken)
+      localStorage.setItem('auth_refresh', refreshToken)
       localStorage.setItem('auth_username', username)
-      router.push('/expenses')
+      localStorage.setItem(ONBOARDING_DONE_KEY, String(onboardingCompleted))
+      // La lee /change-password para saber si el cambio es obligatorio (sin
+      // salida) o voluntario desde Configuración (con Cancelar).
+      localStorage.setItem('auth_must_change', String(mustChangePassword))
+
+      router.push(mustChangePassword ? '/change-password' : '/expenses')
     } catch {
       setError('Usuario o contraseña incorrectos')
       setErrorKey((k) => k + 1)

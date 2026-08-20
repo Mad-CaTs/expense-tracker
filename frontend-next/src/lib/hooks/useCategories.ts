@@ -18,24 +18,11 @@ export function useCategories(type?: CategoryType) {
   })
 }
 
-/**
- * Mutación de categorías con refresco MANUAL.
- *
- * La invalidación no va en `onSuccess`: refrescar ahí recalcula el hero y el
- * grid mientras el aviso de éxito todavía no se vio, así que el total cambia
- * detrás del modal. La pantalla dispara `refresh()` al descartarlo, y el número
- * recorre a la vista.
- *
- * Quien no muestre aviso —CategorySelector crea al vuelo desde el formulario de
- * gastos— debe llamar `refresh()` en su propio `onSuccess`.
- */
 function useCategoryMutation<TVars, TData = unknown>(fn: (vars: TVars) => Promise<TData>) {
   const qc = useQueryClient()
   const mutation = useMutation({ mutationFn: fn })
   const refresh = useCallback(() => {
     qc.invalidateQueries({ queryKey: ['categories'] })
-    // El total y el contador de movimientos del hero salen del BREAKDOWN, no de
-    // la lista de categorías: sin invalidar esto, la cifra nunca se recalculaba.
     qc.invalidateQueries({ queryKey: ['reports'] })
   }, [qc])
   return { ...mutation, refresh }

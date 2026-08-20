@@ -154,16 +154,10 @@ export function CategorySheet({ type, category, usage, onClose, onCreated, onSav
     if (editing) {
       await update.mutateAsync({ id: category.id, data: payload })
       close()
-      // El aviso espera a que el sheet termine de salir: encimarlo sobre el
-      // formulario abierto apila dos capas y no se lee qué pasó.
       window.setTimeout(() => onSaved?.(trimmed), MOTION.sheet)
     } else {
       const created = await create.mutateAsync(payload)
-      // Inmediato: CategorySelector lo usa para seleccionar lo recién creado en
-      // el formulario de gastos, y ahí un retraso se sentiría como un cuelgue.
       onCreated?.(created)
-      // Sin `onDone` no hay aviso que esperar (así lo usa CategorySelector),
-      // así que la lista se refresca ya: si no, la nueva categoría no aparece.
       if (!onDone) create.refresh()
       close()
       window.setTimeout(() => onDone?.(trimmed), MOTION.sheet)
@@ -174,18 +168,9 @@ export function CategorySheet({ type, category, usage, onClose, onCreated, onSav
     ? 'Editar categoría'
     : type === 'INCOME' ? 'Nueva categoría de ingreso' : 'Nueva categoría de gasto'
 
-  // Tono con el que el color elegido se ve realmente en la app, para que los
-  // acentos del formulario coincidan con la tarjeta resultante.
   const accent = categorySwatch(color)
 
   return (
-    // La raíz es el motion que anima: con un <div> plano acá, AnimatePresence
-    // desmontaba el árbol de golpe y el `exit` del sheet nunca corría.
-    // SIN fondo ni opacidad animada. Dos motivos: una capa de color se
-    // interpondría entre el sheet y la pantalla, y el backdrop-filter del sheet
-    // desenfocaría ESA capa plana en vez del grid; y un ancestro con opacity < 1
-    // crea un grupo de composición que anula el backdrop-filter de sus hijos.
-    // El contraste con el fondo lo da la sombra proyectada del propio sheet.
     <div
       className="fixed inset-0 z-50 flex items-end justify-center sm:items-center"
       onClick={close}
@@ -194,29 +179,11 @@ export function CategorySheet({ type, category, usage, onClose, onCreated, onSav
           como una capa más de /categories y no como un diálogo pegado encima. */}
       <div
         className={`liquid-glass max-h-[88dvh] w-full max-w-sm select-none rounded-t-[24px] border-b-0 sm:max-w-md sm:rounded-[24px] ${closing ? 'sheet-out' : 'sheet-in'} ${sliding ? 'is-sliding overflow-hidden' : 'sheet-settled overflow-y-auto'}`}
-        // Muy por encima de los 22px de .liquid-glass (calibrados para cards
-        // chicas): un panel de este tamaño necesita difusión fuerte para que el
-        // grid de colores detrás deje de ser reconocible.
-        //
-        // El blur difumina las FORMAS pero no baja el color, así que el gradiente
-        // del final agrega un velo — dentro del propio sheet, porque una capa
-        // externa se interpondría y anularía el desenfoque.
-        //
-        // La sombra ancha reemplaza al overlay: separa el sheet del fondo sin
-        // interponer nada entre él y la pantalla.
+
         style={{
-          // SIN backdrop-filter, a propósito. Con el velo en .97 solo atraviesa
-          // el 3% del fondo: desenfocar eso no se percibe, pero obliga a
-          // recomponer la capa en cada frame del deslizamiento. Encenderlo al
-          // aterrizar (de golpe o interpolado) tampoco sirve — cualquier cambio
-          // de estado a mitad de camino se nota más que el efecto que aporta.
           backdropFilter: 'none',
           WebkitBackdropFilter: 'none',
           backgroundImage: 'linear-gradient(var(--lg-veil), var(--lg-veil)), var(--lg-grad)',
-          // Sin `spread` y con difuminado corto: con 60px de blur y 20px de
-          // expansión, la sombra proyectaba una banda oscura de ~80px que al
-          // cerrar barría las tarjetas de abajo y se leía como una mancha
-          // siguiendo al panel. Solo necesita despegarlo del fondo.
           boxShadow: '0 -6px 20px rgba(0,0,0,0.35), var(--lg-inset)',
         }}
         onClick={(e) => e.stopPropagation()}
@@ -284,8 +251,6 @@ export function CategorySheet({ type, category, usage, onClose, onCreated, onSav
           </p>
           <div className="flex flex-wrap gap-2">
             {COLOR_PRESETS.map((c) => {
-              // La ficha muestra el color ATENUADO (el que tendrá la tarjeta);
-              // el valor guardado sigue siendo el hex del preset.
               const shown = categorySwatch(c)
               return (
                 <motion.button

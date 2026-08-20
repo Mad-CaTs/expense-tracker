@@ -7,7 +7,7 @@ import { categoryHueSat } from '@/lib/utils/cardVisuals'
 import { getCategoryColor } from '@/lib/utils/categoryColors'
 import { useCategoryBreakdown } from '@/lib/hooks/useReports'
 import { useRecurring } from '@/lib/hooks/useRecurring'
-import { useFilterStore } from '@/stores/filterStore'
+import { useActiveWallet } from '@/lib/hooks/useActiveWallet'
 import type { CategoryBreakdown } from '@/types'
 import { categorySwatch } from '@/lib/utils/cardVisuals'
 
@@ -54,7 +54,6 @@ function SegmentedBar({ items }: { items: CategoryBreakdown[] }) {
             const weight = it.percentage && it.percentage > 0 ? it.percentage : it.total
             const { h, s } = categoryHueSat(getCategoryColor(it, i))
             return (
-              // ...y cada segmento hace fade-in escalonado encima del reveal
               <span
                 key={`${it.categoryName}-${i}`}
                 className="seg-fade mov-seg rounded-[5px]"
@@ -123,13 +122,10 @@ function FlowRow({
 
 function MovementsCard() {
   const { from, to } = monthRange()
-  const walletId = useFilterStore((s) => s.walletId)
+  const walletId = useActiveWallet()
 
-  // CUSTOM (no MONTHLY): el backend resuelve MONTHLY con su propio reloj (UTC) e ignora
-  // from/to; con CUSTOM respeta el rango del mes calculado en la zona horaria del usuario.
-  // walletId filtra por la cuenta activa del carousel (undefined = total de todas).
-  const { data: incomeItems = [] } = useCategoryBreakdown({ period: 'CUSTOM', from, to, txType: 'INCOME', walletId })
-  const { data: expenseItems = [] } = useCategoryBreakdown({ period: 'CUSTOM', from, to, txType: 'EXPENSE', walletId })
+  const { data: incomeItems = [] } = useCategoryBreakdown({ period: 'CUSTOM', from, to, txType: 'INCOME', walletId }, { requireWallet: true })
+  const { data: expenseItems = [] } = useCategoryBreakdown({ period: 'CUSTOM', from, to, txType: 'EXPENSE', walletId }, { requireWallet: true })
 
   const incomeTotal = incomeItems.reduce((acc, it) => acc + (it.total ?? 0), 0)
   const expenseTotal = expenseItems.reduce((acc, it) => acc + (it.total ?? 0), 0)
@@ -149,10 +145,9 @@ function MovementsCard() {
 }
 
 function RecurringCard() {
-  const walletId = useFilterStore((s) => s.walletId)
-  const { data: recurring = [] } = useRecurring(walletId)
+  const walletId = useActiveWallet()
+  const { data: recurring = [] } = useRecurring(walletId, { requireWallet: true })
 
-  // Si caben en los slots, se muestran todos; si sobran, el último slot es "+N".
   const overflow = recurring.length > RECURRING_SLOTS
   const visible = recurring.slice(0, overflow ? RECURRING_SLOTS - 1 : RECURRING_SLOTS)
   const extra = recurring.length - visible.length

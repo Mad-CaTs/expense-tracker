@@ -144,8 +144,7 @@ export function BudgetLimitSheet({ budget, onClose, onSaved, onDelete }: BudgetL
     }
     await update.mutateAsync({ id: budget.id, amount: parsed })
     close()
-    // El aviso espera a que el sheet termine de salir: encimarlo sobre el
-    // formulario abierto apila dos capas y no se lee qué pasó.
+
     window.setTimeout(() => onSaved?.(budget.categoryName ?? ''), MOTION.sheet)
   }
 
@@ -185,8 +184,6 @@ export function BudgetLimitSheet({ budget, onClose, onSaved, onDelete }: BudgetL
               inputMode="decimal"
               value={amount}
               onChange={(e) => {
-                // Solo dígitos y un punto: el teclado decimal de Android deja
-                // escribir comas y letras sueltas.
                 const clean = e.target.value.replace(/[^\d.]/g, '')
                 setAmount(clean)
                 setError('')
@@ -194,8 +191,6 @@ export function BudgetLimitSheet({ budget, onClose, onSaved, onDelete }: BudgetL
               placeholder="0.00"
               autoComplete="off"
               className="mono-amount w-full bg-transparent text-[26px] font-extrabold tracking-[-0.02em] tabular-nums outline-none"
-              // Blanco siempre: teñirlo con el color de la categoría restaba
-              // legibilidad a la cifra con los tonos oscuros del preset.
               style={{ color: Number(amount) > 0 ? 'var(--text-primary)' : 'var(--text-placeholder)' }}
             />
           </div>

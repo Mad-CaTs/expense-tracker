@@ -20,7 +20,6 @@ function readStoredUsername() {
   return localStorage.getItem('auth_username') ?? ''
 }
 
-// En servidor e hidratación se rinde '' (igual que el HTML prerenderizado).
 function getServerUsername() {
   return ''
 }

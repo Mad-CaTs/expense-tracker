@@ -16,10 +16,7 @@ import { useCreateTransfer } from '@/lib/hooks/useTransfers'
 import { useWallets } from '@/lib/hooks/useWallets'
 import { useSheetStore } from '@/stores/sheetStore'
 
-/**
- * Da a los formularios el cierre ANIMADO del sheet. Pasarles el `close` del
- * store haría desaparecer el panel de golpe, sin recorrido de salida.
- */
+
 function SheetBody({ render }: { render: (close: () => void) => React.ReactNode }) {
   return <>{render(useSheetClose())}</>
 }
@@ -33,32 +30,17 @@ export function SheetHost() {
   const deleteIncome = useDeleteIncome()
   const transfer = useCreateTransfer()
 
-  /** Lo guardado, a la espera de que el sheet termine de bajar. */
   const pending = useRef<TxSummary | null>(null)
   const [saved, setSaved] = useState<TxSummary | null>(null)
 
-  // Precarga: los formularios consultan categorías al montarse, y esa respuesta
-  // llegando a mitad del deslizamiento del sheet provoca un re-render que se
-  // siente como un tirón. Pidiéndolas desde acá —que está montado siempre— ya
-  // están en caché cuando el sheet abre.
   useCategories('EXPENSE')
   useCategories('INCOME')
 
-  /**
-   * El formulario reporta al guardar, pero el sheet todavía está bajando. Se
-   * anota y se muestra en `dismissSheet`, que corre cuando el panel ya salió:
-   * un timer propio acá se sumaba al del sheet y el aviso llegaba tarde, como
-   * un segundo movimiento aparte.
-   */
   function announce(summary: TxSummary) {
     pending.current = summary
   }
 
-  /**
-   * Lo llama el sheet cuando su animación de salida terminó. El aviso espera un
-   * frame: desmontar el panel y montar el modal en el mismo commit deja los dos
-   * trabajos de layout en el mismo frame, y en móvil eso se ve como un salto.
-   */
+
   function dismissSheet() {
     close()
     const summary = pending.current
@@ -67,10 +49,7 @@ export function SheetHost() {
     requestAnimationFrame(() => setSaved(summary))
   }
 
-  /**
-   * Recién al descartar el aviso se refrescan las consultas, para que el total
-   * de la cabecera recorra a la vista y no cambie escondido tras el modal.
-   */
+
   function dismiss() {
     const kind = saved?.kind
     setSaved(null)

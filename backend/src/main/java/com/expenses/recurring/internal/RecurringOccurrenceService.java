@@ -94,7 +94,7 @@ public class RecurringOccurrenceService {
         return switch (frequency) {
             case "WEEKLY"  -> current.plusWeeks(1);
             case "YEARLY"  -> current.plusYears(1);
-            default        -> current.plusMonths(1); // MONTHLY
+            default        -> current.plusMonths(1);
         };
     }
 

@@ -54,21 +54,12 @@ function GridSkeleton() {
   )
 }
 
-/**
- * Pantalla de categorías: hero con el total del mes y grid de tarjetas ordenado
- * por gasto. Las que no tuvieron movimientos quedan atenuadas al final.
- *
- * Cada tarjeta ofrece dos acciones sobre el mismo elemento — toque corto abre
- * los movimientos de esa categoría, presión sostenida abre el editor.
- */
 export function CategoriesScreen() {
   const { exitClass, open, goBack } = useSubPageExit()
   const [activeType, setActiveType] = useState<CategoryType>('EXPENSE')
   const { cards, isLoading, total, topCategory, movementCount } = useCategoryCards(activeType)
 
   const deleteCategory = useDeleteCategory()
-  // Solo por su `refresh`: las mutaciones viven en el sheet, pero el refresco
-  // debe correr al descartar el aviso para que el hero recorra a la vista.
   const createCategory = useCreateCategory()
   const updateCategory = useUpdateCategory()
 
@@ -134,8 +125,6 @@ export function CategoriesScreen() {
             <CategoryCard
               key={c.id}
               category={c}
-              // +2: el segmented y el hero ocupan los dos primeros lugares del
-              // stagger, así la secuencia continúa en vez de reiniciarse.
               index={i + 2}
               onOpen={() => open(`/categories/${c.id}`)}
               onEdit={() => openEditor(c.id)}

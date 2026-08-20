@@ -1,10 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
-
-import { animate } from 'framer-motion'
-
-import { MOTION } from '@/lib/utils/motion'
+import { useCountUp } from '@/components/features/shared/useCountUp'
 
 export interface AnimatedAmountProps {
   value: number
@@ -37,30 +33,7 @@ export function AnimatedAmount({
   className,
   style,
 }: AnimatedAmountProps) {
-  const [shown, setShown] = useState(animateOnMount ? from : value)
-  const previous = useRef(animateOnMount ? from : value)
-  const mounted = useRef(false)
-
-  useEffect(() => {
-    const first = !mounted.current
-    mounted.current = true
-    if (first && !animateOnMount) {
-      previous.current = value
-      setShown(value)
-      return
-    }
-    if (previous.current === value) return
-
-    const controls = animate(previous.current, value, {
-      duration: MOTION.count / 1000,
-      ease: [0.32, 0.72, 0, 1],
-      onUpdate: setShown,
-    })
-    previous.current = value
-    return () => controls.stop()
-    // `animateOnMount` y `from` solo importan en el primer render.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value])
+  const shown = useCountUp(value, animateOnMount, from)
 
   return (
     <span className={className} style={style}>
