@@ -14,14 +14,13 @@ const NAV_ITEMS: { href: string; label: string; icon: NavIconName }[] = [
   { href: '/settings', label: 'Ajustes',  icon: 'cuenta'   },
 ]
 
-// Un único spring para pill, layout y label → todo se mueve al unísono (sin saltos)
 const SPRING = { type: 'spring' as const, stiffness: 420, damping: 38, mass: 0.9 }
 
 export function BottomNav() {
   const pathname = usePathname()
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-30 flex justify-center pb-4 md:hidden">
+    <div className="bottomnav-host fixed bottom-0 left-0 right-0 z-30 flex justify-center pb-4 md:hidden">
       <motion.nav
         layout
         transition={SPRING}

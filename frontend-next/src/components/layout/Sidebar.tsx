@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 
 import { AnimatePresence, motion } from 'framer-motion'
 
@@ -12,16 +12,24 @@ const NAV_ITEMS = [
   { href: '/reports', label: 'Reportes', icon: ChartIcon },
 ]
 
+function subscribeUsername() {
+  return () => {}
+}
+
+function readStoredUsername() {
+  return localStorage.getItem('auth_username') ?? ''
+}
+
+function getServerUsername() {
+  return ''
+}
+
 export function Sidebar() {
   const pathname = usePathname()
   const router = useRouter()
-  const [username, setUsername] = useState('')
+  const username = useSyncExternalStore(subscribeUsername, readStoredUsername, getServerUsername)
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    setUsername(localStorage.getItem('auth_username') ?? '')
-  }, [])
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {

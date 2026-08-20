@@ -5,12 +5,10 @@ import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { X } from 'lucide-react'
 
+import { COLOR_PRESETS } from '@/components/features/shared/colorPresets'
 import { useCreateWallet } from '@/lib/hooks/useWallets'
-
-const COLOR_PRESETS = [
-  '#d4af37', '#ef4444', '#3b82f6', '#22c55e',
-  '#f97316', '#a855f7', '#ec4899', '#14b8a6',
-]
+import { categorySwatch } from '@/lib/utils/cardVisuals'
+import { EASE, MOTION_S } from '@/lib/utils/motion'
 
 interface WalletSheetProps {
   onClose: () => void
@@ -40,7 +38,7 @@ export function WalletSheet({ onClose }: WalletSheetProps) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.15 }}
+      transition={{ duration: MOTION_S.tint, ease: EASE }}
       className="fixed inset-0 z-50 flex items-end justify-center sm:items-center"
       style={{ background: 'rgba(0,0,0,0.5)' }}
       onClick={onClose}
@@ -49,8 +47,8 @@ export function WalletSheet({ onClose }: WalletSheetProps) {
         initial={{ opacity: 0, y: 32 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 32 }}
-        transition={{ duration: 0.22, ease: [0.32, 0.72, 0, 1] }}
-        className="w-full max-w-sm overflow-hidden rounded-t-[24px] sm:max-w-md sm:rounded-[20px]"
+        transition={{ duration: MOTION_S.layer, ease: EASE }}
+        className="w-full max-w-sm overflow-hidden rounded-t-[20px] sm:max-w-md sm:rounded-[16px]"
         style={{ background: 'var(--bg-card-inner)' }}
         onClick={e => e.stopPropagation()}
       >
@@ -104,20 +102,25 @@ export function WalletSheet({ onClose }: WalletSheetProps) {
               Color
             </label>
             <div className="flex flex-wrap gap-2">
-              {COLOR_PRESETS.map((c) => (
-                <button
-                  key={c}
-                  type="button"
-                  onClick={() => setColor(c)}
-                  className="h-7 w-7 rounded-full transition-transform"
-                  style={{
-                    background: c,
-                    boxShadow: color === c ? `0 0 0 2px var(--bg-card-inner), 0 0 0 3.5px ${c}` : 'none',
-                    transform: color === c ? 'scale(1.15)' : 'scale(1)',
-                  }}
-                  aria-label={c}
-                />
-              ))}
+              {COLOR_PRESETS.map((c) => {
+                // La ficha muestra el color ATENUADO (el que tendrá la tarjeta);
+                // el valor guardado sigue siendo el hex del preset.
+                const shown = categorySwatch(c)
+                return (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => setColor(c)}
+                    className="h-7 w-7 rounded-full transition-transform"
+                    style={{
+                      background: shown,
+                      boxShadow: color === c ? `0 0 0 2px var(--bg-card-inner), 0 0 0 3.5px ${shown}` : 'none',
+                      transform: color === c ? 'scale(1.15)' : 'scale(1)',
+                    }}
+                    aria-label={c}
+                  />
+                )
+              })}
             </div>
           </div>
 
@@ -125,7 +128,7 @@ export function WalletSheet({ onClose }: WalletSheetProps) {
             onClick={handleCreate}
             disabled={create.isPending}
             whileTap={{ scale: 0.97 }}
-            transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+            transition={{ duration: MOTION_S.press, ease: EASE }}
             className="h-11 w-full rounded-full text-[13px] font-bold disabled:opacity-50"
             style={{ background: 'var(--accent-light)', color: 'var(--bg-base)' }}
           >

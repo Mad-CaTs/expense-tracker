@@ -72,6 +72,20 @@
   --glass-item-active: rgba(255, 255, 255, 0.12);
   --glass-item-active-ic: rgba(255, 255, 255, 0.18);
   --glass-sep: rgba(255, 255, 255, 0.09);
+
+  /* ── Movimiento ──
+     Una sola curva para toda la app (el paginado de iOS): arranca con algo de
+     aceleración y frena largo, así el recorrido se LEE. Lo que cambia por
+     interacción es la DURACIÓN, no la curva. Espejo de lib/utils/motion.ts. */
+  --ease-sys: cubic-bezier(0.32, 0.72, 0, 1);
+  --dur-press: 120ms;  /* hundido de un botón: responde al dedo */
+  --dur-tint: 180ms;   /* color/opacidad en el sitio: hover, estado activo */
+  --dur-layer: 300ms;  /* aparición de una capa: modales, expansiones */
+  --dur-sheet: 420ms;  /* bottom sheet: recorre el alto de la pantalla */
+  --dur-step: 460ms;   /* paso a paso dentro de un sheet: el panel no se mueve */
+  --dur-travel: 460ms; /* recorrido que se sigue con la vista: carruseles */
+  --dur-restore: 620ms; /* vuelta al detalle desde un listado: pantalla completa */
+  --dur-count: 840ms;  /* cifra que recorre hasta su valor; sigue a enter-pop */
 }
 
 /* ── Light mode (Cool Gray) ── */
@@ -174,7 +188,7 @@
 
 .icon-btn {
   color: var(--text-muted);
-  transition: background 0.15s, color 0.15s;
+  transition: background var(--dur-tint) var(--ease-sys), color var(--dur-tint) var(--ease-sys);
 }
 .icon-btn:hover {
   background: var(--bg-hover);
@@ -188,7 +202,7 @@
 .btn-danger-soft {
   background: rgba(239, 68, 68, 0.1);
   color: var(--danger);
-  transition: background 0.15s;
+  transition: background var(--dur-tint) var(--ease-sys);
 }
 .btn-danger-soft:hover {
   background: rgba(239, 68, 68, 0.18);
@@ -198,7 +212,7 @@
   border: 1px solid var(--border-default);
   background: var(--bg-input);
   border-radius: 12px;
-  transition: border-color 0.15s;
+  transition: border-color var(--dur-tint) var(--ease-sys);
 }
 .input-wrapper:hover {
   border-color: var(--border-strong);
@@ -218,11 +232,43 @@ button.input-wrapper:focus:not([data-state="closed"]),
   border: 1px solid transparent;
   background: var(--bg-input);
   border-radius: 12px;
-  transition: border-color 0.15s;
+  transition: border-color var(--dur-tint) var(--ease-sys);
+}
+
+/* Buscador sobre cristal (listas de movimientos): --text-placeholder (#3c424d en
+   oscuro) es un gris pensado para fondos planos y sobre liquid-glass queda casi
+   invisible. Se sube a --text-muted, que sigue leyéndose como secundario. */
+.search-input::placeholder {
+  color: var(--text-muted);
+  opacity: 1;
 }
 .input-borderless:focus,
 .input-borderless:focus-within {
   border-color: var(--accent-light) !important;
+}
+
+/* Las utilidades transition-* de Tailwind traen su propia curva (0.4,0,0.2,1)
+   y 150ms. Se alinean con la escala del sistema en un solo sitio, en vez de
+   anotar duración y ease en cada uno de los ~19 usos. */
+.transition-colors,
+.transition-opacity,
+.transition-transform,
+.transition-all {
+  transition-timing-function: var(--ease-sys);
+  transition-duration: var(--dur-tint);
+}
+/* El hundido de un tap es la excepción: debe seguir al dedo, no leerse. */
+.transition-transform {
+  transition-duration: var(--dur-press);
+}
+/* En transition-all conviven dos velocidades: el hundido acompaña al dedo
+   (press) y el cambio de color al seleccionar se lee (tint).
+   `box-shadow` queda FUERA a propósito: varios controles lo usan como anillo de
+   selección (`0 0 0 1.5px`), y animarlo hace que el borde crezca desde cero —
+   se lee como un golpe, no como una transición. Debe aparecer ya puesto. */
+.transition-all {
+  transition-property: transform, background-color, background-image, border-color, color, opacity, filter;
+  transition-duration: var(--dur-press), var(--dur-tint), var(--dur-tint), var(--dur-tint), var(--dur-tint), var(--dur-tint), var(--dur-tint);
 }
 
 html {
@@ -235,7 +281,7 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition: background-color var(--dur-tint) var(--ease-sys), color var(--dur-tint) var(--ease-sys);
 }
 
 /* Subtle noise overlay — fixed, pointer-events-none, below all interactive layers */
@@ -261,9 +307,189 @@ textarea::placeholder {
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ── Animaciones de entrada (CSS puro) ──
+   Corren en el compositor y no dependen del hilo principal: la página sigue
+   respondiendo a taps (bottom nav incluida) aunque esté hidratando/renderizando.
+   El escalonado se parametriza con --enter-i; `backwards` mantiene el estado
+   inicial durante el delay y devuelve el control a estilos inline al terminar. */
+/* SOLO opacidad, sin transform.
+   Un ancestro con `transform` crea un containing block nuevo: cualquier
+   `position: sticky` que cuelgue de él (los SubPageHeader de /categories,
+   /budgets y /recurring) se recalcula en cada frame y da un salto al terminar,
+   cuando el transform vuelve a `none`. Se leía como un rebote de la cabecera.
+   Es el mismo motivo por el que el detalle de wallet neutraliza esta clase. */
+@keyframes page-enter {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.page-enter {
+  /* Corta (0.22s) A PROPÓSITO: es el telón de la página, no la entrada del
+     contenido. Sus hijos con .enter-pop animan su propia opacidad 0→1 con
+     stagger, y dos opacidades anidadas se MULTIPLICAN — al terminar la del
+     padre, las tarjetas saltaban a opacidad plena de golpe (parpadeo).
+     Terminando antes de que el stagger avance, el contenido manda el ritmo. */
+  animation: page-enter 0.3s var(--ease-sys) both;
+}
+
+/* ── Navegación entre una lista y su detalle (categorías → movimientos) ──
+   Reusa el MISMO gesto que la tarjeta de categoría (.enter-pop): sube con un
+   leve scale y remata con overshoot. No se inventa una curva nueva — la
+   pantalla entra como entra la tarjeta que la abrió.
+   La salida es su inversa, y corre ANTES del push (ver useSubPageExit). */
+/* El gesto (translate + scale) va en el CONTENIDO, no en el contenedor: el
+   contenedor sostiene un SubPageHeader sticky y un transform ahí lo haría
+   rebotar (ver page-enter). El header entra solo con opacidad. */
+.subpage-in > :not(.subpage-header) {
+  animation: enter-pop 0.84s cubic-bezier(0.22, 1.36, 0.32, 1) backwards;
+}
+.subpage-in > .subpage-header {
+  animation: page-enter 0.3s var(--ease-sys) both;
+}
+.subpage-out {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-layer) var(--ease-sys);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .subpage-in { animation: none; }
+  .subpage-out { transition-duration: 1ms; transform: none; }
+}
+
+/* ── Bottom sheet ──
+   En CSS y no en framer: la convención del proyecto es entradas por compositor
+   y framer solo para interacción. Animado por JS, cada frame de este panel
+   —con su preview, 12 iconos y 10 fichas— pasa por el hilo principal.
+   `translate3d` fuerza capa propia; `will-change` solo mientras dura. */
+@keyframes sheet-in  { from { transform: translate3d(0, 100%, 0); } to { transform: translate3d(0, 0, 0); } }
+@keyframes sheet-out { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(0, 100%, 0); } }
+.sheet-in  { animation: sheet-in  var(--dur-sheet) var(--ease-sys) both; will-change: transform; }
+.sheet-out { animation: sheet-out var(--dur-sheet) var(--ease-sys) both; will-change: transform; }
+
+/* Asentado: libera la capa promovida. No hay efecto que encender acá — el panel
+   se ve igual durante todo el recorrido, que es lo que hace que no se note
+   ningún cambio a mitad de camino. */
+.sheet-settled { will-change: auto; }
+
+/* ── Panel anclado a su disparador ──
+   Los filtros no se despliegan desde abajo: nacen bajo el chip que los abrió,
+   así que el recorrido es corto y con origen arriba. Se anima opacity + escala
+   además del desplazamiento porque a 8px el movimiento solo no se percibe. */
+@keyframes anchor-in {
+  from { opacity: 0; transform: translate3d(0, -8px, 0) scale(0.97); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes anchor-out {
+  from { opacity: 1; transform: none; }
+  to   { opacity: 0; transform: translate3d(0, -8px, 0) scale(0.97); }
+}
+.anchor-in  { animation: anchor-in  var(--dur-layer) var(--ease-sys) both; transform-origin: top center; }
+.anchor-out { animation: anchor-out var(--dur-tint)  var(--ease-sys) both; transform-origin: top center; }
+
+/* El velo que hay detrás del panel solo funde: moverlo o escalarlo delataría
+   que es una capa y no el fondo real de la pantalla. */
+@keyframes backdrop-in  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes backdrop-out { from { opacity: 1; } to { opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .anchor-in, .anchor-out { animation-duration: 1ms; }
+}
+
+/* Pasos dentro de un sheet: el contenido viaja en horizontal mientras el panel
+   queda quieto, así el gesto se distingue de la entrada (que es vertical).
+   Recorrido corto — es un cambio de sección, no de pantalla. */
+@keyframes step-fwd  { from { opacity: 0; transform: translate3d(26px, 0, 0); } to { opacity: 1; transform: none; } }
+@keyframes step-back { from { opacity: 0; transform: translate3d(-26px, 0, 0); } to { opacity: 1; transform: none; } }
+/* Duración propia y no --dur-layer: a 300ms el cambio de paso se sentía seco.
+   El recorrido también crece un poco — a mayor duración, 16px se quedaban
+   quietos demasiado tiempo. */
+.step-fwd  { animation: step-fwd  var(--dur-step) var(--ease-sys) both; }
+.step-back { animation: step-back var(--dur-step) var(--ease-sys) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .step-fwd, .step-back { animation: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sheet-in, .sheet-out { animation-duration: 1ms; }
+}
+
+/* Equivale al spring(260, 24) de entrada: ease-out con ligero overshoot */
+@keyframes enter-pop {
+  from { opacity: 0; transform: translateY(24px) scale(0.92); }
+  to   { opacity: 1; transform: none; }
+}
+.enter-pop {
+  /* Conserva el overshoot (spring con rebote): es el carácter de la entrada,
+     no un timing a uniformar. Solo se alarga para poder seguirse en móvil. */
+  animation: enter-pop 0.84s cubic-bezier(0.22, 1.36, 0.32, 1) backwards;
+  animation-delay: calc(var(--enter-i, 0) * 120ms);
+}
+
+/* Variante corta (iconos apilados de RECURRENTES, spring(260, 20) + 14px) */
+@keyframes enter-pop-sm {
+  from { opacity: 0; transform: translateY(14px) scale(0.9); }
+  to   { opacity: 1; transform: none; }
+}
+.enter-pop-sm {
+  /* Bezier con más rebote: el original era spring(260, 20), ζ≈0.62 → overshoot ~8% */
+  animation: enter-pop-sm 0.68s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+  animation-delay: calc(var(--enter-i, 0) * 105ms);
+}
+
+/* ── Barrido del donut de ESTADÍSTICAS ──
+   Los radios aparecen en secuencia siguiendo el círculo, como una aguja que
+   recorre el anillo. Solo opacidad: la geometría de cada radio ya está
+   calculada y tocarla acá deformaría el anillo mientras entra.
+
+   El escalonado va en --spoke-i (índice del radio) por --spoke-step (el reparto
+   de --dur-travel entre todos), no en --enter-i: ese lo consume .enter-pop en
+   los contenedores y compartirlo mezclaría las dos escaleras.
+
+   Solo el fotograma inicial: sin un `to`, la animación termina devolviendo la
+   opacidad al atributo del elemento, que es el que marca el tramo atenuado
+   (0.25). Con `to { opacity: 1 }` el barrido pisaría ese atenuado. */
+@keyframes spoke-in {
+  from { opacity: 0; }
+}
+.spoke-in {
+  animation: spoke-in 160ms var(--ease-sys) backwards;
+  animation-delay: calc(var(--spoke-i, 0) * var(--spoke-step, 8ms));
+}
+
+/* Reveal izq→der de la barra segmentada de MOVIMIENTOS (clip-path + scaleX, GPU) */
+@keyframes seg-reveal {
+  from { clip-path: inset(0 100% 0 0); transform: scaleX(0.6); }
+  to   { clip-path: inset(0 0 0 0); transform: scaleX(1); }
+}
+.seg-reveal {
+  transform-origin: left;
+  animation: seg-reveal 0.68s cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+@keyframes seg-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.seg-fade {
+  animation: seg-fade 0.54s var(--ease-sys) backwards;
+  animation-delay: calc(160ms + var(--enter-i, 0) * 80ms);
+}
+
+/* Crecimiento del fill de la barra de progreso (presupuestos) */
+@keyframes enter-grow {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+.enter-grow {
+  transform-origin: left;
+  animation: enter-grow 0.82s cubic-bezier(0.32, 0.72, 0, 1) backwards;
+  animation-delay: calc(135ms + var(--enter-i, 0) * 68ms);
 }
 
 /* Tabular numbers for financial data */
@@ -389,12 +615,14 @@ select:focus-visible,
   line-height: 1.3;
 }
 
-/* ── Aurora animada de los wallets (mesh gradient en movimiento, estilo skylrk) ── */
+/* ── Aurora animada de los wallets (mesh gradient en movimiento, estilo skylrk) ──
+   El blur/saturate vive en CADA blob (contenido estático → el navegador lo
+   rasteriza una vez y el transform animado solo compone la textura cacheada).
+   En el contenedor obligaría a re-rasterizar toda la capa en cada frame. */
 .wallet-aura {
   position: absolute;
   inset: -25%;
   z-index: 0;
-  filter: blur(38px) saturate(1.15);
   pointer-events: none;
 }
 .wallet-blob {
@@ -402,6 +630,7 @@ select:focus-visible,
   width: 62%;
   height: 62%;
   border-radius: 50%;
+  filter: blur(38px) saturate(1.15);
   mix-blend-mode: screen;
   will-change: transform;
 }
@@ -409,6 +638,31 @@ select:focus-visible,
 .wallet-blob.b2 { animation: wb2 13s ease-in-out infinite; }
 .wallet-blob.b3 { animation: wb3 17s ease-in-out infinite; }
 .wallet-blob.b4 { animation: wb4 11s ease-in-out infinite; }
+
+/* Tono ATENUADO de las superficies de color (categorías, presupuestos y el
+   carrusel de billeteras de /expenses): color como tinte (ver categoryAura) y
+   foco más difuso — un spot marcado por tarjeta hace vibrar la pantalla cuando
+   hay varias juntas. El blur sigue viviendo en cada blob, nunca en el
+   contenedor: ahí obligaría a compositar toda la capa en móvil. */
+.aura-soft .wallet-blob {
+  filter: blur(52px) saturate(1.05);
+  opacity: 0.85;
+}
+
+/* Aurora CONGELADA mientras un contenedor se desplaza.
+   Un blob combina blur de 52px, mix-blend-mode y una animación infinita: dentro
+   de un panel en movimiento el navegador recompone esas capas en cada frame
+   (el blend obliga además a releer el fondo). Congelarlos durante el recorrido
+   devuelve el deslizamiento a fotogramas plenos, y nadie percibe que la aurora
+   se detuvo 400ms. */
+/* SOLO se pausa la animación: un blob quieto es idéntico a uno en movimiento
+   durante 400ms, así que el ahorro es invisible. NO se toca el blend ni la
+   opacidad — cambiarlos ahorra algo más, pero el salto al restituirlos se ve
+   mucho más que el trabado que evitan. */
+.is-sliding .wallet-blob {
+  animation-play-state: paused;
+}
+
 
 @keyframes wb1 { 0%,100% { transform: translate(-5%,-5%)  scale(1);    } 50% { transform: translate(45%,35%)  scale(1.35); } }
 @keyframes wb2 { 0%,100% { transform: translate(55%,-10%) scale(1.1);  } 50% { transform: translate(10%,40%)  scale(0.9);  } }
@@ -449,7 +703,6 @@ select:focus-visible,
   position: absolute;
   inset: -30%;
   z-index: 0;
-  filter: blur(16px) saturate(1.05);
   pointer-events: none;
   background: var(--nav-aura-base);
 }
@@ -458,6 +711,7 @@ select:focus-visible,
   width: 70%;
   height: 130%;
   border-radius: 50%;
+  filter: blur(16px) saturate(1.05);
   mix-blend-mode: var(--nav-aura-blend);
   will-change: transform;
 }
@@ -484,6 +738,72 @@ select:focus-visible,
   box-shadow: var(--soft-raised);
 }
 
+/* ── Material "cristal líquido" (referencia Skylrk, variante F) ──
+   Vidrio grueso: gradiente diagonal + specular highlight arriba + sombra
+   interna abajo, con la transparencia atenuada para que el contenido
+   conserve contraste. Superficie de cards, acciones, chips y avatar. */
+:root {
+  --lg-grad: linear-gradient(160deg, rgba(255,255,255,.085) 0%, rgba(255,255,255,.032) 42%, rgba(255,255,255,.055) 100%);
+  --lg-border: rgba(255,255,255,.11);
+  --lg-inset: inset 0 1px 1px rgba(255,255,255,.20), inset 0 -14px 22px rgba(0,0,0,.16);
+  --lg-drop: 0 6px 20px rgba(0,0,0,.30);
+  --lg-sheen: linear-gradient(180deg, rgba(255,255,255,.09), transparent);
+  --lg-ic-grad: linear-gradient(160deg, rgba(255,255,255,.10), rgba(255,255,255,.035));
+  --lg-ic-border: rgba(255,255,255,.10);
+  /* velo para paneles GRANDES de cristal (sheets): el blur difumina las formas
+     pero no baja el color, y sobre el grid de categorías el fondo se seguía
+     distinguiendo. No se usa en las cards chicas, que no lo necesitan. */
+  --lg-veil: rgba(20,20,22,.97);
+  /* anillo que separa avatares solapados sobre cristal (antes: color sólido de la card) */
+  --lg-avatar-ring: rgba(28,28,30,.72);
+}
+.light {
+  --lg-grad: linear-gradient(160deg, rgba(255,255,255,.92) 0%, rgba(255,255,255,.72) 42%, rgba(255,255,255,.82) 100%);
+  --lg-border: rgba(255,255,255,.85);
+  --lg-inset: inset 0 1px 1px rgba(255,255,255,.9), inset 0 -14px 22px rgba(15,23,42,.05);
+  --lg-drop: 0 6px 20px rgba(15,23,42,.10);
+  --lg-sheen: linear-gradient(180deg, rgba(255,255,255,.55), transparent);
+  --lg-ic-grad: linear-gradient(160deg, rgba(255,255,255,.85), rgba(255,255,255,.55));
+  --lg-ic-border: rgba(15,23,42,.06);
+  --lg-veil: rgba(250,251,253,.97);
+  --lg-avatar-ring: rgba(255,255,255,.86);
+}
+
+.liquid-glass {
+  position: relative;
+  background: var(--lg-grad);
+  backdrop-filter: blur(22px) saturate(1.7);
+  -webkit-backdrop-filter: blur(22px) saturate(1.7);
+  border: 1px solid var(--lg-border);
+  box-shadow: var(--lg-inset), var(--lg-drop);
+  overflow: hidden;
+}
+/* brillo especular superior: la firma del vidrio grueso.
+   Va DETRÁS del contenido (z-index 0 + hijos elevados); si se pintara encima,
+   lavaría los títulos que caen en el 44% superior de la card. */
+/* Brillo especular: altura FIJA, no porcentual. Con `44%` el reflejo crecía con
+   la card — en una card alta (Movimientos) eran ~110px de degradado frente a
+   ~26px en las bajas, y se veía mucho más clara que las demás. */
+.liquid-glass::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; top: 0;
+  height: 34px;
+  z-index: 0;
+  background: var(--lg-sheen);
+  pointer-events: none;
+}
+.liquid-glass > * {
+  position: relative;
+  z-index: 1;
+}
+/* contenedores de icono dentro del cristal (más tenues que la superficie) */
+.liquid-glass-ic {
+  background: var(--lg-ic-grad);
+  border: 1px solid var(--lg-ic-border);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.20);
+}
+
 /* ── Aurora animada de los segmentos del gráfico de MOVIMIENTOS ──
    Mismo lenguaje que los wallets (base casi-negra + blobs monocromáticos del hue
    de la categoría), miniaturizado para segmentos de 14px. Balance oscuro:
@@ -496,7 +816,6 @@ select:focus-visible,
 .mov-seg-aura {
   position: absolute;
   inset: -40%;
-  filter: blur(9px) saturate(1.15);
   pointer-events: none;
 }
 .mov-seg-blob {
@@ -504,6 +823,7 @@ select:focus-visible,
   width: 70%;
   height: 180%;
   border-radius: 50%;
+  filter: blur(9px) saturate(1.15);
   mix-blend-mode: screen;
   will-change: transform;
 }
@@ -517,4 +837,274 @@ select:focus-visible,
 
 @media (prefers-reduced-motion: reduce) {
   .mov-seg-blob { animation: none; }
+}
+
+/* ═══════════════ Detalle de billetera (/wallets): marco, vuelo y bolsillo ═══════════════
+   Port del demo aprobado (docs/demos/wallets-carousel-demo-header.html).
+   Coreografía por clases en la raíz .wd-screen: .is-detail (vuelo en curso u hoja abierta)
+   y .is-settled (panel visible; la tarjeta aterrizó o está por encajar). */
+
+/* marco-billetera: la tarjeta vive METIDA en el bolsillo; solo asoma su banda superior */
+/* Alto proporcional: con 200px fijos, en pantallas de móvil (iPhone 11 ≈ 715px
+   útiles) la billetera + las cards de acceso consumían 520px y a la lista de
+   movimientos le quedaban 150px (≈1 fila). Cede alto en pantallas cortas. */
+.wd-strip { position: relative; height: clamp(168px, 24vh, 200px); flex: none; margin-bottom: clamp(10px, 1.6vh, 18px); }
+/* Bloque de accesos (Categorías / Frecuentes / Presupuesto): separaciones
+   proporcionales, para no comerse la lista en pantallas cortas. */
+.wd-access { margin-top: clamp(10px, 1.8vh, 20px); gap: clamp(10px, 1.6vh, 16px); padding-bottom: clamp(8px, 1.5vh, 16px) !important; }
+.wd-access .liquid-glass { padding-top: clamp(9px, 1.4vh, 20px); padding-bottom: clamp(9px, 1.4vh, 20px); }
+.wd-strip-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: fill; }
+.wd-strip-bg { filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.38)); }
+.wd-strip-front { pointer-events: none; }
+/* boca del bolsillo medida sobre el asset (costura ~36% con onda suave) */
+.wd-pocket-clip {
+  clip-path: polygon(0% 36.5%, 8% 36.4%, 16% 35.8%, 26% 35.6%, 36% 35.6%, 44% 36.4%,
+                     50% 36.9%, 56% 36.4%, 64% 35.9%, 74% 35.8%, 84% 35.6%, 92% 35.6%,
+                     100% 36.2%, 100% 100%, 0% 100%);
+}
+.wd-card-slot { position: absolute; left: 24px; right: 24px; top: 15px; aspect-ratio: 1313 / 857; }
+
+/* logo TALLADO PROFUNDO en el cuero: 3 capas enmascaradas (luz bajo el borde,
+   tinta hundida, sombra superior difusa) */
+.wd-logo { position: absolute; right: 26px; bottom: 17px; width: 66px; height: 36px; pointer-events: none; }
+.wd-logo i {
+  position: absolute; inset: 0;
+  -webkit-mask: url('/brand/logo.webp') center / contain no-repeat;
+  mask: url('/brand/logo.webp') center / contain no-repeat;
+}
+.wd-logo .wd-logo-hl  { background: rgba(255, 240, 218, 0.20); transform: translateY(2.5px); }
+.wd-logo .wd-logo-ink { background: rgba(30, 22, 14, 0.40); }
+.wd-logo .wd-logo-sh  { background: rgba(0, 0, 0, 0.24); transform: translateY(-2px); filter: blur(1px); }
+
+/* cara FRONTAL de la tarjeta: saldo grabado. Tipografía/padding en em sobre un
+   font-size proporcional al ancho (lo fija el JS) → idéntica en vuelo y adoptada */
+.wd-card-front {
+  position: absolute; inset: 0; border-radius: 0.63em; overflow: hidden;
+  background-color: #15151c; /* fondo bajo la imagen metálica teñida */
+  box-shadow: inset 0 0 0 0.045em rgba(0, 0, 0, 0.45),
+              inset 0 0.045em 0 rgba(255, 255, 255, 0.18), inset 0 0 0 0.045em rgba(255, 255, 255, 0.05);
+  /* El padding superior iguala el `top` del chip (0.55em): con 0.36em la
+     etiqueta arrancaba por encima de los iconos de la derecha y el bloque se
+     veía desnivelado. El inferior queda corto porque el monto creció a 1.28em
+     y su línea base rozaba la boca del bolsillo. */
+  padding: 0.55em 0.84em 0.36em;
+  color: #fff;
+}
+/* iluminación radial suave desde arriba-derecha (propuesta C) */
+.wd-cf-glow {
+  position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background: radial-gradient(120% 90% at 78% 8%, rgba(255, 255, 255, 0.20), transparent 55%);
+}
+/* chip dorado + ondas contactless (propuesta B). Todo en em: escala con el vuelo. */
+.wd-cf-chip {
+  position: absolute; z-index: 2; right: 2.5em; top: 0.55em;
+  width: 1.55em; height: 1.19em; border-radius: 0.22em;
+  background: linear-gradient(145deg, #e8d9a8 0%, #c9b273 38%, #f0e6c0 60%, #b99f5e 100%);
+  box-shadow: inset 0 0 0 0.03em rgba(0, 0, 0, 0.28), 0 0.03em 0.07em rgba(0, 0, 0, 0.3);
+}
+.wd-cf-chip::before, .wd-cf-chip::after { content: ''; position: absolute; background: rgba(0, 0, 0, 0.26); }
+.wd-cf-chip::before { left: 0; right: 0; top: 50%; height: 0.04em; }
+.wd-cf-chip::after { top: 0.18em; bottom: 0.18em; left: 34%; width: 0.04em; }
+.wd-cf-wave {
+  position: absolute; z-index: 2; right: 0.7em; top: 0.72em;
+  width: 0.88em; height: 0.88em; color: #fff; opacity: 0.8;
+}
+/* Anclado ARRIBA a propósito: en el detalle la tarjeta vive metida en el
+   bolsillo y solo asoma su banda superior (el clip corta a la altura de la
+   boca). Centrar el monto lo escondería tras el cuero. */
+.wd-cf-content { position: relative; z-index: 1; display: block; }
+
+.wd-cf-label {
+  display: block;
+  font-family: var(--font-sans);
+  font-size: 0.42em; font-weight: 600; letter-spacing: 0.14em;
+  color: rgba(255, 255, 255, 0.78); text-transform: uppercase;
+  /* El interlineado por defecto (~1.5) es lo que más separa a este cuerpo. */
+  line-height: 1.25;
+}
+
+/* Sin la etiqueta "Saldo disponible": el monto es el único dato de la tarjeta y
+   se lee solo, así que ocupa el espacio que ella dejó. */
+.wd-cf-amount {
+  display: block;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 1.28em; font-weight: 700; letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  /* Casi pegado al label: un respiro mínimo para que no se toquen, medido en em
+     del propio cuerpo (1.28em) — ~0.05em reales. */
+  margin-top: 0.04em;
+  line-height: 1.05;
+}
+.wd-cf-amount small { font-size: 0.6em; font-weight: 700; opacity: 0.85; margin-right: 0.13em; }
+
+/* tarjeta adoptada por el layout tras encajar (el JS le fija el clip a la boca).
+   Se monta OCULTA durante el vuelo; el motor la revela en el tick del encaje. */
+.wd-static-card { position: absolute; inset: 0; visibility: hidden; }
+.wd-static-card.is-on { visibility: visible; }
+
+/* ── panel del detalle: PÁGINA ESTÁTICA (solo scrollea la lista de movimientos) ── */
+.wd-panel {
+  /* fixed a viewport (mismo plano que las capas de cuero fx en body): así el
+     sándwich trasero(z1) < panel(z10) < frontal(z40) se cumple por z-index reales.
+     left/width se fijan por JS (--wd-left/--wd-width) al ancho real del screen. */
+  position: fixed;
+  top: 0; bottom: 0;
+  left: var(--wd-left, 0px); width: var(--wd-width, 100%);
+  padding: 0 16px;
+  z-index: 10;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+  opacity: 0; visibility: hidden; transform: translateY(16px);
+  transition: opacity 0.28s var(--ease-out-strong, cubic-bezier(0.23, 1, 0.32, 1)),
+              transform 0.28s var(--ease-out-strong, cubic-bezier(0.23, 1, 0.32, 1)),
+              visibility 0s 0.28s;
+}
+.wd-screen.is-settled .wd-panel {
+  opacity: 1; visibility: visible; transform: none;
+  transition: opacity 0.32s var(--ease-out-strong, cubic-bezier(0.23, 1, 0.32, 1)),
+              transform 0.32s var(--ease-out-strong, cubic-bezier(0.23, 1, 0.32, 1)),
+              visibility 0s;
+}
+.wd-screen.is-detail .wd-carousel { opacity: 0; pointer-events: none; }
+.wd-carousel { transition: opacity 0.42s cubic-bezier(0.23, 1, 0.32, 1); }
+
+/* scroll interno de la lista (scrollbar oculta, look móvil) */
+.wd-mv-scroll {
+  flex: 1; min-height: 0;
+  overflow-y: auto;
+  /* Reserva bajo la lista para que las últimas filas puedan subir por encima del
+     bolsillo. Proporcional al alto de pantalla: un valor fijo (190px) dejaba sin
+     espacio la lista en móviles y no se veían los movimientos. */
+  padding-bottom: clamp(96px, 15vh, 190px);
+  scrollbar-width: none;
+}
+.wd-mv-scroll::-webkit-scrollbar { display: none; }
+
+/* cards de acceso y Movimientos: entran RECIÉN cuando la tarjeta encaja (is-seated) */
+.wd-reveal {
+  opacity: 0; transform: translateY(14px);
+  transition: opacity 0.3s cubic-bezier(0.23, 1, 0.32, 1), transform 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+}
+.wd-screen.is-seated .wd-reveal { opacity: 1; transform: none; }
+.wd-screen.is-seated .wd-reveal-2 { transition-delay: 0.05s; }
+.wd-screen.is-seated .wd-reveal-3 { transition-delay: 0.1s; }
+
+/* entrada de las filas: stagger gateado por el encaje */
+.wd-mv-item {
+  opacity: 0; transform: translateY(10px);
+  transition: opacity 0.28s cubic-bezier(0.23, 1, 0.32, 1), transform 0.28s cubic-bezier(0.23, 1, 0.32, 1);
+}
+.wd-screen.is-seated .wd-mv-item { opacity: 1; transform: none; transition-delay: 0.1s; }
+.wd-screen.is-seated .wd-mv-item:nth-child(2) { transition-delay: 0.13s; }
+.wd-screen.is-seated .wd-mv-item:nth-child(3) { transition-delay: 0.16s; }
+.wd-screen.is-seated .wd-mv-item:nth-child(4) { transition-delay: 0.19s; }
+.wd-screen.is-seated .wd-mv-item:nth-child(5) { transition-delay: 0.22s; }
+.wd-screen.is-seated .wd-mv-item:nth-child(6) { transition-delay: 0.25s; }
+.wd-screen.is-seated .wd-mv-item:nth-child(7) { transition-delay: 0.28s; }
+.wd-screen.is-seated .wd-mv-item:nth-child(8) { transition-delay: 0.31s; }
+
+/* traspaso entrada → scroll: en flow-live el rAF manda (sin transiciones) */
+.wd-panel.wd-flow .wd-flow-el { transition: opacity 0.3s ease, transform 0.3s ease, filter 0.3s ease; }
+.wd-panel.wd-flow-live .wd-flow-el { transition: none; }
+
+/* Salida hacia un listado (Categorías / Frecuentes / Presupuestos): sin esto el
+   push era instantáneo. Solo opacidad — el panel es fixed y su geometría la
+   miden las capas del vuelo; moverlo con transform rompería el anclaje.
+   El selector repite .is-settled: esa regla (0-3-0) fija opacity:1 y le gana a
+   un .wd-panel.is-leaving suelto (0-2-0), que por eso no se veía. */
+.wd-screen.is-settled .wd-panel.is-leaving,
+.wd-panel.is-leaving {
+  opacity: 0;
+  transition: opacity var(--dur-layer) var(--ease-sys);
+  pointer-events: none;
+}
+
+/* Vuelta desde un listado: el panel entra completo (marco incluido) en vez de
+   aparecer de golpe. Las cards y la lista NO necesitan regla propia: ya las
+   anima .wd-reveal cuando el screen recibe .is-seated — basta con que ese
+   estado llegue un frame después del montaje (ver setRestoreSeated).
+
+   Duración propia (--dur-restore), NO --dur-layer: a 300ms en móvil el retorno
+   apenas se distinguía de un corte. Tampoco se alarga .wd-reveal, que es
+   compartida con el vuelo de apertura y desincronizaría el encaje. */
+@keyframes wd-restore {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+.wd-panel.is-restored {
+  animation: wd-restore var(--dur-restore) var(--ease-sys) backwards;
+}
+/* Las cards y la lista acompañan al panel: su .wd-reveal se alarga y escalona
+   SOLO en el retorno, sin tocar la de la apertura. */
+.wd-panel.is-restored .wd-reveal {
+  transition-duration: var(--dur-restore);
+}
+.wd-screen.is-seated .wd-panel.is-restored .wd-reveal-2 { transition-delay: 0.1s; }
+.wd-screen.is-seated .wd-panel.is-restored .wd-reveal-3 { transition-delay: 0.18s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .wd-screen.is-settled .wd-panel.is-leaving,
+  .wd-panel.is-leaving { transition-duration: 1ms; }
+  .wd-panel.is-restored { animation: none; }
+}
+
+/* ── capas fx del vuelo (viewport-fixed; el dock cubre la bottom-nav z-30) ── */
+.wd-fx { position: fixed; inset: 0; pointer-events: none; }
+/* Las capas de cuero viven en <body>, fuera del panel: sin esto seguían a plena
+   opacidad mientras el panel se desvanecía hacia un listado y desaparecían de
+   golpe al desmontar — se leía como un parpadeo. Acompañan la salida. */
+body.wd-leaving .wd-fx {
+  opacity: 0;
+  transition: opacity var(--dur-layer) var(--ease-sys);
+}
+.wd-fx-under { z-index: 6; } /* cuero trasero: bajo el panel (z10) -> la lista tapa su franja superior y entra por la boca */
+.wd-fx-over  { z-index: 40; perspective: 1100px; }
+.wd-fx-leather { position: absolute; object-fit: contain; will-change: transform; }
+.wd-fx-leather.back { filter: drop-shadow(0 20px 26px rgba(0, 0, 0, 0.5)); }
+.wd-fx-leather.front {
+  clip-path: polygon(0% 14%, 30% 14%, 34% 14.6%, 38% 16.5%, 42% 19.5%,
+                     46% 21.3%, 50% 22%, 54% 21.8%, 58% 20.5%, 62% 18%,
+                     66% 15.5%, 70% 14.4%, 100% 14.4%, 100% 100%, 0% 100%);
+}
+.wd-fx-card { position: absolute; will-change: transform, opacity, filter; transform-style: preserve-3d; }
+.wd-fx-card .wd-spin { position: absolute; inset: 0; will-change: transform; transform-style: preserve-3d; }
+.wd-fx-card .wd-face { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.wd-fx-card .wd-face.front { transform: rotateY(180deg); }
+/* sombra de la tarjeta EN VUELO: solo en la capa fx; el encaje la funde a cero
+   (una tarjeta dentro del bolsillo no proyecta sombra) */
+.wd-fx-card .wd-face.front { filter: drop-shadow(0 5px 9px rgba(0, 0, 0, 0.3)); will-change: filter; }
+.wd-fx-card img { position: absolute; inset: 0; width: 100%; height: 100%; filter: drop-shadow(0 5px 9px rgba(0, 0, 0, 0.35)); }
+.wd-fx-card .wd-tint {
+  position: absolute; inset: 0;
+  background: var(--tint); mix-blend-mode: color; opacity: 0.55;
+  -webkit-mask: url('/wallets/card-flat.webp') center / contain no-repeat;
+  mask: url('/wallets/card-flat.webp') center / contain no-repeat;
+}
+/* clon del bolsillo del marco: recorta la tarjeta al encajar; aparece con el panel */
+.wd-fx-strip-front {
+  position: absolute; pointer-events: none;
+  opacity: 0; transition: opacity 0.32s cubic-bezier(0.23, 1, 0.32, 1);
+}
+.wd-fx-strip-front > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: fill; }
+.wd-fx-strip-front.is-settled { opacity: 1; }
+
+/* el panel del detalle es fixed: ningún ancestro puede tener transform (rompería
+   el anclaje al viewport). page-enter termina en transform:none, pero lo forzamos. */
+body.wallet-detail-open .page-enter { transform: none !important; animation: none; }
+
+/* con el detalle abierto, el chrome de la página se retira: la top-bar (avatar +
+   título) desaparece dejando solo el ← del panel, y la bottom-nav no debe recibir
+   taps bajo el cuero anclado. Solo opacidad: el layout no se mueve (la geometría
+   del vuelo depende de él). */
+body.wallet-detail-open .topbar-host,
+body.wallet-detail-open .bottomnav-host { opacity: 0; pointer-events: none; }
+.topbar-host, .bottomnav-host { transition: opacity 0.3s ease; }
+
+/* Los sheets llevan `select-none`: montan bajo el dedo durante un long-press y
+   el navegador extendía la selección hasta su título. Los campos sí deben
+   dejar seleccionar su contenido — sin esto no se puede corregir un monto a
+   medias en iOS. */
+input, textarea {
+  -webkit-user-select: text;
+  user-select: text;
 }

@@ -1,16 +1,25 @@
 'use client'
 
-import { AnimatePresence } from 'framer-motion'
+import { useRef, useState } from 'react'
 
 import { CreateSelectorSheet } from '@/components/features/expenses/CreateSelectorSheet'
 import { ExpenseForm } from '@/components/features/expenses/ExpenseForm'
 import { IncomeForm } from '@/components/features/incomes/IncomeForm'
+import { type TxSummary, txDialogDescription, txDialogTitle } from '@/components/features/shared/txSummary'
 import { TransferSheet } from '@/components/features/wallets/TransferSheet'
-import { Sheet } from '@/components/ui/Sheet'
+import { Sheet, useSheetClose } from '@/components/ui/Sheet'
+import { SuccessDialog } from '@/components/ui/SuccessDialog'
+import { useCategories } from '@/lib/hooks/useCategories'
 import { useDeleteExpense } from '@/lib/hooks/useExpenses'
 import { useDeleteIncome } from '@/lib/hooks/useIncomes'
+import { useCreateTransfer } from '@/lib/hooks/useTransfers'
 import { useWallets } from '@/lib/hooks/useWallets'
 import { useSheetStore } from '@/stores/sheetStore'
+
+
+function SheetBody({ render }: { render: (close: () => void) => React.ReactNode }) {
+  return <>{render(useSheetClose())}</>
+}
 
 export function SheetHost() {
   const active = useSheetStore((s) => s.active)
@@ -19,6 +28,35 @@ export function SheetHost() {
   const { data: wallets = [] } = useWallets()
   const deleteExpense = useDeleteExpense()
   const deleteIncome = useDeleteIncome()
+  const transfer = useCreateTransfer()
+
+  const pending = useRef<TxSummary | null>(null)
+  const [saved, setSaved] = useState<TxSummary | null>(null)
+
+  useCategories('EXPENSE')
+  useCategories('INCOME')
+
+  function announce(summary: TxSummary) {
+    pending.current = summary
+  }
+
+
+  function dismissSheet() {
+    close()
+    const summary = pending.current
+    if (!summary) return
+    pending.current = null
+    requestAnimationFrame(() => setSaved(summary))
+  }
+
+
+  function dismiss() {
+    const kind = saved?.kind
+    setSaved(null)
+    if (kind === 'expense') deleteExpense.refresh()
+    else if (kind === 'income') deleteIncome.refresh()
+    else if (kind === 'transfer') transfer.refresh()
+  }
 
   function title(): string | undefined {
     if (!active) return undefined
@@ -32,36 +70,47 @@ export function SheetHost() {
   }
 
   return (
-    <AnimatePresence>
+    <>
+      {/* Sin AnimatePresence: el sheet anima su salida por CSS y retrasa el
+          onClose hasta que termina (ver `closing` en ui/Sheet). */}
       {active && (
-        <Sheet key={active.kind + ('id' in active ? `-${active.id ?? 'new'}` : '')} onClose={close} title={title()}>
+        <Sheet key={active.kind + ('id' in active ? `-${active.id ?? 'new'}` : '')} onClose={dismissSheet} title={title()}>
           {active.kind === 'selector' && (
             <CreateSelectorSheet onSelect={(s) => open(s)} />
           )}
 
           {active.kind === 'expense-form' && (
-            <ExpenseForm
-              expenseId={active.id}
-              onDone={close}
-              onRequestDelete={active.id ? () => open({ kind: 'confirm-delete', id: active.id!, txType: 'expense', label: 'gasto' }) : undefined}
-            />
+            <SheetBody render={(dismiss) => (
+              <ExpenseForm
+                expenseId={active.id}
+                onDone={dismiss}
+                onSaved={announce}
+                onRequestDelete={active.id ? () => open({ kind: 'confirm-delete', id: active.id!, txType: 'expense', label: 'gasto' }) : undefined}
+              />
+            )} />
           )}
 
           {active.kind === 'income-form' && (
-            <IncomeForm
-              incomeId={active.id}
-              onDone={close}
-              onRequestDelete={active.id ? () => open({ kind: 'confirm-delete', id: active.id!, txType: 'income', label: 'ingreso' }) : undefined}
-            />
+            <SheetBody render={(dismiss) => (
+              <IncomeForm
+                incomeId={active.id}
+                onDone={dismiss}
+                onSaved={announce}
+                onRequestDelete={active.id ? () => open({ kind: 'confirm-delete', id: active.id!, txType: 'income', label: 'ingreso' }) : undefined}
+              />
+            )} />
           )}
 
           {active.kind === 'transfer' && (
             <div className="px-4 pb-6 pt-2">
-              <TransferSheet wallets={wallets} onDone={close} />
+              <SheetBody render={(dismiss) => (
+                <TransferSheet wallets={wallets} onDone={dismiss} onSaved={announce} />
+              )} />
             </div>
           )}
 
           {active.kind === 'confirm-delete' && (
+            <SheetBody render={(closeSheet) => (
             <div className="flex flex-col gap-4 px-5 pb-6 pt-4">
               <div>
                 <p className="t-title" style={{ color: 'var(--text-primary)' }}>¿Eliminar {active.label}?</p>
@@ -69,17 +118,19 @@ export function SheetHost() {
               </div>
               <div className="flex gap-2">
                 <button
-                  onClick={close}
+                  onClick={closeSheet}
                   className="h-11 flex-1 rounded-full text-[13px] font-semibold cursor-pointer"
                   style={{ background: 'var(--bg-hover)', color: 'var(--text-secondary)' }}
                 >
                   Cancelar
                 </button>
                 <button
-                  onClick={() => {
-                    if (active.txType === 'expense') deleteExpense.mutate(active.id)
-                    else deleteIncome.mutate(active.id)
-                    close()
+                  onClick={async () => {
+                    const isExpense = active.txType === 'expense'
+                    if (isExpense) await deleteExpense.mutateAsync(active.id)
+                    else await deleteIncome.mutateAsync(active.id)
+                    announce({ kind: isExpense ? 'expense' : 'income', edited: false, amount: 0, label: '', deleted: true })
+                    closeSheet()
                   }}
                   className="h-11 flex-1 rounded-full text-[13px] font-bold cursor-pointer"
                   style={{ background: 'var(--danger)', color: '#fff' }}
@@ -88,9 +139,17 @@ export function SheetHost() {
                 </button>
               </div>
             </div>
+            )} />
           )}
         </Sheet>
       )}
-    </AnimatePresence>
+
+      <SuccessDialog
+        open={saved != null}
+        title={saved ? txDialogTitle(saved) : ''}
+        description={saved ? txDialogDescription(saved) : undefined}
+        onClose={dismiss}
+      />
+    </>
   )
 }

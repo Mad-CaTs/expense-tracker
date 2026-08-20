@@ -1,3 +1,5 @@
+import { useCallback } from 'react'
+
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import {
@@ -16,27 +18,21 @@ export function useCategories(type?: CategoryType) {
   })
 }
 
-export function useCreateCategory() {
+function useCategoryMutation<TVars, TData = unknown>(fn: (vars: TVars) => Promise<TData>) {
   const qc = useQueryClient()
-  return useMutation({
-    mutationFn: (data: Omit<Category, 'id'>) => createCategory(data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['categories'] }),
-  })
+  const mutation = useMutation({ mutationFn: fn })
+  const refresh = useCallback(() => {
+    qc.invalidateQueries({ queryKey: ['categories'] })
+    qc.invalidateQueries({ queryKey: ['reports'] })
+  }, [qc])
+  return { ...mutation, refresh }
 }
 
-export function useUpdateCategory() {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Omit<Category, 'id'> }) =>
-      updateCategory(id, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['categories'] }),
-  })
-}
+export const useCreateCategory = () =>
+  useCategoryMutation((data: Omit<Category, 'id'>) => createCategory(data))
 
-export function useDeleteCategory() {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: (id: number) => deleteCategory(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['categories'] }),
-  })
-}
+export const useUpdateCategory = () =>
+  useCategoryMutation(({ id, data }: { id: number; data: Omit<Category, 'id'> }) => updateCategory(id, data))
+
+export const useDeleteCategory = () =>
+  useCategoryMutation((id: number) => deleteCategory(id))

@@ -63,7 +63,24 @@ public class AuthService {
         String accessToken = jwtService.generateAccessToken(user, scope);
         String rawRefresh = generateAndSaveRefreshToken(user, UUID.randomUUID().toString());
 
-        return new LoginResponseDTO(accessToken, rawRefresh, user.isMustChangePassword(), user.getUsername());
+        return new LoginResponseDTO(
+                accessToken,
+                rawRefresh,
+                user.isMustChangePassword(),
+                user.getOnboardingCompletedAt() != null,
+                user.getUsername());
+    }
+
+    @Transactional
+    public void completeOnboarding(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
+
+        if (user.getOnboardingCompletedAt() != null) {
+            return;
+        }
+        user.setOnboardingCompletedAt(LocalDateTime.now());
+        userRepository.save(user);
     }
 
     @Transactional(noRollbackFor = BadCredentialsException.class)

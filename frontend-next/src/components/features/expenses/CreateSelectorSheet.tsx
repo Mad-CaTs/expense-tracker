@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion'
 import { ArrowLeftRight, TrendingDown, TrendingUp } from 'lucide-react'
 
+import { EASE, MOTION_S } from '@/lib/utils/motion'
 import type { ActiveSheet } from '@/stores/sheetStore'
 
 interface CreateSelectorSheetProps {
@@ -24,7 +25,7 @@ export function CreateSelectorSheet({ onSelect }: CreateSelectorSheetProps) {
           type="button"
           onClick={() => onSelect(opt.sheet)}
           whileTap={{ scale: 0.98 }}
-          transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+          transition={{ duration: MOTION_S.press, ease: EASE }}
           className="flex items-center gap-3 rounded-[var(--r-md)] px-4 py-3.5 text-left transition-colors cursor-pointer"
           style={{ background: 'var(--surface-raised)' }}
         >

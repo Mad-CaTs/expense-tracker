@@ -1,19 +1,16 @@
 'use client'
 
-import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
-import { Plus } from 'lucide-react'
+import { History, Plus } from 'lucide-react'
 
 import { BudgetCategoryIcon } from '@/components/features/budgets/BudgetCategoryIcon'
-import { BudgetSheet } from '@/components/features/budgets/BudgetSheet'
+import { useActiveWallet } from '@/lib/hooks/useActiveWallet'
 import { useBudgets } from '@/lib/hooks/useBudgets'
-import { walletAura } from '@/lib/utils/cardVisuals'
-import { useFilterStore } from '@/stores/filterStore'
+import { categoryAura, categorySwatch } from '@/lib/utils/cardVisuals'
 import type { Budget } from '@/types'
 
 function BudgetMiniCard({ budget, index, onOpen }: { budget: Budget; index: number; onOpen: () => void }) {
-  const reduce = useReducedMotion()
   const spent = budget.spent ?? 0
   const amount = budget.amount ?? 0
   const remaining = amount - spent
@@ -21,30 +18,29 @@ function BudgetMiniCard({ budget, index, onOpen }: { budget: Budget; index: numb
   const pct = Math.min(pctRaw, 100)
   const isOver = pctRaw > 100
   const color = budget.categoryColor ?? '#d4af37'
+  const iconColor = categorySwatch(color)
 
-  // Aurora derivada del color de la categoría (mismo mesh que los wallets)
-  const aura = walletAura(color)
+  const aura = categoryAura(color)
 
   return (
-    <motion.div
-      initial={reduce ? { opacity: 0 } : { opacity: 0, y: 24, scale: 0.92 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={reduce ? { duration: 0.2 } : { type: 'spring', stiffness: 260, damping: 24, delay: index * 0.09 }}
-      className="relative flex-shrink-0 rounded-[24px]"
+    <div
+      className="enter-pop relative flex-shrink-0 rounded-[20px]"
       style={{
         width: 'calc((100vw - 2rem - 0.75rem) / 2)',
         maxWidth: '220px',
         height: '196px',
         boxShadow: '0 1px 3px rgba(0,0,0,0.14)',
+        scrollSnapAlign: 'start',
+        ['--enter-i' as string]: index,
       }}
     >
       {/* Contenedor interior: recorta la aurora (la sombra vive en el wrapper para no cortarse) */}
       <div
-        className="relative flex h-full w-full flex-col justify-end overflow-hidden rounded-[24px]"
+        className="relative flex h-full w-full flex-col justify-end overflow-hidden rounded-[20px]"
         style={{ background: aura.base }}
       >
       {/* Aurora animada */}
-      <div className="wallet-aura" aria-hidden>
+      <div className="wallet-aura aura-soft" aria-hidden>
         <span className="wallet-blob b1" style={{ background: aura.blobs[0] }} />
         <span className="wallet-blob b2" style={{ background: aura.blobs[1] }} />
         <span className="wallet-blob b3" style={{ background: aura.blobs[2] }} />
@@ -70,7 +66,7 @@ function BudgetMiniCard({ budget, index, onOpen }: { budget: Budget; index: numb
           className="mt-[11px] flex h-9 w-9 items-center justify-center rounded-full bg-white"
           style={{ boxShadow: '0 2px 6px rgba(0,0,0,0.15)' }}
         >
-          <span style={{ color, lineHeight: 0 }}>
+          <span style={{ color: iconColor, lineHeight: 0 }}>
             <BudgetCategoryIcon name={budget.categoryIcon} size={19} />
           </span>
         </div>
@@ -89,12 +85,9 @@ function BudgetMiniCard({ budget, index, onOpen }: { budget: Budget; index: numb
 
         {/* Barra (deja libre la zona del FAB) — fill anima con scaleX (GPU), no width */}
         <div className="mr-[42px] mt-3 h-[6px] overflow-hidden rounded-full" style={{ background: 'rgba(255,255,255,0.25)' }}>
-          <motion.div
-            initial={reduce ? { opacity: 0 } : { transform: 'scaleX(0)' }}
-            animate={reduce ? { opacity: 1 } : { transform: 'scaleX(1)' }}
-            transition={{ duration: reduce ? 0.2 : 0.6, ease: [0.32, 0.72, 0, 1], delay: reduce ? 0 : index * 0.05 + 0.1 }}
-            className="h-full rounded-full"
-            style={{ width: `${pct}%`, transformOrigin: 'left', background: isOver ? '#ffd9d0' : '#fff' }}
+          <div
+            className="enter-grow h-full rounded-full"
+            style={{ width: `${pct}%`, background: isOver ? '#ffd9d0' : '#fff', ['--enter-i' as string]: index }}
           />
         </div>
 
@@ -103,56 +96,91 @@ function BudgetMiniCard({ budget, index, onOpen }: { budget: Budget; index: numb
         </p>
       </div>
 
-      {/* FAB */}
+      {/* Lleva a los movimientos de la categoría, igual que "Historial" en la
+          tarjeta de billetera: desde el resumen se va al detalle. */}
       <button
         type="button"
         onClick={onOpen}
-        aria-label={`Editar presupuesto de ${budget.categoryName ?? 'categoría'}`}
+        aria-label={`Ver movimientos de ${budget.categoryName ?? 'la categoría'}`}
         className="absolute bottom-[13px] right-[13px] z-[3] flex h-[34px] w-[34px] items-center justify-center rounded-full text-white transition-transform active:scale-90"
         style={{ background: 'rgba(255,255,255,0.22)', backdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,0.3)' }}
       >
-        <Plus size={17} strokeWidth={2.4} />
+        <History size={16} strokeWidth={2.2} />
       </button>
       </div>
-    </motion.div>
+    </div>
+  )
+}
+
+function BudgetGhostCard({ onCreate }: { onCreate: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onCreate}
+      className="liquid-glass enter-pop flex h-[196px] w-full max-w-[220px] flex-shrink-0 flex-col rounded-[20px] p-[15px] text-left transition-transform active:scale-[0.985]"
+      style={{ ['--enter-i' as string]: 0 }}
+    >
+      {/* El + arriba, donde la tarjeta real lleva el icono de categoría. */}
+      <span
+        className="liquid-glass-ic flex h-9 w-9 flex-none items-center justify-center rounded-full"
+        style={{ color: 'var(--text-secondary)' }}
+      >
+        <Plus size={17} strokeWidth={2} />
+      </span>
+
+      {/* mt-auto: el texto se apoya en el fondo, como en la tarjeta real. */}
+      <span className="mt-auto block">
+        <span className="mb-1.5 block text-[15px] font-bold leading-tight tracking-[-0.01em]" style={{ color: 'var(--text-secondary)' }}>
+          Nuevo<br />presupuesto
+        </span>
+        <span className="mb-3 block text-[11px] leading-[1.45]" style={{ color: 'var(--text-muted)' }}>
+          Pon un límite por categoría
+        </span>
+        {/* La barra vacía: el hueco que va a llenar el gasto. */}
+        <span
+          className="mr-[42px] block h-[6px] rounded-full"
+          style={{ background: 'var(--bg-hover)' }}
+        />
+      </span>
+    </button>
   )
 }
 
 export function BudgetCarousel() {
-  const walletId = useFilterStore((s) => s.walletId)
-  const { data: budgets = [] } = useBudgets(walletId)
-  const [showSheet, setShowSheet] = useState(false)
+  const router = useRouter()
+  const walletId = useActiveWallet()
+  const { data: budgets = [] } = useBudgets(walletId, { requireWallet: true })
 
   return (
     <>
       <div className="pt-2 -mb-3">
         {budgets.length === 0 ? (
-          <button
-            type="button"
-            onClick={() => setShowSheet(true)}
-            className="mx-4 flex w-[calc(100%-2rem)] flex-col items-center justify-center gap-1.5 rounded-[24px] border border-dashed py-8"
-            style={{ borderColor: 'var(--border-strong)', color: 'var(--text-placeholder)' }}
-          >
-            <Plus size={18} />
-            <span className="text-[11px] font-medium">Crea tu primer presupuesto</span>
-          </button>
+          <div className="flex px-4 pb-6 pt-1">
+            {/* A /budgets, no al sheet: crear el primero es entrar a la sección,
+                igual que hace el ⋯ de la cabecera. */}
+            <BudgetGhostCard onCreate={() => router.push('/budgets')} />
+          </div>
         ) : (
-          // pb amplio: la sombra necesita espacio dentro del área de scroll (overflow-x
-          // recorta también el overflow-y). El -mb del wrapper compensa el layout.
           <div
             className="flex gap-3 overflow-x-auto px-4 pb-6 pt-1"
-            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            style={{
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
+              scrollSnapType: 'x mandatory',
+              scrollPaddingLeft: '1rem',
+            }}
           >
             {budgets.map((b, i) => (
-              <BudgetMiniCard key={b.id} budget={b} index={i} onOpen={() => setShowSheet(true)} />
+              <BudgetMiniCard
+                key={b.id}
+                budget={b}
+                index={i}
+                onOpen={() => { if (b.categoryId) router.push(`/categories/${b.categoryId}`) }}
+              />
             ))}
           </div>
         )}
       </div>
-
-      <AnimatePresence>
-        {showSheet && <BudgetSheet onClose={() => setShowSheet(false)} />}
-      </AnimatePresence>
     </>
   )
 }

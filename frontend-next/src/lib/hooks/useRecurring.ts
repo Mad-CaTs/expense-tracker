@@ -1,3 +1,5 @@
+import { useCallback } from 'react'
+
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import {
@@ -8,30 +10,26 @@ import {
 } from '@/lib/api/recurring'
 import type { CreateRecurringPayload } from '@/types'
 
-export function useRecurring(walletId?: number) {
-  return useQuery({ queryKey: ['recurring', walletId ?? null], queryFn: () => getRecurring(walletId) })
-}
-
-export function useCreateRecurring() {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: (data: CreateRecurringPayload) => createRecurring(data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['recurring'] }),
+export function useRecurring(walletId?: number, options?: { requireWallet?: boolean }) {
+  return useQuery({
+    queryKey: ['recurring', walletId ?? null],
+    queryFn: () => getRecurring(walletId),
+    enabled: options?.requireWallet ? walletId != null : true,
   })
 }
 
-export function useToggleRecurring() {
+function useRecurringMutation<TVars>(fn: (vars: TVars) => Promise<unknown>) {
   const qc = useQueryClient()
-  return useMutation({
-    mutationFn: toggleRecurring,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['recurring'] }),
-  })
+  const mutation = useMutation({ mutationFn: fn })
+  const refresh = useCallback(() => {
+    qc.invalidateQueries({ queryKey: ['recurring'] })
+  }, [qc])
+  return { ...mutation, refresh }
 }
 
-export function useDeleteRecurring() {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: deleteRecurring,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['recurring'] }),
-  })
-}
+export const useCreateRecurring = () =>
+  useRecurringMutation((data: CreateRecurringPayload) => createRecurring(data))
+
+export const useToggleRecurring = () => useRecurringMutation(toggleRecurring)
+
+export const useDeleteRecurring = () => useRecurringMutation(deleteRecurring)

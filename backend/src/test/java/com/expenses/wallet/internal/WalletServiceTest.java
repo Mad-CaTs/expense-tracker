@@ -56,7 +56,6 @@ class WalletServiceTest {
 
         BigDecimal balance = walletService.calculateBalance(10L, 1L);
 
-        // 100 + 70 - 40
         assertThat(balance).isEqualByComparingTo("130.00");
     }
 
@@ -75,8 +74,8 @@ class WalletServiceTest {
         var result = walletService.findAll(1L);
 
         assertThat(result).hasSize(2);
-        assertThat(result.get(0).balance()).isEqualByComparingTo("115.00"); // 100+50-35
-        assertThat(result.get(1).balance()).isEqualByComparingTo("1005.00"); // 1000+5
+        assertThat(result.get(0).balance()).isEqualByComparingTo("115.00");
+        assertThat(result.get(1).balance()).isEqualByComparingTo("1005.00");
         verify(contribution, never()).inflow(anyLong(), anyLong());
         verify(contribution, never()).outflow(anyLong(), anyLong());
     }

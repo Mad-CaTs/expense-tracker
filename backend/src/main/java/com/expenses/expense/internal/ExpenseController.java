@@ -42,7 +42,7 @@ public class ExpenseController {
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
         Long userId = userResolver.getCurrentUserId();
         return PageResponse.from(expenseService.findAll(from, to, categoryId, walletId, userId,
-                PageRequest.of(page, size, Sort.by("date").descending())));
+                PageRequest.of(page, size, Sort.by(Sort.Order.desc("date"), Sort.Order.desc("id")))));
     }
 
     @GetMapping("/{id}")

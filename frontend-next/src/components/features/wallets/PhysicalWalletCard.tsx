@@ -38,7 +38,7 @@ export function PhysicalWalletCard({
       layout
       whileTap={{ scale: 0.99 }}
       transition={{ type: 'spring', stiffness: 400, damping: 32 }}
-      className="relative overflow-hidden rounded-[22px] cursor-pointer"
+      className="relative overflow-hidden rounded-[18px] cursor-pointer"
       style={{ ...bgStyle, boxShadow: expanded ? '0 18px 40px -12px rgba(0,0,0,0.55)' : '0 8px 22px -10px rgba(0,0,0,0.45)' }}
     >
       {/* Lengüeta (siempre visible) */}

@@ -1,22 +1,19 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
 
-import { AnimatePresence, motion, useMotionValue, useReducedMotion, useSpring, useTransform } from 'framer-motion'
-// useTransform kept for rotateX/rotateY tilt
+import { AnimatePresence, motion, useMotionValue, useSpring, useTransform } from 'framer-motion'
 import { Eye, EyeOff, History, Plus, TrendingDown, TrendingUp } from 'lucide-react'
 
 import { WalletSheet } from '@/components/features/expenses/WalletSheet'
+import { WalletBalanceAmount } from '@/components/features/wallets/WalletBalanceAmount'
 import { useWallets } from '@/lib/hooks/useWallets'
-import { walletAura } from '@/lib/utils/cardVisuals'
+import { categoryAura } from '@/lib/utils/cardVisuals'
+import { EASE, MOTION_S } from '@/lib/utils/motion'
 import type { Wallet } from '@/types'
 
-// Logo de la app (bucket público R2)
-const LOGO_URL = 'https://pub-9be4d45b1f4e4c9a869f708de0984f55.r2.dev/Logo%20negro%20sin%20fondo.png'
-
-function formatBalance(n: number) {
-  return n.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-}
+const LOGO_URL = '/brand/logo.webp'
 
 function WalletCard({
   wallet,
@@ -35,17 +32,14 @@ function WalletCard({
   onSelect: () => void
   onShowMovements: () => void
 }) {
-  const reduce = useReducedMotion()
   const balance = Number(wallet.balance)
   const initial = Number(wallet.initialBalance)
   const diff = balance - initial
   const pct = initial !== 0 ? ((diff / Math.abs(initial)) * 100).toFixed(1) : null
   const positive = diff >= 0
 
-  // Aurora animada derivada del color del wallet (mesh gradient en movimiento)
-  const aura = walletAura(wallet.color ?? '#d4af37')
+  const aura = categoryAura(wallet.color ?? '#d4af37')
 
-  // Spring-based tilt — only on pointer devices, decorative
   const cardRef = useRef<HTMLDivElement>(null)
   const rawX = useMotionValue(0)
   const rawY = useMotionValue(0)
@@ -67,7 +61,6 @@ function WalletCard({
     rawY.set(0)
   }
 
-  // Anillo de selección dorado; sin borde ni sombra cuando no está seleccionada
   const boxShadow = selected ? '0 0 0 2px var(--accent)' : 'none'
 
   return (
@@ -80,23 +73,22 @@ function WalletCard({
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect() } }}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      initial={reduce ? { opacity: 0 } : { opacity: 0, y: 24, scale: 0.92 }}
-      animate={{ opacity: 1, y: 0, scale: 1, transition: reduce ? { duration: 0.2 } : { type: 'spring', stiffness: 260, damping: 24, delay: index * 0.09 } }}
       whileTap={{ scale: 0.985 }}
-      transition={{ type: 'spring', stiffness: 380, damping: 28 }}
+      transition={{ duration: MOTION_S.press, ease: EASE }}
       style={{
         rotateX,
         rotateY,
         boxShadow,
+        ['--enter-i' as string]: index,
       }}
-      className="relative flex-shrink-0 w-full rounded-[28px] text-left cursor-pointer"
+      className="enter-pop relative flex-shrink-0 w-full rounded-[22px] text-left cursor-pointer"
     >
       <div
-        className="relative rounded-[28px] overflow-hidden"
+        className="relative rounded-[22px] overflow-hidden"
         style={{ background: aura.base }}
       >
         {/* Aurora animada (blobs difuminados) */}
-        <div className="wallet-aura" aria-hidden>
+        <div className="wallet-aura aura-soft" aria-hidden>
           <span className="wallet-blob b1" style={{ background: aura.blobs[0] }} />
           <span className="wallet-blob b2" style={{ background: aura.blobs[1] }} />
           <span className="wallet-blob b3" style={{ background: aura.blobs[2] }} />
@@ -112,6 +104,7 @@ function WalletCard({
               src={LOGO_URL}
               alt=""
               aria-hidden
+              decoding="async"
               style={{
                 width: '54px',
                 height: '36px',
@@ -164,7 +157,14 @@ function WalletCard({
               className="text-[32px] font-bold leading-none tracking-[-0.03em] tabular-nums"
               style={{ color: '#fff', textShadow: '0 1px 18px rgba(0,0,0,0.25)' }}
             >
-              {hidden ? 'S/ ••••••' : `S/ ${formatBalance(balance)}`}
+              {hidden ? (
+                'S/ ••••••'
+              ) : (
+                <>
+                  S/{' '}
+                  <WalletBalanceAmount walletId={wallet.id} balance={balance} />
+                </>
+              )}
             </p>
 
             <button
@@ -190,8 +190,8 @@ function AddWalletCard({ onClick, full = false }: { onClick: () => void; full?: 
       type="button"
       onClick={onClick}
       whileTap={{ scale: 0.97 }}
-      transition={{ type: 'spring', stiffness: 400, damping: 28 }}
-      className={`${full ? 'w-full' : 'flex-shrink-0 w-[140px]'} rounded-[22px] border border-dashed flex flex-col items-center justify-center gap-2 py-8`}
+      transition={{ duration: MOTION_S.press, ease: EASE }}
+      className={`${full ? 'w-full' : 'flex-shrink-0 w-[140px]'} rounded-[18px] border border-dashed flex flex-col items-center justify-center gap-2 py-8`}
       style={{ borderColor: 'var(--border-subtle)', color: 'var(--text-placeholder)' }}
     >
       <Plus size={20} />
@@ -202,10 +202,11 @@ function AddWalletCard({ onClick, full = false }: { onClick: () => void; full?: 
 
 interface WalletCarouselProps {
   selectedWalletId?: number
-  onSelect: (id: number | undefined) => void
+  onSelect: (id: number) => void
 }
 
 export function WalletCarousel({ selectedWalletId, onSelect }: WalletCarouselProps) {
+  const router = useRouter()
   const { data: wallets = [] } = useWallets()
   const [showSheet, setShowSheet] = useState(false)
   const [hidden, setHidden] = useState(false)
@@ -255,8 +256,8 @@ export function WalletCarousel({ selectedWalletId, onSelect }: WalletCarouselPro
                 hidden={hidden}
                 index={i}
                 onToggleHidden={() => setHidden((v) => !v)}
-                onSelect={() => onSelect(selectedWalletId === w.id ? undefined : w.id)}
-                onShowMovements={() => onSelect(w.id)}
+                onSelect={() => onSelect(w.id)}
+                onShowMovements={() => router.push(`/wallets?w=${w.id}`)}
               />
             </div>
           ))}
@@ -276,7 +277,7 @@ export function WalletCarousel({ selectedWalletId, onSelect }: WalletCarouselPro
                   ? (w.color ?? 'var(--accent-light)')
                   : 'var(--border-strong)',
               }}
-              transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+              transition={{ duration: MOTION_S.tint, ease: EASE }}
               style={{ height: '6px' }}
             />
           ))}

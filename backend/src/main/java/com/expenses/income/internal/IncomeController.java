@@ -32,7 +32,7 @@ public class IncomeController {
             @RequestParam(defaultValue = "0") @Min(0) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
         return PageResponse.from(incomeService.findAll(from, to, walletId, userResolver.getCurrentUserId(),
-                PageRequest.of(page, size, Sort.by("date").descending())));
+                PageRequest.of(page, size, Sort.by(Sort.Order.desc("date"), Sort.Order.desc("id")))));
     }
 
     @GetMapping("/{id}")

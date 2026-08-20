@@ -5,8 +5,6 @@ import { Providers } from '@/providers/Providers'
 
 import './globals.css'
 
-// Inter = sustituto web de SF Pro Display (métricas casi idénticas) para
-// dispositivos sin SF Pro. El stack en globals.css prioriza SF Pro real cuando existe.
 const interSans = Inter({
   variable: '--font-inter',
   subsets: ['latin'],
@@ -26,7 +24,12 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es" className={`${interSans.variable} ${geistMono.variable} h-full dark`} suppressHydrationWarning>
+    <html
+      lang="es"
+      className={`${interSans.variable} ${geistMono.variable} h-full dark`}
+      data-scroll-behavior="smooth"
+      suppressHydrationWarning
+    >
       <head>
         <script
           dangerouslySetInnerHTML={{

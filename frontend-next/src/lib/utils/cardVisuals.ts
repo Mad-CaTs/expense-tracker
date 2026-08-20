@@ -25,9 +25,6 @@ function hexToHsl(hex: string): { h: number; s: number; l: number } {
   return { h, s: s * 100, l: l * 100 }
 }
 
-// Paleta de "aurora" animada MONOCROMÁTICA derivada del color del wallet (estilo skylrk):
-// un único tono (el del wallet) que varía solo en luminosidad — base casi-negra → glow
-// brillante. Sin tonos análogos: el wallet azul fluye solo en azules, etc.
 export function walletAura(color: string): { base: string; blobs: [string, string, string, string] } {
   let hsl: { h: number; s: number; l: number }
   try {
@@ -37,18 +34,52 @@ export function walletAura(color: string): { base: string; blobs: [string, strin
   }
   const h = Math.round(hsl.h)
   const s = Math.max(45, Math.min(Math.round(hsl.s), 82))
-  const base = `hsl(${h} ${Math.round(s * 0.7)}% 9%)`
+  const base = `hsl(${h} ${Math.round(s * 0.6)}% 6%)`
   const blobs: [string, string, string, string] = [
-    `hsl(${h} ${s}% 38%)`,
-    `hsl(${h} ${s}% 54%)`,
-    `hsl(${h} ${Math.max(s - 18, 28)}% 70%)`, // glow brillante (algo desaturado → tiende a blanco)
-    `hsl(${h} ${s}% 30%)`,                     // tono medio-oscuro para profundidad
+    `hsl(${h} ${s}% 16%)`,                     // penumbra
+    `hsl(${h} ${s}% 54%)`,                     // el único foco de luz
+    `hsl(${h} ${Math.max(s - 18, 28)}% 60%)`,  // halo del foco (desaturado)
+    `hsl(${h} ${s}% 12%)`,                     // sombra profunda
   ]
   return { base, blobs }
 }
 
-// Hue + saturación de un color de categoría, para la aurora animada de los segmentos
-// del gráfico de MOVIMIENTOS (mismo lenguaje visual monocromático que walletAura).
+
+export function categoryAura(color: string): { base: string; blobs: [string, string, string, string] } {
+  let hsl: { h: number; s: number; l: number }
+  try {
+    hsl = hexToHsl(color)
+  } catch {
+    hsl = { h: 45, s: 65, l: 50 }
+  }
+  const h = Math.round(hsl.h)
+  const s = Math.max(30, Math.min(Math.round(hsl.s), 52))
+  const focus = 40
+  return {
+    base: `hsl(${h} ${Math.round(s * 0.6)}% 8%)`,
+    blobs: [
+      `hsl(${h} ${s}% ${Math.round(focus * 0.3)}%)`,        // penumbra
+      `hsl(${h} ${s}% ${focus}%)`,                          // foco
+      `hsl(${h} ${Math.max(s - 18, 20)}% ${focus + 6}%)`,   // halo
+      `hsl(${h} ${s}% ${Math.round(focus * 0.22)}%)`,       // sombra
+    ],
+  }
+}
+
+
+export function categorySwatch(color: string): string {
+  let hsl: { h: number; s: number; l: number }
+  try {
+    hsl = hexToHsl(color)
+  } catch {
+    hsl = { h: 45, s: 65, l: 50 }
+  }
+  const h = Math.round(hsl.h)
+  const s = Math.max(30, Math.min(Math.round(hsl.s), 52))
+  return `hsl(${h} ${s}% 46%)`
+}
+
+
 export function categoryHueSat(color: string): { h: number; s: number } {
   let hsl: { h: number; s: number; l: number }
   try {
@@ -62,7 +93,6 @@ export function categoryHueSat(color: string): { h: number; s: number } {
   }
 }
 
-// Crecimiento vs saldo inicial (mismo cálculo que WalletCarousel). null si initial === 0.
 export function walletGrowth(
   balance: number,
   initialBalance: number,

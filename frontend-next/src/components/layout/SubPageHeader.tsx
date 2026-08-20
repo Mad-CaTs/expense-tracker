@@ -1,31 +1,41 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
+import { ArrowLeft } from 'lucide-react'
 
-import { ChevronLeft } from 'lucide-react'
-
-export function SubPageHeader({ title, action }: { title: string; action?: React.ReactNode }) {
-  const router = useRouter()
-
+export function SubPageHeader({
+  title,
+  action,
+  onBack,
+}: {
+  /** Omitirlo deja solo el ←, para pantallas que ya se nombran solas. */
+  title?: string
+  action?: React.ReactNode
+  /** Permite animar la salida antes de navegar (ver useSubPageExit). */
+  onBack: () => void
+}) {
   return (
-    <div
-      className="sticky top-0 z-20 flex items-center justify-between gap-1 px-2 pt-5 pb-3"
+    <header
+      className="subpage-header sticky top-0 z-20 flex items-center justify-between gap-1 px-4 pt-5 pb-2.5"
       style={{ background: 'var(--bg-base)' }}
     >
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-3">
+        {/* Mismo chrome que el ← del detalle de wallet y el avatar de la top-bar:
+            liquid-glass, redondo y tinta neutra. */}
         <button
-          onClick={() => router.back()}
-          className="flex h-10 w-10 items-center justify-center transition-opacity active:opacity-60 cursor-pointer"
-          style={{ color: 'var(--text-secondary)' }}
+          onClick={onBack}
+          className="liquid-glass flex h-12 w-12 flex-shrink-0 cursor-pointer items-center justify-center rounded-full transition-transform active:scale-95"
+          style={{ color: 'var(--text-primary)' }}
           aria-label="Volver"
         >
-          <ChevronLeft size={26} strokeWidth={2} />
+          <ArrowLeft size={20} />
         </button>
-        <h1 className="text-[22px] font-extrabold tracking-[-0.04em]" style={{ color: 'var(--text-primary)' }}>
-          {title}
-        </h1>
+        {title && (
+          <h1 className="text-[19px] font-extrabold tracking-[-0.01em]" style={{ color: 'var(--text-primary)' }}>
+            {title}
+          </h1>
+        )}
       </div>
-      {action && <div className="pr-2">{action}</div>}
-    </div>
+      {action && <div>{action}</div>}
+    </header>
   )
 }

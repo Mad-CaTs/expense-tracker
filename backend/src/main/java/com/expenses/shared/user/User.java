@@ -32,6 +32,9 @@ public class User {
     @Column(name = "must_change_password", nullable = false)
     private boolean mustChangePassword = true;
 
+    @Column(name = "onboarding_completed_at")
+    private LocalDateTime onboardingCompletedAt;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 }

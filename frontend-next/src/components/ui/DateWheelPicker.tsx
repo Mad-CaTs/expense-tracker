@@ -1,8 +1,8 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
-import { motion, useMotionValue, useTransform, animate } from 'framer-motion'
+import { motion, useMotionValue, animate } from 'framer-motion'
 
 interface DateWheelPickerProps {
   value: Date
@@ -16,6 +16,12 @@ interface DateWheelPickerProps {
 
 const ITEM_HEIGHT_MAP = { sm: 36, md: 44, lg: 52 }
 const VISIBLE_ITEMS = 5
+
+/** Alto exacto de la rueda. Se exporta para que quien la despliegue pueda
+ *  animar hacia una altura concreta en vez de hacia `auto`. */
+export function wheelPickerHeight(size: keyof typeof ITEM_HEIGHT_MAP = 'md') {
+  return ITEM_HEIGHT_MAP[size] * VISIBLE_ITEMS
+}
 
 function clamp(val: number, min: number, max: number) {
   return Math.max(min, Math.min(max, val))
@@ -50,12 +56,20 @@ function WheelColumn({ items, selectedIndex, onSelectIndex, itemHeight, disabled
   const visibleHeight = VISIBLE_ITEMS * itemHeight
   const centerOffset = Math.floor(VISIBLE_ITEMS / 2) * itemHeight
 
+  // El primer posicionamiento es instantáneo: al desplegarse el campo, tres
+  // springs de framer arrancando en el mismo frame que la animación de apertura
+  // eran gran parte del tirón. La rueda ya nace en su sitio y solo anima cuando
+  // el usuario la mueve.
+  const settled = useRef(false)
   useEffect(() => {
-    animate(y, -selectedIndex * itemHeight, {
-      type: 'spring',
-      stiffness: 300,
-      damping: 30,
-    })
+    const target = -selectedIndex * itemHeight
+    if (!settled.current) {
+      settled.current = true
+      y.set(target)
+      return
+    }
+    const controls = animate(y, target, { type: 'spring', stiffness: 300, damping: 30 })
+    return () => controls.stop()
   }, [selectedIndex, itemHeight, y])
 
   // Register non-passive wheel listener so preventDefault actually stops page scroll
@@ -176,7 +190,9 @@ function WheelColumn({ items, selectedIndex, onSelectIndex, itemHeight, disabled
                     : distance === 1
                     ? 'var(--text-muted)'
                     : 'var(--border-strong)',
-                transition: 'color 0.15s, font-size 0.15s',
+                // Solo color: animar `font-size` reflowea la columna entera en
+                // cada frame, y son decenas de ítems por rueda.
+                transition: 'color 0.15s',
               }}
             >
               {label}
@@ -216,15 +232,26 @@ export function DateWheelPicker({
   const daysInMonth = getDaysInMonth(selectedYear, selectedMonth)
   const days = Array.from({ length: daysInMonth }, (_, i) => String(i + 1).padStart(2, '0'))
 
-  // Clamp day when month/year changes
+  // El montaje NO notifica al padre: la fecha que muestra ya es la que el padre
+  // tiene, así que ese onChange solo servía para re-renderizar el formulario a
+  // mitad de la animación de apertura. Un flag por effect, y no uno compartido:
+  // ambos corren en el primer ciclo y se pisarían el turno entre sí.
+  const clampMounted = useRef(false)
+  const dayMounted = useRef(false)
+
+  // Clamp day when month/year changes. El timing de onChange es comportamiento observable:
+  // clampear el día debe pasar por el effect de selectedDay para notificar al padre una sola vez.
   useEffect(() => {
     const maxDay = getDaysInMonth(selectedYear, selectedMonth)
     const clamped = clamp(selectedDay, 1, maxDay)
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (clamped !== selectedDay) setSelectedDay(clamped)
-    else onChange(new Date(selectedYear, selectedMonth - 1, clamped))
+    else if (clampMounted.current) onChange(new Date(selectedYear, selectedMonth - 1, clamped))
+    clampMounted.current = true
   }, [selectedYear, selectedMonth])
 
   useEffect(() => {
+    if (!dayMounted.current) { dayMounted.current = true; return }
     onChange(new Date(selectedYear, selectedMonth - 1, selectedDay))
   }, [selectedDay])
 

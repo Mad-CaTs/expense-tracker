@@ -9,5 +9,7 @@ public class LoginResponseDTO {
     private String accessToken;
     private String refreshToken;
     private boolean mustChangePassword;
+    /** false mientras el usuario no haya terminado el onboarding. */
+    private boolean onboardingCompleted;
     private String username;
 }

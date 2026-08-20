@@ -1,35 +1,14 @@
 'use client'
 
 import React from 'react'
-import {
-  Car,
-  ChevronDown,
-  Ellipsis,
-  Film,
-  HeartPulse,
-  Home,
-  type LucideIcon,
-  ShoppingCart,
-  Utensils,
-  Wallet,
-  Zap,
-} from 'lucide-react'
+import { ChevronDown, Wallet } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 
 import { AttachmentsModal } from '@/components/features/expenses/AttachmentsModal'
+import { CATEGORY_ICON_MAP } from '@/lib/utils/categoryIcons'
+import { EASE, MOTION_S } from '@/lib/utils/motion'
 import type { Expense } from '@/types'
-
-const ICON_MAP: Record<string, LucideIcon> = {
-  utensils: Utensils,
-  car: Car,
-  'heart-pulse': HeartPulse,
-  film: Film,
-  home: Home,
-  ellipsis: Ellipsis,
-  'shopping-cart': ShoppingCart,
-  wallet: Wallet,
-  zap: Zap,
-}
+import { categorySwatch } from '@/lib/utils/cardVisuals'
 
 interface ExpenseRowProps {
   expense: Expense
@@ -42,7 +21,7 @@ interface ExpenseRowProps {
 
 export function ExpenseRow({ expense, onEdit, onDelete, index, expanded, onToggle }: ExpenseRowProps) {
   const [showAttachments, setShowAttachments] = React.useState(false)
-  const Icon = expense.categoryIcon ? (ICON_MAP[expense.categoryIcon] ?? Wallet) : Wallet
+  const Icon = expense.categoryIcon ? (CATEGORY_ICON_MAP[expense.categoryIcon] ?? Wallet) : Wallet
   const color = expense.categoryColor ?? '#d4af37'
 
   const formattedDate = new Date(expense.date + 'T12:00:00').toLocaleDateString('es-PE', {
@@ -61,7 +40,7 @@ export function ExpenseRow({ expense, onEdit, onDelete, index, expanded, onToggl
       <motion.button
         initial={{ opacity: 0, y: 4 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: index * 0.03, duration: 0.18, ease: [0.32, 0.72, 0, 1] }}
+        transition={{ delay: index * 0.03, duration: MOTION_S.tint, ease: EASE }}
         onClick={onToggle}
         className="w-full cursor-pointer transition-colors duration-150"
         style={{
@@ -73,7 +52,7 @@ export function ExpenseRow({ expense, onEdit, onDelete, index, expanded, onToggl
         <div className="flex items-center gap-3 px-4 py-3">
           <motion.div
             animate={{ rotate: expanded ? 180 : 0 }}
-            transition={{ duration: 0.2, ease: [0.32, 0.72, 0, 1] }}
+            transition={{ duration: MOTION_S.layer, ease: EASE }}
             className="flex-shrink-0"
           >
             <ChevronDown size={13} style={{ color: 'var(--text-muted)' }} />
@@ -83,7 +62,7 @@ export function ExpenseRow({ expense, onEdit, onDelete, index, expanded, onToggl
             className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl"
             style={{ backgroundColor: `${color}14`, boxShadow: `0 0 0 1px ${color}18` }}
           >
-            <Icon size={14} style={{ color }} strokeWidth={1.6} />
+            <Icon size={14} style={{ color: categorySwatch(color) }} strokeWidth={1.6} />
           </div>
 
           <div className="flex min-w-0 flex-1 items-center gap-2">
@@ -92,7 +71,7 @@ export function ExpenseRow({ expense, onEdit, onDelete, index, expanded, onToggl
             </p>
             <span
               className="hidden sm:inline-flex flex-shrink-0 rounded-full px-2 py-0.5 text-[9px] font-semibold tracking-wide"
-              style={{ background: `${color}15`, color }}
+              style={{ background: `${color}15`, color: categorySwatch(color) }}
             >
               {expense.categoryName}
             </span>
@@ -115,7 +94,7 @@ export function ExpenseRow({ expense, onEdit, onDelete, index, expanded, onToggl
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2, ease: [0.32, 0.72, 0, 1] }}
+            transition={{ duration: MOTION_S.layer, ease: EASE }}
             className="overflow-hidden"
             style={{ borderTop: '1px solid var(--border-subtle)', background: 'var(--bg-subtle)' }}
           >
@@ -144,7 +123,7 @@ export function ExpenseRow({ expense, onEdit, onDelete, index, expanded, onToggl
                   </p>
                   <div className="flex items-center gap-1.5">
                     <div className="flex h-4 w-4 items-center justify-center rounded" style={{ background: `${color}20` }}>
-                      <Icon size={10} style={{ color }} strokeWidth={1.8} />
+                      <Icon size={10} style={{ color: categorySwatch(color) }} strokeWidth={1.8} />
                     </div>
                     <p style={{ color: 'var(--text-secondary)' }}>{expense.categoryName}</p>
                   </div>

@@ -3,13 +3,14 @@
 import { Suspense, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 
 import { WalletCarousel } from '@/components/features/expenses/WalletCarousel'
 import { BudgetCarousel } from '@/components/features/expenses/BudgetCarousel'
 import { MovementsRecurringSection } from '@/components/features/expenses/MovementsRecurringSection'
 import { ActionIcon, type ActionIconName } from '@/components/features/expenses/ActionIcon'
 import { SectionHeader } from '@/components/ui/SectionHeader'
+import { useActiveWallet } from '@/lib/hooks/useActiveWallet'
 import { useFilterStore } from '@/stores/filterStore'
 import { useSheetStore } from '@/stores/sheetStore'
 
@@ -25,7 +26,6 @@ const QUICK_ACTIONS: { label: string; icon: ActionIconName; kind: QuickActionKin
 function QuickActions() {
   const openSheet = useSheetStore((s) => s.open)
   const [soon, setSoon] = useState(false)
-  const reduce = useReducedMotion()
 
   function handle(kind: QuickActionKind) {
     if (kind === 'scan') {
@@ -43,13 +43,11 @@ function QuickActions() {
           <motion.button
             key={kind}
             type="button"
-            initial={reduce ? { opacity: 0 } : { opacity: 0, y: 24, scale: 0.92 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
             whileTap={{ scale: 0.98 }}
-            transition={reduce ? { duration: 0.2 } : { type: 'spring', stiffness: 260, damping: 24, delay: i * 0.09 }}
+            transition={{ type: 'spring', stiffness: 260, damping: 24 }}
             onClick={() => handle(kind)}
-            className="soft-action flex flex-col items-center justify-center gap-2 rounded-[20px] py-4 cursor-pointer"
-            style={{ background: 'var(--surface-overlay)' }}
+            className="enter-pop liquid-glass flex flex-col items-center justify-center gap-2 rounded-[20px] py-4 cursor-pointer"
+            style={{ ['--enter-i' as string]: i }}
           >
             <span style={{ color: 'var(--text-primary)' }}>
               <ActionIcon name={icon} size={24} />
@@ -82,15 +80,16 @@ function QuickActions() {
 function ExpensesPageInner() {
   const router = useRouter()
   const storeFilters = useFilterStore()
+  const walletId = useActiveWallet()
 
-  function handleWalletSelect(id: number | undefined) {
+  function handleWalletSelect(id: number) {
     storeFilters.setWalletId(id)
     storeFilters.setPage(0)
   }
 
   return (
     <div className="mx-auto max-w-3xl pb-4">
-      <WalletCarousel selectedWalletId={storeFilters.walletId} onSelect={handleWalletSelect} />
+      <WalletCarousel selectedWalletId={walletId} onSelect={handleWalletSelect} />
 
       <QuickActions />
 
