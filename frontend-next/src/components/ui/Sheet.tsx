@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 
 import { MOTION } from '@/lib/utils/motion'
 
@@ -84,7 +85,20 @@ export function Sheet({ onClose, title, children }: SheetProps) {
     if (dy > DISMISS_DISTANCE || velocity > DISMISS_VELOCITY) close()
   }
 
-  return (
+  // Montado en el `<body>` por portal, como ColorPickerSheet.
+  //
+  // `position: fixed` se resuelve contra el viewport SALVO que un ancestro
+  // tenga `transform`, que entonces pasa a ser su bloque contenedor. El
+  // carrusel del onboarding desplaza sus slides con `translate3d`, así que un
+  // sheet abierto desde ahí se anclaba al slide y aparecía fuera de pantalla
+  // (left = -1560) en vez de sobre el viewport. Al `<body>` no hay ancestro
+  // transformado que lo capture, venga de donde venga.
+  //
+  // En SSR no hay `document`; el sheet solo existe tras una interacción, así
+  // que no renderizar nada en el servidor no cambia el HTML inicial.
+  if (typeof document === 'undefined') return null
+
+  return createPortal(
     <SheetCloseContext.Provider value={close}>
     <div className="fixed inset-0 z-50 flex items-end justify-center">
       <div
@@ -138,6 +152,7 @@ export function Sheet({ onClose, title, children }: SheetProps) {
         </div>
       </div>
     </div>
-    </SheetCloseContext.Provider>
+    </SheetCloseContext.Provider>,
+    document.body
   )
 }

@@ -2,6 +2,7 @@ package com.expenses.income.internal;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 public record IncomeResponse(
         Long id,
@@ -14,5 +15,6 @@ public record IncomeResponse(
         Long categoryId,
         String categoryName,
         String categoryColor,
-        String categoryIcon) {
+        String categoryIcon,
+        LocalDateTime createdAt) {
 }

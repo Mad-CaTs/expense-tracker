@@ -38,6 +38,9 @@ export function AmountField({ label, inputId, value, error, onChange }: AmountFi
           min="0"
           max={MAX_AMOUNT}
           step="0.01"
+          autoComplete="off"
+          data-1p-ignore
+          data-lpignore="true"
           className="absolute inset-0 h-full w-full cursor-default opacity-0"
           value={value}
           onChange={(e) => {
@@ -53,11 +56,6 @@ export function AmountField({ label, inputId, value, error, onChange }: AmountFi
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.08 }}
           className="mono-amount text-[40px] font-extrabold leading-none tracking-[-0.03em]"
-          // El acento de la app, no un color por tipo de operación: antes gasto
-          // iba en rojo e ingreso en verde, repitiendo lo que ya dice el título
-          // ("Nuevo gasto" / "Nuevo ingreso"). `--accent-light` es el mismo
-          // token del botón principal, así que el monto y la acción que lo
-          // confirma hablan igual — azul marino en claro, blanco en oscuro.
           style={{ color: amountNum > 0 ? 'var(--accent-light)' : 'var(--text-placeholder)' }}
         >
           S/ {formatDisplay(value)}

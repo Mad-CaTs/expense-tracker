@@ -1,17 +1,16 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 
 import { motion } from 'framer-motion'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 import { COLOR_PRESETS } from '@/components/features/shared/colorPresets'
 import { leaveNotice } from '@/components/features/shared/pendingNotice'
 import { useSubPageExit } from '@/components/features/shared/useSubPageExit'
-import { LeatherWallet } from '@/components/features/wallets/LeatherWallet'
+import { toLeatherId } from '@/components/features/wallets/leathers'
+import { WalletAppearance } from '@/components/features/wallets/WalletAppearance'
 import { SubPageHeader } from '@/components/layout/SubPageHeader'
 import { useCreateWallet, useUpdateWallet } from '@/lib/hooks/useWallets'
-import { MOTION } from '@/lib/utils/motion'
 import type { Wallet } from '@/types'
 
 /** Lo que /wallets necesita para anunciar el resultado de una acción. */
@@ -25,17 +24,18 @@ interface WalletFormScreenProps {
   wallet?: Wallet
 }
 
-/** Desplazamiento mínimo para que el gesto cuente como cambio de color. */
-const SWIPE_PX = 45
-
-
 /**
  * Alta y edición de billeteras.
  *
  * El formulario ES la billetera: el nombre y el saldo se escriben donde van a
- * aparecer, y el color se elige deslizándola como en el carrusel. Con campos
- * etiquetados y una fila de fichas, se elegía el color mirando un cuadradito de
- * 34px en vez del objeto que se está creando.
+ * aparecer, y el aspecto se elige viendo el resultado. `WalletAppearance` deja
+ * a la vista solo el preview y un botón "Personalizar"; sus dos selectores
+ * viven en un sheet, para que el nombre y el saldo no queden empujados fuera
+ * de pantalla por controles que casi siempre se usan una vez.
+ *
+ * El campo de saldo está en el mismo sitio en ambos modos, pero significa cosas
+ * distintas: al crear es el saldo inicial, y al editar el saldo actual — el
+ * backend deduce el inicial que hace cuadrar los movimientos ya registrados.
  */
 export function WalletFormScreen({ wallet }: WalletFormScreenProps) {
   const { exitClass, open, goBack } = useSubPageExit()
@@ -44,60 +44,40 @@ export function WalletFormScreen({ wallet }: WalletFormScreenProps) {
   const editing = wallet != null
 
   const [name, setName] = useState(wallet?.name ?? '')
-  const [initialBalance, setInitialBalance] = useState('')
-  const [colorIndex, setColorIndex] = useState(() => {
-    const i = COLOR_PRESETS.indexOf(wallet?.color ?? '')
-    return i >= 0 ? i : 0
-  })
+  // Al editar arranca con el saldo ACTUAL (el derivado), que es el número que el
+  // usuario reconoce como "lo que tengo"; el inicial es un detalle interno.
+  const [balance, setBalance] = useState(wallet ? String(wallet.balance) : '')
+  // El color guardado puede no estar en la paleta (viene del picker libre), así
+  // que se conserva tal cual en vez de buscarlo en `COLOR_PRESETS`.
+  const [color, setColor] = useState(wallet?.color ?? COLOR_PRESETS[0])
+  const [leather, setLeather] = useState(() => toLeatherId(wallet?.leather))
   const [error, setError] = useState('')
 
-  /** Dirección del último cambio, para que la billetera entre por el lado
-   *  correcto. */
-  const [dir, setDir] = useState<1 | -1>(1)
-  const startX = useRef(0)
-  const swiping = useRef(false)
-
-  const color = COLOR_PRESETS[colorIndex]
   const pending = create.isPending || update.isPending
-
-  function move(delta: 1 | -1) {
-    setDir(delta)
-    setColorIndex((i) => (i + delta + COLOR_PRESETS.length) % COLOR_PRESETS.length)
-  }
-
-  function onPointerDown(e: React.PointerEvent) {
-    swiping.current = true
-    startX.current = e.clientX
-  }
-
-  function onPointerUp(e: React.PointerEvent) {
-    if (!swiping.current) return
-    swiping.current = false
-    const dx = e.clientX - startX.current
-    if (Math.abs(dx) < SWIPE_PX) return
-    move(dx < 0 ? 1 : -1)
-  }
-
-  const preview: Wallet = {
-    id: wallet?.id ?? 0,
-    name: name.trim() || 'Nueva billetera',
-    initialBalance: 0,
-    balance: editing ? Number(wallet.balance) : parseFloat(initialBalance) || 0,
-    color,
-    backgroundId: wallet?.backgroundId ?? null,
-  }
 
   async function handleSubmit() {
     const trimmed = name.trim()
     if (!trimmed) { setError('Ponle un nombre a la billetera'); return }
 
     if (editing) {
-      await update.mutateAsync({ id: wallet.id, data: { name: trimmed, color, backgroundId: wallet.backgroundId ?? null } })
+      // `leather` va SIEMPRE: el PUT reemplaza el recurso entero y omitirlo lo
+      // pondría a null, borrando el acabado de la billetera que se edita.
+      await update.mutateAsync({
+        id: wallet.id,
+        data: {
+          name: trimmed,
+          currentBalance: parseFloat(balance) || 0,
+          color,
+          leather,
+          backgroundId: wallet.backgroundId ?? null,
+        },
+      })
     } else {
       await create.mutateAsync({
         name: trimmed,
-        initialBalance: parseFloat(initialBalance) || 0,
+        initialBalance: parseFloat(balance) || 0,
         color,
+        leather,
         backgroundId: null,
       })
     }
@@ -112,45 +92,17 @@ export function WalletFormScreen({ wallet }: WalletFormScreenProps) {
 
       <div className="flex flex-1 flex-col justify-center pb-4">
 
-        {/* El color se elige moviendo la billetera: se ve el cuero y la tarjeta
-            teñida, no una ficha suelta. `pt` deja sitio a la tarjeta, que asoma
-            por encima del cuero. */}
-        <div className="enter-pop flex items-center justify-center gap-4 pb-1 pt-[52px]" style={{ ['--enter-i' as string]: 0 }}>
-          <Arrow side="left" onClick={() => move(-1)} />
-
-          <div
-            onPointerDown={onPointerDown}
-            onPointerUp={onPointerUp}
-            onPointerCancel={() => { swiping.current = false }}
-            className="cursor-grab touch-pan-y select-none active:cursor-grabbing"
-          >
-            {/* key por color: remonta y la entrada vuelve a correr, así el cambio
-                se percibe como un giro del carrusel y no como un tinte. */}
-            <div key={colorIndex} className={dir === 1 ? 'step-fwd' : 'step-back'}>
-              <LeatherWallet wallet={preview} width={214} />
-            </div>
-          </div>
-
-          <Arrow side="right" onClick={() => move(1)} />
-        </div>
-
-        <div className="flex justify-center gap-1.5 pb-1 pt-4">
-          {COLOR_PRESETS.map((c, i) => (
-            <span
-              key={c}
-              className="h-[5px] rounded-full"
-              style={{
-                width: i === colorIndex ? 16 : 5,
-                background: i === colorIndex ? 'var(--text-primary)' : 'var(--border-strong)',
-                transition: `width ${MOTION.tint}ms var(--ease-sys), background-color ${MOTION.tint}ms var(--ease-sys)`,
-              }}
-            />
-          ))}
-        </div>
+        <WalletAppearance
+          name={name.trim() || 'Nueva billetera'}
+          leather={leather}
+          color={color}
+          onLeatherChange={setLeather}
+          onColorChange={setColor}
+        />
 
         {/* Sin nada que enmarque: se escribe donde el dato va a vivir, y la
             pista de abajo es lo que dice que se puede tocar. */}
-        <div className="enter-pop px-4 pt-8 text-center" style={{ ['--enter-i' as string]: 1 }}>
+        <div className="enter-pop px-4 pt-7 text-center" style={{ ['--enter-i' as string]: 2 }}>
           <input
             type="text"
             value={name}
@@ -165,30 +117,27 @@ export function WalletFormScreen({ wallet }: WalletFormScreenProps) {
             {error || 'Nombre de la billetera'}
           </p>
 
-          {/* Solo al crear: después el saldo lo determinan los movimientos, y
-              editarlo descuadraría el historial. */}
-          {!editing && (
-            <>
-              <div className="mt-5 flex items-baseline justify-center gap-1.5">
-                <span className="text-[19px] font-bold" style={{ color: 'var(--text-tertiary)' }}>S/</span>
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  value={initialBalance}
-                  onChange={(e) => setInitialBalance(e.target.value.replace(/[^\d.]/g, ''))}
-                  placeholder="0.00"
-                  autoComplete="off"
-                  aria-label="Saldo inicial"
-                  size={Math.max(4, initialBalance.length || 4)}
-                  className="search-input mono-amount bg-transparent text-center text-[30px] font-extrabold tracking-[-0.03em] tabular-nums outline-none"
-                  style={{ color: parseFloat(initialBalance) > 0 ? 'var(--text-primary)' : 'var(--text-placeholder)' }}
-                />
-              </div>
-              <p className="mt-1 text-[10.5px]" style={{ color: 'var(--text-dim)' }}>
-                Saldo inicial
-              </p>
-            </>
-          )}
+          {/* Al editar también: la billetera refleja una cuenta real, y el
+              usuario debe poder cuadrarla con el saldo que esa cuenta tiene hoy
+              sin recalcular a mano el inicial. */}
+          <div className="mt-5 flex items-baseline justify-center gap-1.5">
+            <span className="text-[19px] font-bold" style={{ color: 'var(--text-tertiary)' }}>S/</span>
+            <input
+              type="text"
+              inputMode="decimal"
+              value={balance}
+              onChange={(e) => setBalance(e.target.value.replace(/[^\d.]/g, ''))}
+              placeholder="0.00"
+              autoComplete="off"
+              aria-label={editing ? 'Saldo actual' : 'Saldo inicial'}
+              size={Math.max(4, balance.length || 4)}
+              className="search-input mono-amount bg-transparent text-center text-[30px] font-extrabold tracking-[-0.03em] tabular-nums outline-none"
+              style={{ color: parseFloat(balance) > 0 ? 'var(--text-primary)' : 'var(--text-placeholder)' }}
+            />
+          </div>
+          <p className="mt-1 text-[10.5px]" style={{ color: 'var(--text-dim)' }}>
+            {editing ? 'Saldo actual' : 'Saldo inicial'}
+          </p>
 
         </div>
       </div>
@@ -220,22 +169,5 @@ export function WalletFormScreen({ wallet }: WalletFormScreenProps) {
         </motion.button>
       </div>
     </div>
-  )
-}
-
-function Arrow({ side, onClick }: { side: 'left' | 'right'; onClick: () => void }) {
-  const Icon = side === 'left' ? ChevronLeft : ChevronRight
-  return (
-    <motion.button
-      type="button"
-      onClick={onClick}
-      whileTap={{ scale: 0.9 }}
-      transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-      aria-label={side === 'left' ? 'Color anterior' : 'Color siguiente'}
-      className="liquid-glass-ic flex h-8 w-8 flex-none cursor-pointer items-center justify-center rounded-full"
-      style={{ color: 'var(--text-muted)' }}
-    >
-      <Icon size={15} strokeWidth={2.4} />
-    </motion.button>
   )
 }

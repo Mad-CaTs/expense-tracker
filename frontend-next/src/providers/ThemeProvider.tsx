@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useSyncExternalStore } from 'react'
+import { createContext, useContext, useSyncExternalStore } from 'react'
 
 export type ThemePreference = 'light' | 'dark'
 
@@ -45,10 +45,6 @@ export function useTheme() {
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const preference = useSyncExternalStore(subscribeTheme, readStoredPreference, getServerPreference)
-
-  useEffect(() => {
-    applyTheme(readStoredPreference())
-  }, [])
 
   function setPreference(next: ThemePreference) {
     localStorage.setItem(THEME_KEY, next)

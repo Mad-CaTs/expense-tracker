@@ -1,18 +1,32 @@
 'use client'
 
+import { toLeatherId } from '@/components/features/wallets/leathers'
 import { LEATHER_SRC, themeForColor } from '@/components/features/wallets/WalletLeatherCarousel'
-import type { Wallet } from '@/types'
 
 const CARD_SRC = '/wallets/card.webp'
 
+/**
+ * Lo único que el dibujo necesita: el acabado, el tinte de la tarjeta y un
+ * nombre para el `alt`. Se pide esto y no un `Wallet` entero porque hay dos
+ * sitios (el formulario y el onboarding) que pintan una billetera que TODAVÍA
+ * NO EXISTE; con `Wallet` había que inventar `id`, `balance` e
+ * `initialBalance` solo para satisfacer al tipo, y esos ceros falsos parecían
+ * datos. Un `Wallet` real sigue encajando por estructura.
+ */
+export interface WalletAppearanceValues {
+  name?: string
+  color?: string
+  leather?: string
+}
+
 export interface LeatherWalletProps {
-  wallet: Wallet
+  wallet: WalletAppearanceValues
   active?: boolean
   width?: number
 }
 
 export function LeatherWallet({ wallet, active = true, width = 260 }: LeatherWalletProps) {
-  const theme = themeForColor(wallet.color)
+  const theme = wallet.leather ? toLeatherId(wallet.leather) : themeForColor(wallet.color)
   const leather = LEATHER_SRC[theme]
   const tint = wallet.color ?? '#4ade80'
   const k = width / 260
@@ -24,7 +38,7 @@ export function LeatherWallet({ wallet, active = true, width = 260 }: LeatherWal
         width,
         height: 215 * k,
         ['--tint' as string]: tint,
-        filter: active ? 'drop-shadow(0 20px 26px rgba(0,0,0,0.5))' : 'none',
+        filter: active ? 'drop-shadow(var(--wallet-drop))' : 'none',
       }}
     >
       {/* z1 — pared trasera del cuero (detrás de la tarjeta) */}
@@ -44,7 +58,7 @@ export function LeatherWallet({ wallet, active = true, width = 260 }: LeatherWal
         className="absolute left-1/2 -translate-x-1/2"
         style={{ width: 190 * k, aspectRatio: '1313 / 1207', top: -66 * k, zIndex: 2 }}
       >
-        <div className="absolute inset-0" style={{ filter: active ? 'drop-shadow(0 5px 9px rgba(0,0,0,0.35))' : 'none' }}>
+        <div className="absolute inset-0" style={{ filter: active ? 'drop-shadow(var(--wallet-card-drop))' : 'none' }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={CARD_SRC} alt="" aria-hidden decoding="async" className="absolute inset-0 h-full w-full object-contain" />
           <div

@@ -2,6 +2,9 @@
 
 /* ── Dark mode (default) ── */
 :root {
+  color-scheme: dark;
+  --wallet-drop: 0 20px 26px rgba(0,0,0,0.5);
+  --wallet-card-drop: 0 5px 9px rgba(0,0,0,0.35);
   --bg-base: #191918;
   --bg-elevated: #202021;
   --bg-subtle: #1c1c1c;
@@ -90,6 +93,11 @@
 
 /* ── Light mode (Cool Gray) ── */
 .light {
+  color-scheme: light;
+  /* Mismo azul-gris de las demás sombras del tema claro (ver --lg-drop), en vez
+     del negro puro: sobre #f1f3f6 el negro se lee como suciedad, no como sombra. */
+  --wallet-drop: 0 18px 30px rgba(15,23,42,0.16);
+  --wallet-card-drop: 0 4px 10px rgba(15,23,42,0.12);
   --bg-base:       #f1f3f6;
   --bg-elevated:   #ffffff;
   --bg-subtle:     #e9ecf1;
@@ -432,6 +440,21 @@ textarea::placeholder {
   animation-delay: calc(var(--enter-i, 0) * 120ms);
 }
 
+/* Igual que `enter-pop` pero SIN opacidad: mismo recorrido, misma curva y mismo
+   stagger, así entra sincronizado con sus hermanos.
+   Es para lo que no puede atenuarse sin cambiar de aspecto: la billetera (su
+   drop-shadow gana intensidad al opacarse y la pantalla parece oscurecerse) y
+   el botón "Personalizar" (translúcido, se mezcla con el fondo mientras entra y
+   al llegar a opacidad plena se ve apagarse). */
+@keyframes enter-pop-solid {
+  from { transform: translateY(24px) scale(0.92); }
+  to   { transform: none; }
+}
+.enter-pop-solid {
+  animation: enter-pop-solid 0.84s cubic-bezier(0.22, 1.36, 0.32, 1) backwards;
+  animation-delay: calc(var(--enter-i, 0) * 120ms);
+}
+
 /* Variante corta (iconos apilados de RECURRENTES, spring(260, 20) + 14px) */
 @keyframes enter-pop-sm {
   from { opacity: 0; transform: translateY(14px) scale(0.9); }
@@ -501,6 +524,41 @@ textarea::placeholder {
 .mono-amount {
   font-family: var(--font-mono), ui-monospace, monospace;
   font-variant-numeric: tabular-nums;
+}
+
+.color-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 26px;
+  border-radius: 999px;
+  outline: none;
+  box-shadow: 0 0 0 1px var(--lg-ic-border);
+}
+.color-slider:focus-visible {
+  box-shadow: 0 0 0 2px var(--accent);
+}
+.color-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: #fff;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
+}
+.color-slider::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: #fff;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
+}
+.color-slider::-moz-range-track {
+  background: transparent;
 }
 
 /* Acento sólido (sigue el token de marca) */
@@ -1091,6 +1149,7 @@ body.wd-leaving .wd-fx {
 /* el panel del detalle es fixed: ningún ancestro puede tener transform (rompería
    el anclaje al viewport). page-enter termina en transform:none, pero lo forzamos. */
 body.wallet-detail-open .page-enter { transform: none !important; animation: none; }
+
 
 /* con el detalle abierto, el chrome de la página se retira: la top-bar (avatar +
    título) desaparece dejando solo el ← del panel, y la bottom-nav no debe recibir

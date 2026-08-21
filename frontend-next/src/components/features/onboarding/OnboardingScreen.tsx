@@ -1,22 +1,20 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 import { motion } from 'framer-motion'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 import { INTRO_SLIDES } from '@/components/features/onboarding/introSlides'
 import { markOnboardingSeen, useHasSeenOnboarding } from '@/components/features/onboarding/onboardingState'
 import { completeOnboarding } from '@/lib/api/auth'
 import { COLOR_PRESETS } from '@/components/features/shared/colorPresets'
-import { LeatherWallet } from '@/components/features/wallets/LeatherWallet'
+import { DEFAULT_LEATHER } from '@/components/features/wallets/leathers'
+import { WalletAppearance } from '@/components/features/wallets/WalletAppearance'
 import { SuccessDialog } from '@/components/ui/SuccessDialog'
 import { useCreateWallet } from '@/lib/hooks/useWallets'
 import { MOTION } from '@/lib/utils/motion'
-import type { Wallet } from '@/types'
 
-const SWIPE_PX = 45
 const FORM_STEP = INTRO_SLIDES.length
 
 export function OnboardingScreen() {
@@ -31,44 +29,15 @@ export function OnboardingScreen() {
   const setStep = setPicked
   const [name, setName] = useState('')
   const [initialBalance, setInitialBalance] = useState('')
-  const [colorIndex, setColorIndex] = useState(3)
+  // El color no es un índice sobre la paleta: el picker de `WalletAppearance`
+  // deja elegir cualquier hex, así que se guarda el valor tal cual.
+  const [color, setColor] = useState<string>(COLOR_PRESETS[3])
+  const [leather, setLeather] = useState(DEFAULT_LEATHER)
   const [error, setError] = useState('')
   const [saved, setSaved] = useState<string | null>(null)
 
-  const [dir, setDir] = useState<1 | -1>(1)
-  const startX = useRef(0)
-  const swiping = useRef(false)
-
-  const color = COLOR_PRESETS[colorIndex]
   const onForm = step === FORM_STEP
   const formOnly = seenBefore && onForm
-
-  function move(delta: 1 | -1) {
-    setDir(delta)
-    setColorIndex((i) => (i + delta + COLOR_PRESETS.length) % COLOR_PRESETS.length)
-  }
-
-  function onPointerDown(e: React.PointerEvent) {
-    swiping.current = true
-    startX.current = e.clientX
-  }
-
-  function onPointerUp(e: React.PointerEvent) {
-    if (!swiping.current) return
-    swiping.current = false
-    const dx = e.clientX - startX.current
-    if (Math.abs(dx) < SWIPE_PX) return
-    move(dx < 0 ? 1 : -1)
-  }
-
-  const preview: Wallet = {
-    id: 0,
-    name: name.trim() || 'Mi billetera',
-    initialBalance: 0,
-    balance: parseFloat(initialBalance) || 0,
-    color,
-    backgroundId: null,
-  }
 
   async function handleCreate() {
     const trimmed = name.trim()
@@ -80,6 +49,7 @@ export function OnboardingScreen() {
       name: trimmed,
       initialBalance: parseFloat(initialBalance) || 0,
       color,
+      leather,
       backgroundId: null,
     })
 
@@ -133,36 +103,20 @@ export function OnboardingScreen() {
 
           {/* Último slide: el formulario. */}
           <div className="flex w-full flex-none flex-col justify-center px-[26px]">
-            <div className="flex flex-none flex-col items-center justify-center pt-[46px]">
-              <div className="flex items-center justify-center gap-4">
-                <Arrow side="left" onClick={() => move(-1)} />
-                <div
-                  onPointerDown={onPointerDown}
-                  onPointerUp={onPointerUp}
-                  onPointerCancel={() => { swiping.current = false }}
-                  className="cursor-grab touch-pan-y select-none active:cursor-grabbing"
-                >
-                  {/* key por color: remonta y la entrada vuelve a correr, así el
-                      cambio se percibe como un giro del carrusel, no un tinte. */}
-                  <div key={colorIndex} className={dir === 1 ? 'step-fwd' : 'step-back'}>
-                    <LeatherWallet wallet={preview} width={214} />
-                  </div>
-                </div>
-                <Arrow side="right" onClick={() => move(1)} />
-              </div>
-
-              <div className="flex justify-center gap-1.5 pb-1 pt-4">
-                {COLOR_PRESETS.map((c, i) => (
-                  <span
-                    key={c}
-                    className="h-[5px] rounded-full"
-                    style={{
-                      width: i === colorIndex ? 16 : 5,
-                      background: i === colorIndex ? 'var(--text-primary)' : 'var(--border-strong)',
-                      transition: `width ${MOTION.tint}ms var(--ease-sys), background-color ${MOTION.tint}ms var(--ease-sys)`,
-                    }}
-                  />
-                ))}
+            <div className="flex flex-none flex-col items-center justify-center">
+              {/* Mismo bloque de apariencia que el formulario de /wallets:
+                  preview + botón "Personalizar", con los selectores en un
+                  sheet. Aquí es donde más se nota — desplegados, empujaban el
+                  nombre y el saldo por debajo del pliegue en el primer paso
+                  que ve un usuario nuevo. */}
+              <div className="w-full">
+                <WalletAppearance
+                  name={name.trim() || 'Mi billetera'}
+                  leather={leather}
+                  color={color}
+                  onLeatherChange={setLeather}
+                  onColorChange={setColor}
+                />
               </div>
 
               {/* Sin nada que enmarque: se escribe donde el dato va a vivir, y la
@@ -202,9 +156,10 @@ export function OnboardingScreen() {
                 </p>
               </div>
 
-              <p className="mx-auto max-w-[300px] pt-4 text-center text-[13.5px] leading-[1.6]" style={{ color: 'var(--text-tertiary)' }}>
-                Desliza la billetera o usa las flechas para elegir su color.
-              </p>
+              {/* Aquí iba la pista de "desliza o usa las flechas". El botón
+                  "Personalizar" de `WalletAppearance` ya dice qué se puede
+                  tocar y está junto a lo que describe, así que un texto al pie
+                  —debajo de los campos— solo repetía lo que ya se ve. */}
             </div>
           </div>
         </div>
@@ -267,22 +222,5 @@ export function OnboardingScreen() {
         onClose={finish}
       />
     </div>
-  )
-}
-
-function Arrow({ side, onClick }: { side: 'left' | 'right'; onClick: () => void }) {
-  const Icon = side === 'left' ? ChevronLeft : ChevronRight
-  return (
-    <motion.button
-      type="button"
-      onClick={onClick}
-      whileTap={{ scale: 0.9 }}
-      transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-      aria-label={side === 'left' ? 'Color anterior' : 'Color siguiente'}
-      className="liquid-glass-ic flex h-8 w-8 flex-none cursor-pointer items-center justify-center rounded-full"
-      style={{ color: 'var(--text-muted)' }}
-    >
-      <Icon size={15} strokeWidth={2.4} />
-    </motion.button>
   )
 }
