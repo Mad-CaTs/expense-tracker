@@ -81,6 +81,96 @@ class WalletServiceTest {
     }
 
     @Test
+    void create_persistsLeatherFinish() {
+        WalletRequest request = new WalletRequest();
+        request.setName("Ahorros");
+        request.setInitialBalance(new BigDecimal("100.00"));
+        request.setColor("#3b82f6");
+        request.setLeather("navy");
+
+        when(walletRepository.save(any(Wallet.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        walletService.create(request, user);
+
+        ArgumentCaptor<Wallet> captor = ArgumentCaptor.forClass(Wallet.class);
+        verify(walletRepository).save(captor.capture());
+        assertThat(captor.getValue().getLeather()).isEqualTo("navy");
+    }
+
+    @Test
+    void update_persistsLeatherFinish() {
+        wallet.setLeather("green");
+        WalletRequest request = new WalletRequest();
+        request.setName("Ahorros");
+        request.setColor("#3b82f6");
+        request.setLeather("plum");
+
+        when(walletRepository.findByIdAndUserId(10L, 1L)).thenReturn(Optional.of(wallet));
+        when(walletRepository.save(any(Wallet.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(contribution.inflow(1L, 10L)).thenReturn(BigDecimal.ZERO);
+        when(contribution.outflow(1L, 10L)).thenReturn(BigDecimal.ZERO);
+
+        walletService.update(10L, request, 1L);
+
+        ArgumentCaptor<Wallet> captor = ArgumentCaptor.forClass(Wallet.class);
+        verify(walletRepository).save(captor.capture());
+        assertThat(captor.getValue().getLeather()).isEqualTo("plum");
+    }
+
+    @Test
+    void update_currentBalance_recalculatesInitialBalanceSoDerivedBalanceMatches() {
+        WalletRequest request = new WalletRequest();
+        request.setName("Ahorros");
+        request.setCurrentBalance(new BigDecimal("200.00"));
+
+        when(walletRepository.findByIdAndUserId(10L, 1L)).thenReturn(Optional.of(wallet));
+        when(walletRepository.save(any(Wallet.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(contribution.inflow(1L, 10L)).thenReturn(BigDecimal.ZERO);
+        when(contribution.outflow(1L, 10L)).thenReturn(new BigDecimal("30.00"));
+
+        WalletResponse response = walletService.update(10L, request, 1L);
+
+        // El saldo derivado debe ser exactamente el pedido, no 200-30 ni 200+30.
+        assertThat(response.balance()).isEqualByComparingTo("200.00");
+        assertThat(wallet.getInitialBalance()).isEqualByComparingTo("230.00");
+    }
+
+    @Test
+    void update_currentBalance_belowNetMovementsLeavesNegativeInitialBalance() {
+        // Saldo real menor que los ingresos netos ya registrados: el inicial
+        // resultante es negativo y debe permitirse, o una cuenta cuyo historial
+        // en la app está incompleto no podría cuadrar con la realidad.
+        WalletRequest request = new WalletRequest();
+        request.setName("Ahorros");
+        request.setCurrentBalance(new BigDecimal("10.00"));
+
+        when(walletRepository.findByIdAndUserId(10L, 1L)).thenReturn(Optional.of(wallet));
+        when(walletRepository.save(any(Wallet.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(contribution.inflow(1L, 10L)).thenReturn(new BigDecimal("50.00"));
+        when(contribution.outflow(1L, 10L)).thenReturn(BigDecimal.ZERO);
+
+        WalletResponse response = walletService.update(10L, request, 1L);
+
+        assertThat(response.balance()).isEqualByComparingTo("10.00");
+        assertThat(wallet.getInitialBalance()).isEqualByComparingTo("-40.00");
+    }
+
+    @Test
+    void update_withoutCurrentBalance_leavesInitialBalanceUntouched() {
+        WalletRequest request = new WalletRequest();
+        request.setName("Ahorros");
+
+        when(walletRepository.findByIdAndUserId(10L, 1L)).thenReturn(Optional.of(wallet));
+        when(walletRepository.save(any(Wallet.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(contribution.inflow(1L, 10L)).thenReturn(BigDecimal.ZERO);
+        when(contribution.outflow(1L, 10L)).thenReturn(new BigDecimal("30.00"));
+
+        walletService.update(10L, request, 1L);
+
+        assertThat(wallet.getInitialBalance()).isEqualByComparingTo("100.00");
+    }
+
+    @Test
     void delete_publishesEventAndSoftDeletesWallet() {
         when(walletRepository.findByIdAndUserId(10L, 1L)).thenReturn(Optional.of(wallet));
 

@@ -14,9 +14,12 @@ export interface WalletMovement {
   /** Negativo = gasto, positivo = ingreso. */
   amount: number
   date: string
-  /** Id del recurso. Autoincremental, así que a mayor id más reciente: es el
-   *  desempate cuando varios movimientos comparten fecha. */
+  /** Id del recurso. Solo desempata entre movimientos del mismo tipo: gastos e
+   *  ingresos viven en tablas con secuencias independientes. */
   id: number
+  /** Instante de alta: el desempate real dentro de un mismo día, porque este
+   *  feed mezcla gastos e ingresos. Puede faltar en registros antiguos. */
+  createdAt?: string
   categoryName: string
   categoryIcon?: string
   categoryColor?: string
@@ -41,6 +44,7 @@ export function useWalletMovements(walletId: number) {
       out.push({
         key: `e-${e.id}`,
         id: e.id,
+        createdAt: e.createdAt,
         kind: 'expense',
         attachmentCount: e.attachmentCount,
         description: e.description,
@@ -55,6 +59,7 @@ export function useWalletMovements(walletId: number) {
       out.push({
         key: `i-${i.id}`,
         id: i.id,
+        createdAt: i.createdAt,
         kind: 'income',
         description: i.description ?? 'Ingreso',
         amount: Math.abs(i.amount),

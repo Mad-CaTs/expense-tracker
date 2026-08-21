@@ -7,6 +7,7 @@ import {
   getWallets,
   updateWallet,
 } from '@/lib/api/wallets'
+import type { Wallet } from '@/types'
 
 export function useWallets() {
   return useQuery({
@@ -16,10 +17,15 @@ export function useWallets() {
 }
 
 export function useWallet(id: number) {
+  const qc = useQueryClient()
+
   return useQuery({
     queryKey: ['wallets', id],
     queryFn: () => getWallet(id),
     enabled: id > 0,
+    initialData: () =>
+      qc.getQueryData<Wallet[]>(['wallets'])?.find((w) => w.id === id),
+    initialDataUpdatedAt: () => qc.getQueryState(['wallets'])?.dataUpdatedAt,
   })
 }
 
@@ -34,7 +40,7 @@ export function useCreateWallet() {
 export function useUpdateWallet() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: { name: string; color?: string; icon?: string; backgroundId?: number | null } }) =>
+    mutationFn: ({ id, data }: { id: number; data: Parameters<typeof updateWallet>[1] }) =>
       updateWallet(id, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['wallets'] }),
   })

@@ -6,15 +6,16 @@ import { useWallets } from '@/lib/hooks/useWallets'
 import { useFilterStore } from '@/stores/filterStore'
 
 export function useActiveWallet(): number | undefined {
-  const { data: wallets = [] } = useWallets()
+  const { data: wallets = [], isSuccess } = useWallets()
   const stored = useFilterStore((s) => s.walletId)
   const setWalletId = useFilterStore((s) => s.setWalletId)
-
-  const active = stored ?? wallets[0]?.id
+  const storedExists = stored != null && wallets.some((w) => w.id === stored)
+  const active = storedExists ? stored : wallets[0]?.id
 
   useEffect(() => {
-    if (stored == null && active != null) setWalletId(active)
-  }, [stored, active, setWalletId])
+    if (!isSuccess || active == null || stored === active) return
+    setWalletId(active)
+  }, [isSuccess, stored, active, setWalletId])
 
   return active
 }

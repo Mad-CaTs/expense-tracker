@@ -20,6 +20,7 @@ import org.springframework.context.ApplicationEventPublisher;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
@@ -184,6 +185,7 @@ class RecurringOccurrenceServiceTest {
 
     private ExpenseResponse expenseResponse(Long id) {
         return new ExpenseResponse(id, new BigDecimal("45.00"), "Netflix", LocalDate.now(),
-                3L, null, "Suscripciones", "#8B5CF6", "film", 0, 7L, "Principal");
+                3L, null, "Suscripciones", "#8B5CF6", "film", 0, 7L, "Principal",
+                LocalDateTime.now());
     }
 }

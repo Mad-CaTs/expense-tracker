@@ -11,6 +11,7 @@ import { MOTION } from '@/lib/utils/motion'
 import type { Wallet } from '@/types'
 
 import { cardFaceHTML } from './cardFace'
+import { toLeatherId } from './leathers'
 import { computeAdoptedCard, useWalletFlight } from './useWalletFlight'
 import { LEATHER_SRC, themeForColor, WalletLeatherCarousel } from './WalletLeatherCarousel'
 import { takeNotice } from '@/components/features/shared/pendingNotice'
@@ -24,6 +25,9 @@ type Stage = 'idle' | 'opening' | 'detail' | 'closing'
 
 const nextPaint = () => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())))
 const sleep = (ms: number) => new Promise<void>((resolve) => { window.setTimeout(resolve, ms) })
+
+const leatherOf = (wallet: Wallet) =>
+  LEATHER_SRC[wallet.leather ? toLeatherId(wallet.leather) : themeForColor(wallet.color)]
 
 const REVEAL_OUT_MS = 300
 const PANEL_OUT_MS = 280
@@ -113,7 +117,7 @@ export function WalletsScreen() {
         panel,
         strip,
         slot,
-        leatherSrc: LEATHER_SRC[themeForColor(wallet.color)],
+        leatherSrc: leatherOf(wallet),
       })
 
       setSeated(true)
@@ -160,7 +164,7 @@ export function WalletsScreen() {
         slot,
         walletEl: els.walletEl,
         cardEl: els.cardEl,
-        leatherSrc: LEATHER_SRC[themeForColor(wallet.color)],
+        leatherSrc: leatherOf(wallet),
         tint,
         balance,
       },

@@ -21,6 +21,7 @@ export interface Wallet {
   balance: number
   color?: string
   icon?: string
+  leather?: string
   backgroundId?: number | null
   backgroundUrl?: string | null
 }
@@ -43,6 +44,7 @@ export interface Income {
   categoryName?: string
   categoryColor?: string
   categoryIcon?: string
+  createdAt?: string
 }
 
 export interface IncomePage {
@@ -86,6 +88,7 @@ export interface Expense {
   attachmentCount?: number
   walletId?: number
   walletName?: string
+  createdAt?: string
 }
 
 export interface ExpensePage {
@@ -149,8 +152,6 @@ export interface CategoryBreakdown {
 
 export type RecurringFrequency = 'MONTHLY' | 'WEEKLY' | 'YEARLY'
 
-/** PENDING: espera decisión · PAID: confirmada, generó un gasto ·
- *  SKIPPED: rechazada, queda como deuda pagable. */
 export type OccurrenceStatus = 'PENDING' | 'PAID' | 'SKIPPED'
 
 export interface RecurringOccurrence {
@@ -203,7 +204,6 @@ export interface LoginResponse {
   accessToken: string
   refreshToken: string
   mustChangePassword: boolean
-  /** false mientras el usuario no haya terminado el onboarding. */
   onboardingCompleted: boolean
   username: string
   user: User

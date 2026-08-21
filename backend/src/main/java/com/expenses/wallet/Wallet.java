@@ -43,6 +43,9 @@ public class Wallet extends Auditable {
     @Column(length = 50)
     private String icon;
 
+    @Column(length = 16)
+    private String leather;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "background_id")
     @ToString.Exclude

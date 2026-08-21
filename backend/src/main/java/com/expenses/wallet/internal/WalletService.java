@@ -58,6 +58,7 @@ public class WalletService {
         wallet.setInitialBalance(request.getInitialBalance());
         wallet.setColor(request.getColor());
         wallet.setIcon(request.getIcon());
+        wallet.setLeather(request.getLeather());
         wallet.setUser(user);
         applyBackground(wallet, request.getBackgroundId());
         Wallet saved = walletRepository.save(wallet);
@@ -70,9 +71,35 @@ public class WalletService {
         wallet.setName(request.getName());
         wallet.setColor(request.getColor());
         wallet.setIcon(request.getIcon());
+        wallet.setLeather(request.getLeather());
         applyBackground(wallet, request.getBackgroundId());
+        applyCurrentBalance(wallet, request.getCurrentBalance());
         Wallet saved = walletRepository.save(wallet);
         return walletMapper.toResponse(saved, calculateBalance(saved));
+    }
+
+    /**
+     * Cuadra la billetera con el saldo que la cuenta real tiene hoy.
+     *
+     * <p>El saldo no se guarda, se deriva: {@code inicial + movimientos netos}.
+     * Para que el derivado dé exactamente el saldo pedido sin tocar los
+     * movimientos ya registrados, lo que se mueve es el saldo inicial:
+     * {@code nuevoInicial = saldoPedido - movimientosNetos}.
+     *
+     * <p>Los movimientos netos salen de restar el inicial actual al saldo
+     * derivado actual, la misma resta que hace {@link #calculateBalance}.
+     *
+     * <p>El inicial resultante puede quedar negativo — ocurre cuando el saldo
+     * real es menor que los ingresos ya registrados — y debe permitirse: es el
+     * único modo de que una cuenta con historial incompleto en la app cuadre
+     * con la realidad.
+     */
+    private void applyCurrentBalance(Wallet wallet, BigDecimal desiredBalance) {
+        if (desiredBalance == null) {
+            return;
+        }
+        BigDecimal netMovements = calculateBalance(wallet).subtract(wallet.getInitialBalance());
+        wallet.setInitialBalance(desiredBalance.subtract(netMovements));
     }
 
     @Transactional

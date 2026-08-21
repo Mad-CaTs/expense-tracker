@@ -11,27 +11,23 @@ const PAGE_SIZE = 100
 export interface PeriodMovement {
   key: string
   id: number
+  createdAt?: string
   kind: 'expense' | 'income'
   description: string
   categoryName: string
   categoryColor?: string
   categoryIcon?: string
-  /** Adjuntos confirmados; solo los gastos pueden tenerlos. */
   attachmentCount?: number
-  /** Negativo = gasto, positivo = ingreso. */
   amount: number
   date: string
 }
 
 export interface MovementDay {
-  /** Fecha ISO del grupo, para la key. */
   date: string
-  /** "Hoy", "Ayer" o "9 ago." */
   label: string
   movements: PeriodMovement[]
 }
 
-/** "Hoy" y "Ayer" se nombran; el resto va como fecha corta. */
 function dayLabel(iso: string): string {
   const date = new Date(`${iso.split('T')[0]}T12:00:00`)
   const today = new Date()
@@ -44,22 +40,11 @@ function dayLabel(iso: string): string {
 }
 
 export interface MovementFilters {
-  /** Vacío = todas. */
   categoryIds?: number[]
-  /** Billetera de la que son los movimientos. */
   walletId?: number
   txType?: 'EXPENSE' | 'INCOME' | 'ALL'
 }
 
-/**
- * Gastos e ingresos del período, mezclados y agrupados por día.
- *
- * Los dos endpoints se consultan siempre por rango y los filtros se aplican al
- * mezclar: son queries cacheadas, y alternar tipo o categorías no debería
- * disparar peticiones nuevas. El backend solo acepta UNA categoría por consulta
- * (/expenses) y ninguna en /incomes, así que con varias elegidas no hay forma
- * de delegarlo — se resuelve acá por id.
- */
 export function usePeriodMovements(from: string, to: string, filters: MovementFilters = {}) {
   const { categoryIds = [], walletId, txType = 'ALL' } = filters
 
@@ -80,6 +65,7 @@ export function usePeriodMovements(from: string, to: string, filters: MovementFi
       ...(wantExpenses ? expenses.data?.content ?? [] : []).filter((e) => keep(e.categoryId, e.walletId)).map((e) => ({
         key: `e-${e.id}`,
         id: e.id,
+        createdAt: e.createdAt,
         kind: 'expense' as const,
         description: e.description || 'Gasto',
         categoryName: e.categoryName ?? 'Sin categoría',
@@ -92,6 +78,7 @@ export function usePeriodMovements(from: string, to: string, filters: MovementFi
       ...(wantIncomes ? incomes.data?.content ?? [] : []).filter((i) => keep(i.categoryId, i.walletId)).map((i) => ({
         key: `i-${i.id}`,
         id: i.id,
+        createdAt: i.createdAt,
         kind: 'income' as const,
         description: i.description || 'Ingreso',
         categoryName: i.categoryName ?? 'Sin categoría',

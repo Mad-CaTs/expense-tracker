@@ -9,6 +9,7 @@ public record WalletResponse(
         BigDecimal balance,
         String color,
         String icon,
+        String leather,
         Long backgroundId,
         String backgroundUrl) {
 }

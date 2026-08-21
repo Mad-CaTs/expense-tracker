@@ -11,14 +11,13 @@ import { useWallets } from '@/lib/hooks/useWallets'
 import { categoryHueSat } from '@/lib/utils/cardVisuals'
 import type { Wallet } from '@/types'
 
+import { LEATHERS, leatherSrc, type LeatherId } from './leathers'
 import { LeatherWallet } from './LeatherWallet'
 
-export type LeatherTheme = 'green' | 'brown' | 'tan'
-export const LEATHER_SRC: Record<LeatherTheme, string> = {
-  green: '/wallets/wallet-green.webp',
-  brown: '/wallets/wallet-brown.webp',
-  tan: '/wallets/wallet-tan.webp',
-}
+export type LeatherTheme = LeatherId
+export const LEATHER_SRC: Record<LeatherId, string> = Object.fromEntries(
+  LEATHERS.map((l) => [l.id, leatherSrc(l.id)]),
+) as Record<LeatherId, string>
 const CARD_SRC = '/wallets/card.webp'
 
 export function themeForColor(color?: string): LeatherTheme {

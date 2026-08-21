@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'Gastos — Control de gastos personales',
+  title: 'Pockr',
   description: 'Registra y analiza tus gastos personales con presupuestos y reportes.',
 }
 
@@ -26,18 +26,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="es"
-      className={`${interSans.variable} ${geistMono.variable} h-full dark`}
+      className={`${interSans.variable} ${geistMono.variable} h-full`}
       data-scroll-behavior="smooth"
       suppressHydrationWarning
     >
-      <head>
+      <body className="h-full antialiased" style={{ background: 'var(--bg-base)', color: 'var(--text-primary)' }}>
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('pockr-theme');if(t==='light'){document.documentElement.classList.remove('dark');document.documentElement.classList.add('light')}else{document.documentElement.classList.remove('light');document.documentElement.classList.add('dark')}}catch(e){}})()`,
+            __html: `(function(){try{var t=localStorage.getItem('pockr-theme');document.documentElement.classList.add(t==='light'?'light':'dark')}catch(e){document.documentElement.classList.add('dark')}})()`,
           }}
         />
-      </head>
-      <body className="h-full antialiased" style={{ background: 'var(--bg-base)', color: 'var(--text-primary)' }}>
         <a href="#main-content" className="skip-link">
           Saltar al contenido
         </a>
