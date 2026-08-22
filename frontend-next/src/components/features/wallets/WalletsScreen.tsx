@@ -56,7 +56,7 @@ export function WalletsScreen() {
   const [stage, setStage] = useState<Stage>('idle')
   const [settled, setSettled] = useState(false)
   const [seated, setSeated] = useState(false)
-  const [adoptedCard, setAdoptedCard] = useState<{ html: string; clipPath: string } | null>(null)
+  const [adoptedCard, setAdoptedCard] = useState<{ html: string } | null>(null)
   const [restored, setRestored] = useState(false)
 
   const stageRef = useRef<Stage>('idle')
@@ -76,14 +76,30 @@ export function WalletsScreen() {
   const flightRef = useRef(flight)
   useEffect(() => { flightRef.current = flight }, [flight])
 
+  // La restauración vale para la primera visita a /wallets de esta sesión de
+  // pantalla: es la que sigue a una recarga con el detalle abierto. En las
+  // siguientes, un `?w=` heredado al volver desde otra pestaña de la navbar se
+  // limpia sin abrir nada — antes el detalle aparecía solo, sin animación.
+  // La marca vive en `sessionStorage`, no en un ref: al navegar entre pestañas
+  // la pantalla se remonta y un ref volvería a cero, dejando que el `?w=`
+  // heredado restaurara otra vez. Se consume al RESTAURAR, no al montar —
+  // mientras las billeteras cargan, este efecto corre en vacío.
+  const RESTAURADA = 'pockr-wallet-restaurada'
   useEffect(() => {
     const raw = searchParams.get('w')
     if (!raw) return
-    if (restoredFor.current === raw) return
+    // Con un detalle abierto el `?w=` lo acaba de escribir `openWallet`: se
+    // queda. En `idle` es un parámetro heredado y no debe abrir nada.
     if (stageRef.current !== 'idle') return
+    if (restoredFor.current === raw) return
+    if (sessionStorage.getItem(RESTAURADA) === raw) {
+      router.replace('/wallets', { scroll: false })
+      return
+    }
     const wallet = wallets.find((w) => String(w.id) === raw)
     if (!wallet) return
 
+    sessionStorage.setItem(RESTAURADA, raw)
     restoredFor.current = raw
     stageRef.current = 'detail'
 
@@ -109,7 +125,6 @@ export function WalletsScreen() {
       const adopted = computeAdoptedCard(panel, strip, slot)
       setAdoptedCard({
         html: cardFaceHTML(wallet.color ?? '#4ade80', Number(wallet.balance), adopted.widthPx),
-        clipPath: adopted.clipPath,
       })
 
       flightRef.current.mountSeated({
@@ -122,7 +137,7 @@ export function WalletsScreen() {
 
       setSeated(true)
     })()
-  }, [searchParams, wallets])
+  }, [searchParams, wallets, router])
 
   useEffect(() => {
     document.body.classList.toggle('wallet-detail-open', stage !== 'idle')
@@ -152,7 +167,6 @@ export function WalletsScreen() {
     flushSync(() => {
       setAdoptedCard({
         html: cardFaceHTML(tint, balance, adopted.widthPx),
-        clipPath: adopted.clipPath,
       })
     })
 
@@ -198,6 +212,9 @@ export function WalletsScreen() {
     setStage('idle')
     setOpenWallet(null)
     restoredFor.current = null
+    // Se olvida la marca: si el usuario vuelve a abrir y recarga, esa nueva
+    // sesión de detalle debe poder restaurarse igual que la primera.
+    sessionStorage.removeItem(RESTAURADA)
     router.replace('/wallets', { scroll: false })
   }
 

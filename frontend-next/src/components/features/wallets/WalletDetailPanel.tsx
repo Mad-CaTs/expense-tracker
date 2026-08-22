@@ -20,7 +20,6 @@ import { useWalletMovements, type WalletMovement } from './useWalletMovements'
 import { WalletAccessIcon } from './WalletAccessIcon'
 import { categorySwatch } from '@/lib/utils/cardVisuals'
 
-const STRIP_SRC = '/wallets/budget-strip.webp'
 
 function PencilIcon() {
   return (
@@ -60,29 +59,22 @@ function WalletFrameStrip({
 }: {
   stripRef: React.Ref<HTMLDivElement>
   slotRef: React.Ref<HTMLDivElement>
-  adoptedCard: { html: string; clipPath: string } | null
+  adoptedCard: { html: string } | null
   restored?: boolean
 }) {
   return (
+    // Sin el marco de cuero: la tarjeta es la pieza, no algo metido en un
+    // bolsillo. Eso libera su cara entera —antes el clip la cortaba a la altura
+    // de la boca— y por eso ya lleva pie con las marcas.
     <div ref={stripRef} className="wd-strip">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img className="wd-strip-img wd-strip-bg" src={STRIP_SRC} alt="" aria-hidden decoding="async" />
       <div ref={slotRef} className="wd-card-slot">
         {adoptedCard && (
           <div
             className={`wd-static-card${restored ? ' is-on' : ''}`}
-            style={{ clipPath: adoptedCard.clipPath }}
             dangerouslySetInnerHTML={{ __html: adoptedCard.html }}
           />
         )}
       </div>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img className="wd-strip-img wd-strip-front wd-pocket-clip" src={STRIP_SRC} alt="" aria-hidden decoding="async" />
-      <span className="wd-logo" aria-hidden>
-        <i className="wd-logo-hl" />
-        <i className="wd-logo-ink" />
-        <i className="wd-logo-sh" />
-      </span>
     </div>
   )
 }
@@ -167,7 +159,7 @@ function MovementRow({ movement }: { movement: WalletMovement }) {
 
 export interface WalletDetailPanelProps {
   wallet: Wallet
-  adoptedCard: { html: string; clipPath: string } | null
+  adoptedCard: { html: string } | null
   restored?: boolean
   onBack: () => void
   onDelete: () => void

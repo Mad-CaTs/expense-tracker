@@ -2,28 +2,30 @@
 
 import { useCallback, useEffect, useRef } from 'react'
 
-import { cardFaceHTML } from './cardFace'
+import { CARD_FS_RATIO, cardFaceHTML } from './cardFace'
 
 
 const CARD_FLAT_SRC = '/wallets/card-flat.webp'
-const STRIP_SRC = '/wallets/budget-strip.webp'
+/** Proporción de la tarjeta en el carrusel: la del asset (tarjeta física). */
 const FLAT_RATIO = 372 / 570
+/** Proporción en el DETALLE: achatada a 2:1 para ocupar el ancho sin comerse
+ *  la pantalla. Debe ir en sincronía con `aspect-ratio` de .wd-card-slot. */
+const DEST_RATIO = 1 / 2
 
 const FLIGHT_OPEN_MS = 1150
 const FLIGHT_CLOSE_MS = 900
 const WALLET_OPEN_MS = 1060
 const WALLET_CLOSE_MS = 860
 const TUCK_OPEN_MS = 420
-const TUCK_CLOSE_MS = 300
 const SETTLE_LEAD_MS = 140
-const SETTLE_PAUSE_MS = 240
+/** Ventaja que se da al contenido para salir antes de que la tarjeta despegue:
+ *  lo justo para que se lean como un gesto encadenado, no como dos pasos. */
+const UNSEAT_LEAD_MS = 90
 
 const EASE_FLIGHT = 'cubic-bezier(0.55, 0.06, 0.13, 1)'
 const EASE_SPIN = 'cubic-bezier(0.6, 0.08, 0.18, 1)'
 const EASE_TUCK = 'cubic-bezier(0.23, 1, 0.32, 1)'
 
-const MOUTH_FRAC = 0.356
-const HOVER_INSET_PX = 18
 
 const DOCK_VISIBLE_FRAC = 0.135
 const DOCK_MIN = 92
@@ -57,7 +59,6 @@ interface FxState {
   under: HTMLDivElement
   over: HTMLDivElement
   fxCard: HTMLDivElement
-  stripFront: HTMLDivElement
   leathers: HTMLImageElement[]
   wRect: Rect
   card: Rect
@@ -76,27 +77,19 @@ const rectOf = (el: Element): Rect => {
   const r = el.getBoundingClientRect()
   return { left: r.left, top: r.top, width: r.width, height: r.height }
 }
-const cx = (r: Rect) => r.left + r.width / 2
-const cy = (r: Rect) => r.top + r.height / 2
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 const smooth = (v: number) => {
   const t = Math.min(1, Math.max(0, v))
   return t * t * (3 - 2 * t)
 }
 
+/** Sin `clipPath`: la tarjeta ya no se recorta a la boca de un bolsillo, así
+ *  que solo hace falta su ancho para escalar la cara. */
 export function computeAdoptedCard(
   panel: HTMLElement,
-  strip: HTMLElement,
+  _strip: HTMLElement,
   slot: HTMLElement,
-): { widthPx: number; clipPath: string } {
-  const slotR = measureSettled(panel, slot)
-  const stripR = measureSettled(panel, strip)
-  const keep = stripR.top + stripR.height * MOUTH_FRAC + 12 - slotR.top
-  const slotH = slotR.width * FLAT_RATIO
-  return {
-    widthPx: slotR.width,
-    clipPath: `inset(0 0 ${Math.max(0, Math.round(slotH - keep))}px 0)`,
-  }
+): { widthPx: number } {
+  return { widthPx: measureSettled(panel, slot).width }
 }
 
 function measureSettled(panel: HTMLElement, el: Element): Rect {
@@ -132,34 +125,23 @@ function buildFx(t: FlightTargets): FxState {
   document.body.append(under, over)
 
   const dest = measureSettled(t.panel, t.slot)
-  const stripR = measureSettled(t.panel, t.strip)
 
-  const stripFront = document.createElement('div')
-  stripFront.className = 'wd-fx-strip-front wd-pocket-clip'
-  stripFront.style.cssText = `left:${stripR.left}px;top:${stripR.top}px;width:${stripR.width}px;height:${stripR.height}px;`
-  stripFront.innerHTML =
-    `<img src="${STRIP_SRC}" alt="">` +
-    '<span class="wd-logo" aria-hidden="true"><i class="wd-logo-hl"></i><i class="wd-logo-ink"></i><i class="wd-logo-sh"></i></span>'
-  over.appendChild(stripFront)
-
-  const destH = dest.width * FLAT_RATIO
-  const below = dest.top - stripR.top + destH - stripR.height
-  const drop = Math.ceil(below + HOVER_INSET_PX)
-  const scale = dest.width / card.width
-  const clipLine = stripR.top + stripR.height * MOUTH_FRAC + 12
-  const clipTo = (dest.top + destH - clipLine) / scale
+  const destH = dest.width * DEST_RATIO
+  // `drop` en 0: el vuelo aterriza DIRECTO en su sitio. Antes caía por encima
+  // del destino y bajaba en un segundo tiempo para meterse en el bolsillo del
+  // cuero; sin cuero ese encaje se leía como un tropiezo al final del giro.
+  const drop = 0
 
   return {
     targets: t,
     under,
     over,
     fxCard: over.querySelector('.wd-fx-card') as HTMLDivElement,
-    stripFront,
     leathers: [under.querySelector('.wd-fx-leather'), over.querySelector('.wd-fx-leather.front')] as HTMLImageElement[],
     wRect,
     card,
     dest: { ...dest, height: destH },
-    tuck: { drop, clipFrom: clipTo - drop / scale, clipTo },
+    tuck: { drop, clipFrom: 0, clipTo: 0 },
     dockScale: 1,
     tuckAnims: [],
     dockAnims: [],
@@ -169,11 +151,21 @@ function buildFx(t: FlightTargets): FxState {
   }
 }
 
+/**
+ * Vuelo de la tarjeta desde el carrusel hasta el detalle.
+ *
+ * Se anima la GEOMETRÍA (left/top/width/height), no un `scale`: origen y destino
+ * tienen proporciones distintas —1.53:1 en el carrusel, 2:1 en el detalle— y un
+ * factor único multiplica ancho y alto por igual. Como el factor sale de los
+ * anchos, el ancho encajaba pero el alto llegaba un 31% pasado, y ese exceso
+ * desaparecía de golpe al intercambiar por la tarjeta real.
+ *
+ * Interpolando ancho y alto por separado, la forma se transforma DURANTE el
+ * vuelo y al terminar ya coincide con el destino: no queda nada que ajustar.
+ * El giro vive en `.wd-spin`, su propia capa, así que no compite con esto.
+ */
 function cardAnimations(fx: FxState, dir: 'open' | 'close'): Animation[] {
-  const { card, dest, tuck, fxCard } = fx
-  const dx = cx(dest) - cx(card)
-  const dy = cy(dest) - cy(card) - tuck.drop
-  const scale = dest.width / card.width
+  const { card, dest, fxCard } = fx
   const opts = (dur: number, easing: string): KeyframeAnimationOptions => ({
     duration: dur,
     easing,
@@ -182,58 +174,56 @@ function cardAnimations(fx: FxState, dir: 'open' | 'close'): Animation[] {
   })
   const dur = dir === 'open' ? FLIGHT_OPEN_MS : FLIGHT_CLOSE_MS
   const spin = fxCard.querySelector('.wd-spin') as HTMLElement
-  return [
-    fxCard.animate(
-      [{ transform: 'translate(0,0) scale(1)' }, { transform: `translate(${dx}px, ${dy}px) scale(${scale})` }],
-      opts(dur, EASE_FLIGHT),
-    ),
+  const from = { left: `${card.left}px`, top: `${card.top}px`, width: `${card.width}px`, height: `${card.height}px` }
+  const to = { left: `${dest.left}px`, top: `${dest.top}px`, width: `${dest.width}px`, height: `${dest.height}px` }
+  // La cara mide todo en `em` sobre un font-size proporcional al ancho: sin
+  // animarlo también, el texto se quedaría con el tamaño del carrusel y saltaría
+  // al final, igual que hacía el alto.
+  const face = fxCard.querySelector('.wd-card-front') as HTMLElement | null
+  const anims = [
+    fxCard.animate([from, to], opts(dur, EASE_FLIGHT)),
     spin.animate([{ transform: 'rotateY(0deg)' }, { transform: 'rotateY(-540deg)' }], opts(dur, EASE_SPIN)),
   ]
+  if (face) {
+    anims.push(
+      face.animate(
+        [
+          { fontSize: `${(card.width * CARD_FS_RATIO).toFixed(2)}px` },
+          { fontSize: `${(dest.width * CARD_FS_RATIO).toFixed(2)}px` },
+        ],
+        opts(dur, EASE_FLIGHT),
+      ),
+    )
+  }
+  return anims
 }
 
 function retargetToLiveSlot(fx: FxState): void {
   const dest = rectOf(fx.targets.slot)
-  const stripR = rectOf(fx.targets.strip)
-  const destH = dest.width * FLAT_RATIO
-  const below = dest.top - stripR.top + destH - stripR.height
-  const drop = Math.ceil(below + HOVER_INSET_PX)
-  const scale = dest.width / fx.card.width
-  const clipLine = stripR.top + stripR.height * MOUTH_FRAC + 12
-  const clipTo = (dest.top + destH - clipLine) / scale
+  const destH = dest.width * DEST_RATIO
   fx.dest = { ...dest, height: destH }
-  fx.tuck = { drop, clipFrom: clipTo - drop / scale, clipTo }
+  fx.tuck = { drop: 0, clipFrom: 0, clipTo: 0 }
 }
 
-function tuckAnimations(fx: FxState, dir: 'open' | 'close'): Animation[] {
-  if (dir === 'open') retargetToLiveSlot(fx)
-  const { card, dest, tuck, fxCard } = fx
-  const dx = cx(dest) - cx(card)
-  const dy = cy(dest) - cy(card)
-  const scale = dest.width / card.width
-  const hover = { transform: `translate(${dx}px, ${dy - tuck.drop}px) scale(${scale})` }
-  const seated = { transform: `translate(${dx}px, ${dy}px) scale(${scale})` }
-  const clipHover = { clipPath: `inset(-28px -28px ${tuck.clipFrom}px -28px)` }
-  const clipSeated = { clipPath: `inset(-28px -28px ${tuck.clipTo}px -28px)` }
+/**
+ * Ajuste final al slot vivo. En geometría, como el vuelo: el panel puede haberse
+ * movido unos píxeles mientras la tarjeta viajaba, y esto la deja exactamente
+ * sobre su destino. Sin recorte ni caída — ya no hay bolsillo donde encajar.
+ */
+function tuckAnimations(fx: FxState): Animation[] {
+  retargetToLiveSlot(fx)
+  const { dest: target, fxCard } = fx
   const opts: KeyframeAnimationOptions = {
-    duration: dir === 'open' ? TUCK_OPEN_MS : TUCK_CLOSE_MS,
+    duration: TUCK_OPEN_MS,
     easing: EASE_TUCK,
     fill: 'forwards',
   }
-  const face = fxCard.querySelector('.wd-face.front') as HTMLElement
-  const shadowOn = { filter: 'drop-shadow(0 5px 9px rgba(0, 0, 0, 0.3))' }
-  const shadowOff = { filter: 'drop-shadow(0 1px 0px rgba(0, 0, 0, 0))' }
-  const anims =
-    dir === 'open'
-      ? [
-          fxCard.animate([seated], opts),
-          fxCard.animate([clipHover, clipSeated], opts),
-          face.animate([shadowOn, shadowOff], opts),
-        ]
-      : [
-          fxCard.animate([hover], opts),
-          fxCard.animate([clipSeated, clipHover], opts),
-          face.animate([shadowOff, shadowOn], opts),
-        ]
+  const anims = [
+    fxCard.animate(
+      [{ left: `${target.left}px`, top: `${target.top}px`, width: `${target.width}px`, height: `${target.height}px` }],
+      opts,
+    ),
+  ]
   fx.tuckAnims.push(...anims)
   return anims
 }
@@ -270,6 +260,7 @@ function walletAnimations(fx: FxState, dir: 'open' | 'close'): Animation[] {
 }
 
 const finished = (anims: Animation[]) => Promise.allSettled(anims.map((a) => a.finished))
+const sleep = (ms: number) => new Promise<void>((r) => { window.setTimeout(r, ms) })
 
 export interface SeatedTargets {
   screen: HTMLElement
@@ -373,15 +364,11 @@ export function useWalletFlight(reduceMotion: boolean): WalletFlightApi {
         const staticCard = fx.targets.panel.querySelector<HTMLElement>('.wd-static-card')
         if (staticCard) {
           const slotR = rectOf(fx.targets.slot)
-          const stripR = rectOf(fx.targets.strip)
-          const keep = stripR.top + stripR.height * MOUTH_FRAC + 12 - slotR.top
-          staticCard.style.clipPath = `inset(0 0 ${Math.max(0, Math.round(slotR.height - keep))}px 0)`
           const face = staticCard.querySelector<HTMLElement>('.wd-card-front')
-          if (face) face.style.fontSize = `${(slotR.width * 0.062).toFixed(2)}px`
+          if (face) face.style.fontSize = `${(slotR.width * CARD_FS_RATIO).toFixed(2)}px`
           staticCard.classList.add('is-on')
         }
         fx.fxCard.style.visibility = 'hidden'
-        fx.stripFront.style.visibility = 'hidden'
         fx.docked = true
         fx.seated = true
         onSeated()
@@ -391,19 +378,17 @@ export function useWalletFlight(reduceMotion: boolean): WalletFlightApi {
       if (reduceMotion) {
         anims.forEach((a) => a.finish())
         onSettled()
-        fx.stripFront.classList.add('is-settled')
-        tuckAnimations(fx, 'open').forEach((a) => a.finish())
+        tuckAnimations(fx).forEach((a) => a.finish())
         finishSeated()
         startFlow(true)
         return
       }
       setTimeout(() => {
         onSettled()
-        fx.stripFront.classList.add('is-settled')
       }, FLIGHT_OPEN_MS - SETTLE_LEAD_MS)
       await finished(anims)
-      await sleep(SETTLE_PAUSE_MS)
-      await finished(tuckAnimations(fx, 'open'))
+      // Sin pausa ni fase de encaje: con `drop` en 0 no movían nada y solo
+      // añadían 660 ms muertos entre el final del giro y la tarjeta ya puesta.
       finishSeated()
     },
     [reduceMotion, startFlow],
@@ -433,7 +418,7 @@ export function useWalletFlight(reduceMotion: boolean): WalletFlightApi {
     document.body.append(under, over)
 
     const dest = measureSettled(t.panel, t.slot)
-    const destH = dest.width * FLAT_RATIO
+    const destH = dest.width * DEST_RATIO
 
     fxRef.current = {
       seatedOnly: true,
@@ -441,7 +426,6 @@ export function useWalletFlight(reduceMotion: boolean): WalletFlightApi {
       under,
       over,
       fxCard: null as unknown as HTMLDivElement,
-      stripFront: null as unknown as HTMLDivElement,
       leathers: [
         under.querySelector('.wd-fx-leather'),
         over.querySelector('.wd-fx-leather.front'),
@@ -487,13 +471,14 @@ export function useWalletFlight(reduceMotion: boolean): WalletFlightApi {
       }
 
       fx.fxCard.style.visibility = ''
-      fx.stripFront.style.visibility = ''
       fx.targets.panel.querySelector<HTMLElement>('.wd-static-card')?.classList.remove('is-on')
-      if (!reduceMotion) await finished(tuckAnimations(fx, 'close'))
       fx.tuckAnims.forEach((a) => a.cancel())
       fx.tuckAnims = []
+      // El contenido se retira ANTES de tocar la tarjeta y sin esperarlo: si se
+      // desmonta a la vez que arranca el vuelo, se lee como que todo "encaja"
+      // de golpe y sólo después empieza la animación.
       onUnsettled()
-      fx.stripFront.classList.remove('is-settled')
+      if (!reduceMotion) await sleep(UNSEAT_LEAD_MS)
       const anims = [...walletAnimations(fx, 'close'), ...cardAnimations(fx, 'close')]
       if (reduceMotion) anims.forEach((a) => a.finish())
       await finished(anims)

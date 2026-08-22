@@ -906,33 +906,23 @@ select:focus-visible,
 /* Alto proporcional: con 200px fijos, en pantallas de móvil (iPhone 11 ≈ 715px
    útiles) la billetera + las cards de acceso consumían 520px y a la lista de
    movimientos le quedaban 150px (≈1 fila). Cede alto en pantallas cortas. */
-.wd-strip { position: relative; height: clamp(168px, 24vh, 200px); flex: none; margin-bottom: clamp(10px, 1.6vh, 18px); }
+/* El alto lo pedía el marco de cuero; ahora solo tiene que caber la tarjeta,
+   que a 2:1 y ancho completo (~358px) mide ~179px. */
+.wd-strip { position: relative; height: clamp(152px, 21.5vh, 182px); flex: none; margin-bottom: clamp(10px, 1.6vh, 18px); }
 /* Bloque de accesos (Categorías / Frecuentes / Presupuesto): separaciones
    proporcionales, para no comerse la lista en pantallas cortas. */
 .wd-access { margin-top: clamp(10px, 1.8vh, 20px); gap: clamp(10px, 1.6vh, 16px); padding-bottom: clamp(8px, 1.5vh, 16px) !important; }
 .wd-access .liquid-glass { padding-top: clamp(9px, 1.4vh, 20px); padding-bottom: clamp(9px, 1.4vh, 20px); }
-.wd-strip-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: fill; }
-.wd-strip-bg { filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.38)); }
-.wd-strip-front { pointer-events: none; }
-/* boca del bolsillo medida sobre el asset (costura ~36% con onda suave) */
-.wd-pocket-clip {
-  clip-path: polygon(0% 36.5%, 8% 36.4%, 16% 35.8%, 26% 35.6%, 36% 35.6%, 44% 36.4%,
-                     50% 36.9%, 56% 36.4%, 64% 35.9%, 74% 35.8%, 84% 35.6%, 92% 35.6%,
-                     100% 36.2%, 100% 100%, 0% 100%);
+/* Sin marco de cuero: el slot ya no se encaja dentro de un asset, así que la
+   tarjeta ocupa el ancho disponible y su propia proporción manda el alto.
+   Se centra porque `wd-strip` cede alto en pantallas cortas. */
+/* 2:1, no la proporción de una tarjeta física (1.53:1): a ancho completo esa
+   se iba a ~234px de alto y dominaba la pantalla. Achatada ocupa todo el ancho
+   —que es lo que da presencia— sin comerse la lista de movimientos. */
+.wd-card-slot {
+  position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%);
+  aspect-ratio: 2 / 1;
 }
-.wd-card-slot { position: absolute; left: 24px; right: 24px; top: 15px; aspect-ratio: 1313 / 857; }
-
-/* logo TALLADO PROFUNDO en el cuero: 3 capas enmascaradas (luz bajo el borde,
-   tinta hundida, sombra superior difusa) */
-.wd-logo { position: absolute; right: 26px; bottom: 17px; width: 66px; height: 36px; pointer-events: none; }
-.wd-logo i {
-  position: absolute; inset: 0;
-  -webkit-mask: url('/brand/logo.webp') center / contain no-repeat;
-  mask: url('/brand/logo.webp') center / contain no-repeat;
-}
-.wd-logo .wd-logo-hl  { background: rgba(255, 240, 218, 0.20); transform: translateY(2.5px); }
-.wd-logo .wd-logo-ink { background: rgba(30, 22, 14, 0.40); }
-.wd-logo .wd-logo-sh  { background: rgba(0, 0, 0, 0.24); transform: translateY(-2px); filter: blur(1px); }
 
 /* cara FRONTAL de la tarjeta: saldo grabado. Tipografía/padding en em sobre un
    font-size proporcional al ancho (lo fija el JS) → idéntica en vuelo y adoptada */
@@ -995,9 +985,32 @@ select:focus-visible,
 }
 .wd-cf-amount small { font-size: 0.6em; font-weight: 700; opacity: 0.85; margin-right: 0.13em; }
 
+/* Halo de color + trama de puntos. Debajo del contenido (z-index 1) y encima
+   del fondo metálico, así tiñe la cara sin restar contraste al monto. */
+.wd-cf-pattern { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+
+/* Pie de la tarjeta: marca de Pockr a la izquierda, Visa a la derecha.
+   `center`, no `flex-end`: el logo es cuadrado y el de Visa mucho más bajo, así
+   que alineados por la base quedaban a distinta altura óptica. */
+.wd-cf-foot {
+  position: absolute; z-index: 2; left: 0.84em; right: 0.72em; bottom: 0.45em;
+  height: 1.9em; display: flex; align-items: center; justify-content: space-between;
+}
+.wd-cf-brand {
+  width: 1.85em; height: 1.85em; color: #fff; opacity: 0.95;
+  filter: drop-shadow(0 0.03em 0.09em rgba(0, 0, 0, 0.45));
+}
+.wd-cf-visa {
+  height: 0.82em; width: auto;
+  filter: drop-shadow(0 0.03em 0.1em rgba(0, 0, 0, 0.5));
+}
+
 /* tarjeta adoptada por el layout tras encajar (el JS le fija el clip a la boca).
    Se monta OCULTA durante el vuelo; el motor la revela en el tick del encaje. */
-.wd-static-card { position: absolute; inset: 0; visibility: hidden; }
+/* Misma sombra que lleva la tarjeta durante el vuelo (.wd-fx-card .wd-face.front):
+   sin ella, al aterrizar la tarjeta se quedaba plana contra el fondo y el relevo
+   entre la capa del vuelo y esta se notaba como un corte. */
+.wd-static-card { position: absolute; inset: 0; visibility: hidden; filter: drop-shadow(0 5px 9px rgba(0, 0, 0, 0.3)); }
 .wd-static-card.is-on { visibility: visible; }
 
 /* ── panel del detalle: PÁGINA ESTÁTICA (solo scrollea la lista de movimientos) ── */
@@ -1038,18 +1051,30 @@ select:focus-visible,
 }
 .wd-mv-scroll::-webkit-scrollbar { display: none; }
 
-/* cards de acceso y Movimientos: entran RECIÉN cuando la tarjeta encaja (is-seated) */
+/* cards de acceso y Movimientos: entran RECIÉN cuando la tarjeta encaja (is-seated).
+   La SALIDA (al quitarse .is-seated) es más corta y sin escalonar: si dura lo
+   mismo que la entrada, el contenido se repliega con calma mientras la tarjeta
+   ya despega y se lee como que todo "encaja" antes de empezar la animación. */
 .wd-reveal {
   opacity: 0; transform: translateY(14px);
+  transition: opacity 0.16s cubic-bezier(0.4, 0, 1, 1), transform 0.16s cubic-bezier(0.4, 0, 1, 1);
+  transition-delay: 0s;
+}
+.wd-screen.is-seated .wd-reveal {
   transition: opacity 0.3s cubic-bezier(0.23, 1, 0.32, 1), transform 0.3s cubic-bezier(0.23, 1, 0.32, 1);
 }
 .wd-screen.is-seated .wd-reveal { opacity: 1; transform: none; }
 .wd-screen.is-seated .wd-reveal-2 { transition-delay: 0.05s; }
 .wd-screen.is-seated .wd-reveal-3 { transition-delay: 0.1s; }
 
-/* entrada de las filas: stagger gateado por el encaje */
+/* entrada de las filas: stagger gateado por el encaje. Al salir se van todas a
+   la vez y rápido — el escalonado invertido era lo que más se notaba al cerrar. */
 .wd-mv-item {
   opacity: 0; transform: translateY(10px);
+  transition: opacity 0.14s cubic-bezier(0.4, 0, 1, 1), transform 0.14s cubic-bezier(0.4, 0, 1, 1);
+  transition-delay: 0s;
+}
+.wd-screen.is-seated .wd-mv-item {
   transition: opacity 0.28s cubic-bezier(0.23, 1, 0.32, 1), transform 0.28s cubic-bezier(0.23, 1, 0.32, 1);
 }
 .wd-screen.is-seated .wd-mv-item { opacity: 1; transform: none; transition-delay: 0.1s; }
