@@ -88,7 +88,51 @@ export interface Expense {
   attachmentCount?: number
   walletId?: number
   walletName?: string
+  reimbursableAmount?: number
   createdAt?: string
+}
+
+export interface DebtItem {
+  personName: string
+  amount: number
+}
+
+export type DebtDirection = 'THEY_OWE' | 'I_OWE'
+export type DebtStatus = 'PENDING' | 'PARTIAL' | 'SETTLED'
+
+export interface Debt {
+  id: number
+  direction: DebtDirection
+  personName: string
+  amount: number
+  paidAmount: number
+  pending: number
+  status: DebtStatus
+  expenseId?: number
+  walletId?: number
+  description?: string
+  incurredOn: string
+  settledOn?: string
+}
+
+export interface DebtPersonGroup {
+  personName: string
+  pending: number
+  debts: Debt[]
+}
+
+/** Un abono concreto sobre una deuda pagada por partes. */
+export interface DebtPayment {
+  id: number
+  amount: number
+  paidOn: string
+  walletId?: number
+  walletName?: string
+}
+
+export interface DebtSummary {
+  theyOwe: number
+  iOwe: number
 }
 
 export interface ExpensePage {
@@ -139,6 +183,14 @@ export interface ReportSummary {
   currentIncome?: number
   previousIncome?: number
   netBalance?: number
+}
+
+export interface DailyTotal {
+  date: string
+  total: number
+  categoryName?: string
+  categoryColor?: string
+  categoryIcon?: string
 }
 
 export interface CategoryBreakdown {

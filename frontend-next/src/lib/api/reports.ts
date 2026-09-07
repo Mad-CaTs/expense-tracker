@@ -1,4 +1,4 @@
-import type { CategoryBreakdown, Period, ReportSummary } from '@/types'
+import type { CategoryBreakdown, DailyTotal, Period, ReportSummary } from '@/types'
 
 import { apiClient } from './client'
 
@@ -21,5 +21,11 @@ export async function getCategoryBreakdown({ period, from, to, txType, walletId 
   const res = await apiClient.get<CategoryBreakdown[]>('/reports/by-category', {
     params: { period, from, to, txType, walletId },
   })
+  return res.data
+}
+
+/** Total por día del periodo. Solo trae los días CON movimiento. */
+export async function getDailyTotals(params: ReportParams): Promise<DailyTotal[]> {
+  const res = await apiClient.get<DailyTotal[]>('/reports/daily', { params })
   return res.data
 }

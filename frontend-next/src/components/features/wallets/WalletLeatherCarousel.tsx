@@ -8,6 +8,7 @@ import { useReducedMotion } from 'framer-motion'
 import { WalletBalanceAmount } from '@/components/features/wallets/WalletBalanceAmount'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { useWallets } from '@/lib/hooks/useWallets'
+import { useFilterStore } from '@/stores/filterStore'
 import { categoryHueSat } from '@/lib/utils/cardVisuals'
 import type { Wallet } from '@/types'
 
@@ -61,12 +62,19 @@ export function WalletLeatherCarousel({ onOpenActive }: WalletLeatherCarouselPro
   for (const src of Object.values(LEATHER_SRC)) preload(src, { as: 'image' })
 
   const { data: wallets = [], isLoading } = useWallets()
-  const [rawCurrent, setCurrent] = useState(0)
+  const [rawCurrent, setCurrent] = useState<number | null>(null)
   const [pressed, setPressed] = useState<number | null>(null)
   const reduce = useReducedMotion()
 
+  /* La billetera activa manda mientras no se haya deslizado: al volver desde
+     /expenses el carrusel tiene que reabrir en la MISMA que se abrió, no en la
+     primera. `null` significa "aún sin elegir a mano"; en cuanto el usuario
+     desliza, su elección pasa a mandar. */
+  const activeId = useFilterStore((s) => s.walletId)
   const total = wallets.length
-  const current = total > 0 ? Math.min(rawCurrent, total - 1) : 0
+  const activeIndex = activeId != null ? wallets.findIndex((w) => w.id === activeId) : -1
+  const fallback = activeIndex >= 0 ? activeIndex : 0
+  const current = total > 0 ? Math.min(rawCurrent ?? fallback, total - 1) : 0
   const dragging = useRef(false)
   const moved = useRef(false)
   const startX = useRef(0)
@@ -80,8 +88,8 @@ export function WalletLeatherCarousel({ onOpenActive }: WalletLeatherCarouselPro
     return pos < 0 ? 'hidden-l' : 'hidden-r'
   }
 
-  const next = () => setCurrent((c) => (c + 1) % total)
-  const prev = () => setCurrent((c) => (c - 1 + total) % total)
+  const next = () => setCurrent((current + 1) % total)
+  const prev = () => setCurrent((current - 1 + total) % total)
 
   function onPointerDown(e: React.PointerEvent) {
     dragging.current = true

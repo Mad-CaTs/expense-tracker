@@ -2,6 +2,8 @@ package com.expenses.expense.internal;
 
 import com.expenses.wallet.PerWalletTotal;
 import com.expenses.shared.query.CategoryBreakdownRow;
+import com.expenses.shared.query.DailyCategoryRow;
+import com.expenses.shared.query.DailyTotalRow;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -31,13 +33,13 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long>, JpaSpec
            "WHERE e.user.id = :userId AND e.wallet.id = :walletId AND e.deletedAt IS NULL")
     int softDeleteByWalletId(@Param("userId") Long userId, @Param("walletId") Long walletId, @Param("now") LocalDateTime now);
 
-    @Query("SELECT COALESCE(SUM(e.amount), 0) FROM Expense e WHERE e.user.id = :userId AND e.date BETWEEN :from AND :to")
+    @Query("SELECT COALESCE(SUM(e.amount - e.reimbursableAmount), 0) FROM Expense e WHERE e.user.id = :userId AND e.date BETWEEN :from AND :to")
     BigDecimal sumAmountByUserIdAndDateBetween(@Param("userId") Long userId, @Param("from") LocalDate from, @Param("to") LocalDate to);
 
-    @Query("SELECT COALESCE(SUM(e.amount), 0) FROM Expense e WHERE e.user.id = :userId AND e.date BETWEEN :from AND :to AND e.category.id = :categoryId")
+    @Query("SELECT COALESCE(SUM(e.amount - e.reimbursableAmount), 0) FROM Expense e WHERE e.user.id = :userId AND e.date BETWEEN :from AND :to AND e.category.id = :categoryId")
     BigDecimal sumAmountByUserIdAndDateBetweenAndCategoryId(@Param("userId") Long userId, @Param("from") LocalDate from, @Param("to") LocalDate to, @Param("categoryId") Long categoryId);
 
-    @Query("SELECT COALESCE(SUM(e.amount), 0) FROM Expense e " +
+    @Query("SELECT COALESCE(SUM(e.amount - e.reimbursableAmount), 0) FROM Expense e " +
            "WHERE e.user.id = :userId AND e.category.id = :categoryId AND e.wallet.id = :walletId " +
            "AND MONTH(e.date) = :month AND YEAR(e.date) = :year")
     BigDecimal sumSpentByCategoryWalletAndPeriod(@Param("userId") Long userId,
@@ -46,7 +48,7 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long>, JpaSpec
                                                  @Param("month") Integer month,
                                                  @Param("year") Integer year);
 
-    @Query("SELECT e.category.id AS categoryId, e.wallet.id AS walletId, SUM(e.amount) AS total FROM Expense e " +
+    @Query("SELECT e.category.id AS categoryId, e.wallet.id AS walletId, SUM(e.amount - e.reimbursableAmount) AS total FROM Expense e " +
            "WHERE e.user.id = :userId AND e.wallet IS NOT NULL " +
            "AND MONTH(e.date) = :month AND YEAR(e.date) = :year " +
            "GROUP BY e.category.id, e.wallet.id")
@@ -55,24 +57,48 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long>, JpaSpec
                                                                        @Param("year") Integer year);
 
     @Query("""
-        SELECT e.category.name AS name, SUM(e.amount) AS total, COUNT(e) AS count,
+        SELECT e.category.name AS name, SUM(e.amount - e.reimbursableAmount) AS total, COUNT(e) AS count,
                e.category.color AS color, e.category.icon AS icon
         FROM Expense e
         WHERE e.user.id = :userId AND e.date BETWEEN :from AND :to AND e.category.id = :categoryId
           AND (:walletId IS NULL OR e.wallet.id = :walletId)
         GROUP BY e.category.name, e.category.color, e.category.icon
-        ORDER BY SUM(e.amount) DESC
+        ORDER BY SUM(e.amount - e.reimbursableAmount) DESC
         """)
     List<CategoryBreakdownRow> findCategoryBreakdownByUserIdAndCategoryId(@Param("userId") Long userId, @Param("from") LocalDate from, @Param("to") LocalDate to, @Param("categoryId") Long categoryId, @Param("walletId") Long walletId);
 
     @Query("""
-        SELECT e.category.name AS name, SUM(e.amount) AS total, COUNT(e) AS count,
+        SELECT e.category.name AS name, SUM(e.amount - e.reimbursableAmount) AS total, COUNT(e) AS count,
                e.category.color AS color, e.category.icon AS icon
         FROM Expense e
         WHERE e.user.id = :userId AND e.date BETWEEN :from AND :to
           AND (:walletId IS NULL OR e.wallet.id = :walletId)
         GROUP BY e.category.name, e.category.color, e.category.icon
-        ORDER BY SUM(e.amount) DESC
+        ORDER BY SUM(e.amount - e.reimbursableAmount) DESC
         """)
     List<CategoryBreakdownRow> findCategoryBreakdownByUserId(@Param("userId") Long userId, @Param("from") LocalDate from, @Param("to") LocalDate to, @Param("walletId") Long walletId);
+
+    /** Total por día del periodo: el soft-delete lo aplica @SQLRestriction. */
+    @Query("""
+        SELECT e.date AS date, SUM(e.amount - e.reimbursableAmount) AS total
+        FROM Expense e
+        WHERE e.user.id = :userId AND e.date BETWEEN :from AND :to
+          AND (:walletId IS NULL OR e.wallet.id = :walletId)
+        GROUP BY e.date
+        ORDER BY e.date
+        """)
+    List<DailyTotalRow> findDailyTotals(@Param("userId") Long userId, @Param("from") LocalDate from, @Param("to") LocalDate to, @Param("walletId") Long walletId);
+
+    /** Total por día Y categoría: el cliente pinta la dominante de cada día. */
+    @Query("""
+        SELECT e.date AS date, SUM(e.amount - e.reimbursableAmount) AS total,
+               e.category.name AS categoryName, e.category.color AS categoryColor,
+               e.category.icon AS categoryIcon
+        FROM Expense e
+        WHERE e.user.id = :userId AND e.date BETWEEN :from AND :to
+          AND (:walletId IS NULL OR e.wallet.id = :walletId)
+        GROUP BY e.date, e.category.name, e.category.color, e.category.icon
+        ORDER BY e.date
+        """)
+    List<DailyCategoryRow> findDailyByCategory(@Param("userId") Long userId, @Param("from") LocalDate from, @Param("to") LocalDate to, @Param("walletId") Long walletId);
 }

@@ -4,6 +4,7 @@ import com.expenses.expense.ExpenseQueries;
 import com.expenses.income.IncomeQueries;
 import com.expenses.income.UncategorizedIncome;
 import com.expenses.shared.query.CategoryBreakdownRow;
+import com.expenses.shared.query.DailyCategoryRow;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,7 +13,9 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -131,5 +134,40 @@ public class ReportService {
                 yield new LocalDate[]{ from.minusDays(days), to.minusDays(days) };
             }
         };
+    }
+
+    /**
+     * Total por día del periodo, con la categoría DOMINANTE de cada uno.
+     *
+     * Devuelve SOLO los días con movimiento: el cliente rellena los huecos, que
+     * es donde sabe cuántos días pinta. La dominante se resuelve acá y no en el
+     * cliente para no mandarle todas las categorías de todos los días.
+     */
+    @Transactional(readOnly = true)
+    public List<DailyTotalDTO> getDailyTotals(LocalDate from, LocalDate to, Long userId, String txType, Long walletId) {
+        var rows = "INCOME".equals(txType)
+                ? incomeQueries.dailyByCategory(userId, from, to, walletId)
+                : expenseQueries.dailyByCategory(userId, from, to, walletId);
+
+        // Por día: suma de todas sus categorías + la de mayor importe.
+        Map<LocalDate, BigDecimal> totals = new LinkedHashMap<>();
+        Map<LocalDate, DailyCategoryRow> top = new LinkedHashMap<>();
+        for (var r : rows) {
+            totals.merge(r.getDate(), r.getTotal(), BigDecimal::add);
+            var current = top.get(r.getDate());
+            if (current == null || r.getTotal().compareTo(current.getTotal()) > 0) {
+                top.put(r.getDate(), r);
+            }
+        }
+
+        return totals.entrySet().stream()
+                .map(e -> {
+                    var t = top.get(e.getKey());
+                    return new DailyTotalDTO(e.getKey(), e.getValue(),
+                            t != null ? t.getCategoryName() : null,
+                            t != null ? t.getCategoryColor() : null,
+                            t != null ? t.getCategoryIcon() : null);
+                })
+                .toList();
     }
 }

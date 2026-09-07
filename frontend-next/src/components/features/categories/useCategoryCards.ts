@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react'
 
+import { useActiveWallet } from '@/lib/hooks/useActiveWallet'
 import { useCategories } from '@/lib/hooks/useCategories'
 import { useCategoryBreakdown } from '@/lib/hooks/useReports'
 import type { CategoryType } from '@/types'
@@ -27,7 +28,12 @@ export interface CategoryCardsResult {
 }
 
 export function useCategoryCards(type: CategoryType): CategoryCardsResult {
+  /* TODAS las categorías: esta pantalla las administra, así que también debe
+     mostrar las ocultas (marcadas). El segundo listado, filtrado por la
+     billetera activa, dice cuáles se ofrecen ahí; la diferencia es lo oculto. */
   const { data: categories = [], isLoading: loadingCategories } = useCategories()
+  const activeWalletId = useActiveWallet()
+  const { data: visibles } = useCategories(undefined, activeWalletId)
   const { from, to } = useMemo(() => monthRange(), [])
   const { data: breakdown, isLoading: loadingBreakdown } = useCategoryBreakdown({ period: 'CUSTOM', from, to, txType: type })
 
@@ -43,6 +49,9 @@ export function useCategoryCards(type: CategoryType): CategoryCardsResult {
       })
     }
 
+    // `undefined` mientras carga: sin datos no se marca nada como oculto.
+    const visibleIds = visibles ? new Set(visibles.map((c) => c.id)) : null
+
     const cards: CategoryCardData[] = categories
       .filter((c) => (type === 'INCOME' ? c.type === 'INCOME' : c.type !== 'INCOME'))
       .map((c) => {
@@ -55,6 +64,7 @@ export function useCategoryCards(type: CategoryType): CategoryCardsResult {
           total: u?.total ?? 0,
           count: u?.count ?? 0,
           percentage: u?.percentage ?? 0,
+          hidden: visibleIds != null && !visibleIds.has(c.id),
         }
       })
       .sort((a, b) => {
@@ -73,5 +83,5 @@ export function useCategoryCards(type: CategoryType): CategoryCardsResult {
       topCategory: top && top.total > 0 ? top.name : null,
       movementCount,
     }
-  }, [categories, breakdown, type, isLoading])
+  }, [categories, visibles, breakdown, type, isLoading])
 }

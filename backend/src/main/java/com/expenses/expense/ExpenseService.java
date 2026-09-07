@@ -3,6 +3,7 @@ package com.expenses.expense;
 import com.expenses.category.Category;
 import com.expenses.category.CategoryFinder;
 import com.expenses.category.CategoryType;
+import com.expenses.debt.DebtsForExpense;
 import com.expenses.expense.internal.Expense;
 import com.expenses.expense.internal.ExpenseMapper;
 import com.expenses.expense.internal.ExpenseRepository;
@@ -18,6 +19,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -36,6 +38,7 @@ public class ExpenseService {
     private final CategoryFinder categoryFinder;
     private final WalletFinder walletFinder;
     private final ExpenseMapper expenseMapper;
+    private final DebtsForExpense debts;
 
     @Transactional(readOnly = true)
     public Page<ExpenseResponse> findAll(LocalDate from, LocalDate to, Long categoryId, Long walletId, Long userId, Pageable pageable) {
@@ -70,7 +73,10 @@ public class ExpenseService {
             expense.setWallet(requireWallet(request.getWalletId(), userId));
         }
 
-        return expenseMapper.toResponse(expenseRepository.save(expense));
+        // Guardar primero: el reparto necesita el id del gasto.
+        Expense saved = expenseRepository.save(expense);
+        applySplit(saved, request, userId, user);
+        return expenseMapper.toResponse(expenseRepository.save(saved));
     }
 
     @Transactional
@@ -91,6 +97,7 @@ public class ExpenseService {
             expense.setWallet(null);
         }
 
+        applySplit(expense, request, userId, expense.getUser());
         return expenseMapper.toResponse(expenseRepository.save(expense));
     }
 
@@ -98,7 +105,23 @@ public class ExpenseService {
     public void delete(Long id, Long userId) {
         Expense expense = expenseRepository.findByIdAndUserId(id, userId)
                 .orElseThrow(() -> new ResourceNotFoundException(EXPENSE_NOT_FOUND + id));
+        // Sin esto quedarían deudas huérfanas apuntando a un gasto invisible:
+        // el soft-delete no las arrastra solo.
+        debts.deleteForExpense(expense.getId(), userId);
         expenseRepository.delete(expense);
+    }
+
+    /**
+     * Rehace el reparto del gasto y guarda cuánto suma.
+     *
+     * <p>{@code reimbursableAmount} se desnormaliza en el gasto para que las
+     * consultas de estadísticas no tengan que hacer un JOIN con {@code debts}.
+     */
+    private void applySplit(Expense expense, ExpenseRequest request, Long userId, User user) {
+        BigDecimal reimbursable = debts.replaceForExpense(
+                expense.getId(), userId, user, request.getDebts(),
+                expense.getAmount(), expense.getDate(), expense.getDescription());
+        expense.setReimbursableAmount(reimbursable);
     }
 
     private Specification<Expense> filterSpec(LocalDate from, LocalDate to, Long categoryId, Long walletId, Long userId) {

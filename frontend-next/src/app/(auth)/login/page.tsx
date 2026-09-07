@@ -33,7 +33,7 @@ export default function LoginPage() {
       // salida) o voluntario desde Configuración (con Cancelar).
       localStorage.setItem('auth_must_change', String(mustChangePassword))
 
-      router.push(mustChangePassword ? '/change-password' : '/expenses')
+      router.push(mustChangePassword ? '/change-password' : '/wallets')
     } catch {
       setError('Usuario o contraseña incorrectos')
       setErrorKey((k) => k + 1)

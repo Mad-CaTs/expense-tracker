@@ -38,6 +38,17 @@ public class ReportController {
         return reportService.getCategoryBreakdown(range[0], range[1], userResolver.getCurrentUserId(), categoryId, txType, walletId);
     }
 
+    @GetMapping("/daily")
+    public List<DailyTotalDTO> getDailyTotals(
+            @RequestParam(defaultValue = "MONTHLY") String period,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam(defaultValue = "EXPENSE") String txType,
+            @RequestParam(required = false) Long walletId) {
+        LocalDate[] range = resolveRange(period, from, to);
+        return reportService.getDailyTotals(range[0], range[1], userResolver.getCurrentUserId(), txType, walletId);
+    }
+
     private LocalDate[] resolveRange(String period, LocalDate from, LocalDate to) {
         LocalDate now = LocalDate.now();
         return switch (period) {

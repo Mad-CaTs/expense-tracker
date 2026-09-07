@@ -5,7 +5,14 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Trash2 } from 'lucide-react'
 
-import { useCreateCategory, useUpdateCategory } from '@/lib/hooks/useCategories'
+import {
+  useCreateCategory,
+  useHiddenIn,
+  useSetCategoryVisibility,
+  useUpdateCategory,
+} from '@/lib/hooks/useCategories'
+import { useActiveWallet } from '@/lib/hooks/useActiveWallet'
+import { useWallets } from '@/lib/hooks/useWallets'
 import { categoryAura, categorySwatch } from '@/lib/utils/cardVisuals'
 import { CATEGORY_ICON_MAP } from '@/lib/utils/categoryIcons'
 import { MOTION } from '@/lib/utils/motion'
@@ -103,6 +110,20 @@ export function CategorySheet({ type, category, usage, onClose, onCreated, onSav
   const create = useCreateCategory()
   const update = useUpdateCategory()
   const editing = category != null
+
+  /* Visibilidad por billetera: la excepción se guarda contra la billetera
+     ACTIVA, que es desde la que el usuario está mirando sus categorías. */
+  const activeWalletId = useActiveWallet()
+  const { data: wallets = [] } = useWallets()
+  const activeWallet = wallets.find((w) => w.id === activeWalletId)
+  const { data: hiddenIn = [] } = useHiddenIn(category?.id)
+  const visibility = useSetCategoryVisibility()
+  const isHidden = activeWalletId != null && hiddenIn.includes(activeWalletId)
+
+  function toggleHidden() {
+    if (category == null || activeWalletId == null) return
+    visibility.mutate({ categoryId: category.id, walletId: activeWalletId, hidden: !isHidden })
+  }
 
   const [name, setName] = useState(category?.name ?? '')
   const [icon, setIcon] = useState(category?.icon ?? 'wallet')
@@ -269,6 +290,41 @@ export function CategorySheet({ type, category, usage, onClose, onCreated, onSav
               )
             })}
           </div>
+
+          {/* Visibilidad en la billetera activa. Solo al editar: al crear no hay
+              categoría todavía a la que asociar la excepción. Ocultar NO borra
+              nada — los movimientos ya registrados siguen contando. */}
+          {editing && activeWallet && (
+            <button
+              type="button"
+              onClick={() => toggleHidden()}
+              disabled={visibility.isPending}
+              className="mt-[18px] flex w-full cursor-pointer items-center gap-3 rounded-[16px] px-3.5 py-3 text-left disabled:opacity-60"
+              style={{ background: 'var(--bg-hover)' }}
+            >
+              <span className="min-w-0 flex-1">
+                <span className="block text-[13px] font-bold" style={{ color: 'var(--text-primary)' }}>
+                  Mostrar en {activeWallet.name}
+                </span>
+                <span className="mt-0.5 block text-[11px]" style={{ color: 'var(--text-muted)' }}>
+                  {isHidden
+                    ? 'No aparece al registrar desde esta billetera'
+                    : 'Aparece al registrar desde esta billetera'}
+                </span>
+              </span>
+              <span
+                className="relative h-[26px] w-[44px] flex-none rounded-full transition-colors"
+                style={{ background: isHidden ? 'var(--border-strong)' : 'var(--success)' }}
+                role="switch"
+                aria-checked={!isHidden}
+              >
+                <span
+                  className="absolute top-[3px] h-5 w-5 rounded-full bg-white transition-transform"
+                  style={{ left: 3, transform: isHidden ? 'none' : 'translateX(18px)' }}
+                />
+              </span>
+            </button>
+          )}
 
           <div className="mt-[18px] flex gap-2.5">
             {editing && onDelete && (

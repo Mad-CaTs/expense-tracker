@@ -1,283 +1,106 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
-import { flushSync, preload } from 'react-dom'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRef } from 'react'
+import { preload } from 'react-dom'
+import { useRouter } from 'next/navigation'
 
 import { useReducedMotion } from 'framer-motion'
 
-import { useDeleteWallet, useWallets } from '@/lib/hooks/useWallets'
-import { MOTION } from '@/lib/utils/motion'
+import { useWallets } from '@/lib/hooks/useWallets'
+import { useFilterStore } from '@/stores/filterStore'
 import type { Wallet } from '@/types'
 
-import { cardFaceHTML } from './cardFace'
 import { toLeatherId } from './leathers'
-import { computeAdoptedCard, useWalletFlight } from './useWalletFlight'
+import { predictedSlot, useCardTransition } from './useCardTransition'
 import { LEATHER_SRC, themeForColor, WalletLeatherCarousel } from './WalletLeatherCarousel'
-import { takeNotice } from '@/components/features/shared/pendingNotice'
-import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
-import { SuccessDialog } from '@/components/ui/SuccessDialog'
-
-import { WalletDetailPanel } from './WalletDetailPanel'
-import type { WalletNotice } from './WalletFormScreen'
-
-type Stage = 'idle' | 'opening' | 'detail' | 'closing'
-
-const nextPaint = () => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())))
-const sleep = (ms: number) => new Promise<void>((resolve) => { window.setTimeout(resolve, ms) })
+import { WalletNoticeDialog } from './WalletNoticeDialog'
 
 const leatherOf = (wallet: Wallet) =>
   LEATHER_SRC[wallet.leather ? toLeatherId(wallet.leather) : themeForColor(wallet.color)]
 
-const REVEAL_OUT_MS = 300
-const PANEL_OUT_MS = 280
+/** Dónde termina el vuelo antes de expandirse: centrada y a casi todo el ancho.
+ *  Ya no aterriza en el hueco de la cabecera —desde acá crece hasta cubrir la
+ *  pantalla y se desvanece, y la tarjeta de /expenses aparece debajo. */
+const SLOT_GUTTER = 26
+/** Cuándo se lanza la navegación dentro del vuelo (que dura 1150ms). A media
+ *  animación: lo bastante tarde para que el trabajo de React no compita con el
+ *  arranque del giro, y lo bastante pronto para que /expenses esté montado
+ *  antes de la costura con la expansión. */
+const NAV_LEAD_MS = 620
+/** Cuándo arranca la expansión, contando desde el clic. Un poco antes de que
+ *  termine el vuelo (1150ms) para que no haya un corte entre ambas. */
+const EXPAND_LEAD_MS = 1080
 
-const SAVED_TITLES: Record<WalletNotice['kind'], string> = {
-  created: 'Billetera creada',
-  updated: 'Billetera actualizada',
-  deleted: 'Billetera eliminada',
-}
-
-const SAVED_TEXTS: Record<WalletNotice['kind'], (name: string) => string> = {
-  created: (n) => `"${n}" ya está lista para tus movimientos.`,
-  updated: (n) => `"${n}" se actualizó correctamente.`,
-  deleted: (n) => `"${n}" y sus movimientos se eliminaron.`,
-}
-
+/**
+ * Portada de la app: se elige billetera y nada más.
+ *
+ * Al tocar una, su tarjeta despega y vuela hacia /expenses, donde aterriza
+ * como cabecera fija. La capa del vuelo cuelga de <body>, así que sobrevive a
+ * la navegación: esta pantalla se desmonta con la tarjeta todavía en el aire.
+ */
 export function WalletsScreen() {
   preload('/brand/logo.webp', { as: 'image' })
-  preload('/wallets/budget-strip.webp', { as: 'image' })
-  preload('/wallets/card-flat.webp', { as: 'image' })
 
-  const [openWallet, setOpenWallet] = useState<Wallet | null>(null)
-  const [saved, setSaved] = useState<WalletNotice | null>(null)
-  const [pendingDelete, setPendingDelete] = useState<Wallet | null>(null)
-  const removeWallet = useDeleteWallet()
-  const [stage, setStage] = useState<Stage>('idle')
-  const [settled, setSettled] = useState(false)
-  const [seated, setSeated] = useState(false)
-  const [adoptedCard, setAdoptedCard] = useState<{ html: string } | null>(null)
-  const [restored, setRestored] = useState(false)
-
-  const stageRef = useRef<Stage>('idle')
-  const screenRef = useRef<HTMLDivElement>(null)
-  const panelRef = useRef<HTMLDivElement>(null)
-  const stripRef = useRef<HTMLDivElement>(null)
-  const slotRef = useRef<HTMLDivElement>(null)
-  const boundScrollEl = useRef<HTMLElement | null>(null)
+  const flying = useRef(false)
 
   const reduce = useReducedMotion()
-  const flight = useWalletFlight(Boolean(reduce))
-
+  const { launch, expandAndFade } = useCardTransition(Boolean(reduce))
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const { data: wallets = [] } = useWallets()
-  const restoredFor = useRef<string | null>(null)
-  const flightRef = useRef(flight)
-  useEffect(() => { flightRef.current = flight }, [flight])
+  const setWalletId = useFilterStore((s) => s.setWalletId)
+  useWallets()
 
-  // La restauración vale para la primera visita a /wallets de esta sesión de
-  // pantalla: es la que sigue a una recarga con el detalle abierto. En las
-  // siguientes, un `?w=` heredado al volver desde otra pestaña de la navbar se
-  // limpia sin abrir nada — antes el detalle aparecía solo, sin animación.
-  // La marca vive en `sessionStorage`, no en un ref: al navegar entre pestañas
-  // la pantalla se remonta y un ref volvería a cero, dejando que el `?w=`
-  // heredado restaurara otra vez. Se consume al RESTAURAR, no al montar —
-  // mientras las billeteras cargan, este efecto corre en vacío.
-  const RESTAURADA = 'pockr-wallet-restaurada'
-  useEffect(() => {
-    const raw = searchParams.get('w')
-    if (!raw) return
-    // Con un detalle abierto el `?w=` lo acaba de escribir `openWallet`: se
-    // queda. En `idle` es un parámetro heredado y no debe abrir nada.
-    if (stageRef.current !== 'idle') return
-    if (restoredFor.current === raw) return
-    if (sessionStorage.getItem(RESTAURADA) === raw) {
-      router.replace('/wallets', { scroll: false })
-      return
+
+  async function openWallet(wallet: Wallet, els: { walletEl: HTMLElement; cardEl: HTMLElement }) {
+    if (flying.current) return
+    flying.current = true
+
+    // La billetera queda activa ANTES de navegar: /expenses monta ya filtrado
+    // por ella y la tarjeta aterriza sobre su propio contenido, no sobre el de
+    // la billetera anterior.
+    setWalletId(wallet.id)
+
+    // Centrada verticalmente: desde el centro la expansión crece pareja hacia
+    // los cuatro bordes, sin tirar de la vista hacia arriba. El alto lo decide
+    // `predictedSlot` (proporción de tarjeta), así que se mide primero y se
+    // recoloca — no se puede suponer acá sin duplicar esa proporción.
+    const flat = predictedSlot(window.innerWidth, 0, SLOT_GUTTER)
+    const dest = {
+      ...flat,
+      top: Math.round((window.innerHeight - flat.height) / 2),
     }
-    const wallet = wallets.find((w) => String(w.id) === raw)
-    if (!wallet) return
 
-    sessionStorage.setItem(RESTAURADA, raw)
-    restoredFor.current = raw
-    stageRef.current = 'detail'
-
-    queueMicrotask(() => {
-      setOpenWallet(wallet)
-      setStage('detail')
-      setSettled(true)
-      setRestored(true)
-    })
-
-    void (async () => {
-      await nextPaint()
-      const { current: screen } = screenRef
-      const { current: panel } = panelRef
-      const { current: strip } = stripRef
-      const { current: slot } = slotRef
-      if (!screen || !panel || !strip || !slot) return
-
-      const screenRect = screen.getBoundingClientRect()
-      screen.style.setProperty('--wd-left', `${Math.round(screenRect.left)}px`)
-      screen.style.setProperty('--wd-width', `${Math.round(screenRect.width)}px`)
-
-      const adopted = computeAdoptedCard(panel, strip, slot)
-      setAdoptedCard({
-        html: cardFaceHTML(wallet.color ?? '#4ade80', Number(wallet.balance), adopted.widthPx),
-      })
-
-      flightRef.current.mountSeated({
-        screen,
-        panel,
-        strip,
-        slot,
-        leatherSrc: leatherOf(wallet),
-      })
-
-      setSeated(true)
-    })()
-  }, [searchParams, wallets, router])
-
-  useEffect(() => {
-    document.body.classList.toggle('wallet-detail-open', stage !== 'idle')
-    return () => document.body.classList.remove('wallet-detail-open')
-  }, [stage])
-
-  async function openDetail(wallet: Wallet, els: { walletEl: HTMLElement; cardEl: HTMLElement }) {
-    if (stageRef.current !== 'idle') return
-    stageRef.current = 'opening'
-    setOpenWallet(wallet)
-    setStage('opening')
-    await nextPaint()
-    const { current: screen } = screenRef
-    const { current: panel } = panelRef
-    const { current: strip } = stripRef
-    const { current: slot } = slotRef
-    if (!screen || !panel || !strip || !slot) return
-
-    const tint = wallet.color ?? '#4ade80'
-    const balance = Number(wallet.balance)
-
-    const screenRect = screen.getBoundingClientRect()
-    screen.style.setProperty('--wd-left', `${Math.round(screenRect.left)}px`)
-    screen.style.setProperty('--wd-width', `${Math.round(screenRect.width)}px`)
-
-    const adopted = computeAdoptedCard(panel, strip, slot)
-    flushSync(() => {
-      setAdoptedCard({
-        html: cardFaceHTML(tint, balance, adopted.widthPx),
-      })
-    })
-
-    await flight.open(
+    const flight = launch(
       {
-        screen,
-        panel,
-        strip,
-        slot,
         walletEl: els.walletEl,
         cardEl: els.cardEl,
         leatherSrc: leatherOf(wallet),
-        tint,
-        balance,
+        tint: wallet.color ?? '#4ade80',
+        balance: Number(wallet.balance),
       },
-      () => setSettled(true),
-      () => setSeated(true),
+      dest,
     )
-    stageRef.current = 'detail'
-    setStage('detail')
-    restoredFor.current = String(wallet.id)
-    router.replace(`/wallets?w=${wallet.id}`, { scroll: false })
+
+    // La navegación arranca A MITAD del vuelo, no al terminarlo. Montar
+    // /expenses cuesta uno o dos frames de trabajo de React, y hacerlo justo en
+    // la costura entre el vuelo y la expansión congelaba la tarjeta ahí: era la
+    // "pausa" que se notaba. Acá ese coste cae dentro del giro, donde la
+    // tarjeta ya está en movimiento y no se percibe.
+    window.setTimeout(() => router.push('/expenses'), NAV_LEAD_MS)
+
+    // La expansión se encadena un pelín ANTES de que el vuelo acabe: su último
+    // tramo avanza ~0.3px/frame, invisible, y solapar ahí evita que las dos
+    // fases tengan una frontera dura.
+    window.setTimeout(() => { void expandAndFade() }, EXPAND_LEAD_MS)
+    await flight
   }
-
-  async function closeDetail() {
-    if (stageRef.current !== 'detail') return
-    stageRef.current = 'closing'
-    setStage('closing')
-    setSeated(false)
-    setRestored(false)
-
-    if (flight.isActive()) {
-      await flight.close(() => setSettled(false))
-    } else {
-      if (!reduce) await sleep(REVEAL_OUT_MS)
-      setSettled(false)
-      if (!reduce) await sleep(PANEL_OUT_MS)
-    }
-
-    setAdoptedCard(null)
-    boundScrollEl.current = null
-    stageRef.current = 'idle'
-    setStage('idle')
-    setOpenWallet(null)
-    restoredFor.current = null
-    // Se olvida la marca: si el usuario vuelve a abrir y recarga, esa nueva
-    // sesión de detalle debe poder restaurarse igual que la primera.
-    sessionStorage.removeItem(RESTAURADA)
-    router.replace('/wallets', { scroll: false })
-  }
-
-  async function confirmDelete() {
-    const target = pendingDelete
-    if (!target) return
-    setPendingDelete(null)
-    await closeDetail()
-    await removeWallet.mutateAsync(target.id)
-    setSaved({ name: target.name, kind: 'deleted' })
-  }
-
-  const screenClass = ['wd-screen relative mx-auto w-full max-w-[430px]']
-  if (stage !== 'idle') screenClass.push('is-detail')
-  if (settled) screenClass.push('is-settled')
-  if (seated) screenClass.push('is-seated')
-
-  useEffect(() => {
-    const notice = takeNotice<WalletNotice>()
-    if (!notice) return
-    const t = window.setTimeout(() => setSaved(notice), MOTION.layer)
-    return () => window.clearTimeout(t)
-  }, [])
 
   return (
-    <div ref={screenRef} className={screenClass.join(' ')}>
+    <div className="relative mx-auto w-full max-w-[430px]">
       <div className="wd-carousel">
-        <WalletLeatherCarousel onOpenActive={openDetail} />
+        <WalletLeatherCarousel onOpenActive={openWallet} />
       </div>
-      <ConfirmDialog
-        open={pendingDelete != null}
-        title="Eliminar billetera"
-        description={pendingDelete
-          ? `Se eliminará "${pendingDelete.name}" y sus movimientos. No se puede deshacer.`
-          : undefined}
-        onConfirm={confirmDelete}
-        onCancel={() => setPendingDelete(null)}
-      />
 
-      <SuccessDialog
-        open={saved != null}
-        title={saved ? SAVED_TITLES[saved.kind] : ''}
-        description={saved ? SAVED_TEXTS[saved.kind](saved.name) : undefined}
-        onClose={() => setSaved(null)}
-      />
-
-      {openWallet && (
-        <WalletDetailPanel
-          wallet={openWallet}
-          adoptedCard={adoptedCard}
-          restored={restored}
-          onBack={closeDetail}
-          onDelete={() => setPendingDelete(openWallet)}
-          panelRef={panelRef}
-          stripRef={stripRef}
-          slotRef={slotRef}
-          onScrollElReady={(el) => {
-            if (boundScrollEl.current === el) return
-            boundScrollEl.current = el
-            flight.bindScroll(el)
-          }}
-        />
-      )}
+      <WalletNoticeDialog />
     </div>
   )
 }

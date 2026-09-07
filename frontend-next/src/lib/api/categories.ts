@@ -2,11 +2,30 @@ import type { Category, CategoryType } from '@/types'
 
 import { apiClient } from './client'
 
-export async function getCategories(type?: CategoryType): Promise<Category[]> {
+/** Con `walletId` se excluyen las categorías ocultas en esa billetera. Sin él
+ *  devuelve todas — reportes y presupuestos necesitan el conjunto completo. */
+export async function getCategories(type?: CategoryType, walletId?: number): Promise<Category[]> {
+  const params: Record<string, string | number> = {}
+  if (type) params.type = type
+  if (walletId != null) params.walletId = walletId
   const res = await apiClient.get<Category[]>('/categories', {
-    params: type ? { type } : undefined,
+    params: Object.keys(params).length ? params : undefined,
   })
   return res.data
+}
+
+/** Billeteras donde esta categoría está oculta. */
+export async function getHiddenIn(categoryId: number): Promise<number[]> {
+  const res = await apiClient.get<number[]>(`/categories/${categoryId}/hidden-in`)
+  return res.data
+}
+
+export async function setCategoryVisibility(
+  categoryId: number,
+  walletId: number,
+  hidden: boolean,
+): Promise<void> {
+  await apiClient.put(`/categories/${categoryId}/visibility`, { walletId, hidden })
 }
 
 export async function createCategory(data: Omit<Category, 'id'>): Promise<Category> {

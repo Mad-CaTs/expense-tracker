@@ -4,19 +4,23 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
 import { AttachmentSection, type PendingFile } from '@/components/features/expenses/AttachmentSection'
+import { ExpenseSplitField, type SplitRow } from '@/components/features/expenses/ExpenseSplitField'
 import { AmountField } from '@/components/features/shared/AmountField'
 import { CategorySelector } from '@/components/features/shared/CategorySelector'
 import { DateField } from '@/components/features/shared/DateField'
+import { DescriptionField } from '@/components/features/shared/DescriptionField'
 import { SheetSteps } from '@/components/features/shared/SheetSteps'
 import { StepActions } from '@/components/features/shared/StepActions'
 import type { TxSummary } from '@/components/features/shared/txSummary'
 import { useFormSteps } from '@/components/features/shared/useFormSteps'
 import { NotesField } from '@/components/features/shared/NotesField'
 import { uploadAttachment } from '@/lib/api/attachments'
+import { FIELD_LIMITS } from '@/lib/utils/fieldLimits'
 import { useActiveWallet } from '@/lib/hooks/useActiveWallet'
 import { useCategories } from '@/lib/hooks/useCategories'
+import { useDebtsByExpense } from '@/lib/hooks/useDebts'
 import { useCreateExpense, useExpense, useUpdateExpense } from '@/lib/hooks/useExpenses'
-import { Expense } from '@/types'
+import { DebtItem, Expense } from '@/types'
 
 interface ExpenseFormProps {
   expenseId?: number
@@ -28,18 +32,18 @@ interface ExpenseFormProps {
 
 interface FormInnerProps {
   expense?: Expense
+  initialDebts: DebtItem[]
   expenseId?: number
   onDone?: () => void
   onRequestDelete?: () => void
   onSaved?: (summary: TxSummary) => void
 }
 
-function ExpenseFormInner({ expense, expenseId, onDone, onRequestDelete, onSaved }: FormInnerProps) {
+function ExpenseFormInner({ expense, initialDebts, expenseId, onDone, onRequestDelete, onSaved }: FormInnerProps) {
   const router = useRouter()
   const isEdit = expenseId != null && expenseId > 0
   const embedded = onDone != null
 
-  const { data: categories } = useCategories('EXPENSE')
   const createExpense = useCreateExpense()
   const updateExpense = useUpdateExpense()
 
@@ -60,11 +64,16 @@ function ExpenseFormInner({ expense, expenseId, onDone, onRequestDelete, onSaved
    */
   const activeWalletId = useActiveWallet()
   const walletId = expense?.walletId?.toString() ?? (activeWalletId?.toString() ?? '')
+  // Solo las ofrecidas en esta billetera: las ocultas no se listan.
+  const { data: categories } = useCategories('EXPENSE', walletId ? Number(walletId) : undefined)
   const [notes, setNotes] = useState(expense?.notes ?? '')
+  const [debts, setDebts] = useState<SplitRow[]>(
+    initialDebts.map((d, i) => ({ ...d, key: `init${i}` })),
+  )
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([])
 
-  const { step, stepDir, goNext, goBack, goTo } = useFormSteps(2)
+  const { step, stepDir, goNext, goBack, goTo } = useFormSteps(3)
 
   /** Paso 1: monto, descripción y categoría. Se valida antes de avanzar para
    *  que el error se vea junto al campo que lo produce. */
@@ -77,7 +86,19 @@ function ExpenseFormInner({ expense, expenseId, onDone, onRequestDelete, onSaved
     return Object.keys(errs).length === 0
   }
 
-  /** Paso 2: cuenta y fecha. Se valida acá para no enviar y fallar en el server. */
+  /** Paso 2: el reparto. El backend lo rechaza igual, pero avisar acá evita
+   *  perder el formulario entero. */
+  function validateSplit(): boolean {
+    const shared = debts.reduce((acc, d) => acc + (Number(d.amount) || 0), 0)
+    if (shared > Number(rawAmount || 0)) {
+      setErrors({ debts: 'Lo repartido supera el gasto' })
+      return false
+    }
+    setErrors({})
+    return true
+  }
+
+  /** Paso 3: cuenta y fecha. Se valida acá para no enviar y fallar en el server. */
   function validateStep2(): boolean {
     const errs: Record<string, string> = {}
     if (!walletId) errs.amount = 'Crea una billetera antes de registrar'
@@ -88,6 +109,7 @@ function ExpenseFormInner({ expense, expenseId, onDone, onRequestDelete, onSaved
 
   async function handleSubmit() {
     if (!validateStep1()) { goTo(1); return }
+    if (!validateSplit()) { goTo(2); return }
     if (!validateStep2()) return
     const payload = {
       description: description.trim(),
@@ -96,6 +118,12 @@ function ExpenseFormInner({ expense, expenseId, onDone, onRequestDelete, onSaved
       notes: notes.trim() || undefined,
       categoryId: Number(categoryId),
       walletId: walletId ? Number(walletId) : undefined,
+      // Solo las filas con nombre y monto: una fila vacía a medio escribir no
+      // debe llegar al backend.
+      debts: debts
+        .filter((d) => d.personName.trim() && Number(d.amount) > 0)
+        // `key` es solo de UI (ver SplitRow): no viaja al backend.
+        .map(({ personName, amount }) => ({ personName, amount })),
     }
     if (isEdit && expenseId) {
       await updateExpense.mutateAsync({ id: expenseId, data: payload })
@@ -125,7 +153,11 @@ function ExpenseFormInner({ expense, expenseId, onDone, onRequestDelete, onSaved
 
   return (
     <div className={`relative flex flex-col px-4 ${embedded ? 'pb-4' : 'pb-28'}`}>
-      <SheetSteps step={step} total={2} label={step === 1 ? 'Cuánto y en qué' : 'Dónde y cuándo'} />
+      <SheetSteps
+        step={step}
+        total={3}
+        label={step === 1 ? 'Cuánto y en qué' : step === 2 ? 'Cómo se reparte' : 'Dónde y cuándo'}
+      />
 
       {/* key por paso: sin él React reusa el nodo y la animación no vuelve a
           correr al cambiar de sección. */}
@@ -143,19 +175,13 @@ function ExpenseFormInner({ expense, expenseId, onDone, onRequestDelete, onSaved
               }}
             />
 
-            <p className="mb-2 mt-4 text-[10px] font-bold uppercase tracking-[0.1em]" style={{ color: 'var(--text-placeholder)' }}>
-              Descripción
-            </p>
-            <input
-              type="text"
+            <DescriptionField
               value={description}
-              onChange={(e) => { setDescription(e.target.value); setErrors(e => ({ ...e, description: '' })) }}
               placeholder="¿En qué gastaste?"
-              autoComplete="off"
-              className="liquid-glass-ic h-[46px] w-full rounded-[16px] px-[15px] text-[14px] outline-none"
-              style={{ color: 'var(--text-primary)', ...(errors.description ? { borderColor: 'var(--danger)' } : {}) }}
+              limit={FIELD_LIMITS.description}
+              error={errors.description}
+              onChange={(v) => { setDescription(v); setErrors(e => ({ ...e, description: '' })) }}
             />
-            {errors.description && <p className="mt-1.5 text-[11px]" style={{ color: 'var(--danger)' }}>{errors.description}</p>}
 
             <CategorySelector
               categories={categories}
@@ -168,6 +194,21 @@ function ExpenseFormInner({ expense, expenseId, onDone, onRequestDelete, onSaved
               nextLabel="Siguiente"
               onNext={() => goNext(validateStep1)}
               onCancel={embedded ? onDone : undefined}
+            />
+          </>
+        ) : step === 2 ? (
+          <>
+            <ExpenseSplitField
+              items={debts}
+              total={Number(rawAmount) || 0}
+              error={errors.debts}
+              onChange={(next) => { setDebts(next); setErrors(e => ({ ...e, debts: '' })) }}
+            />
+
+            <StepActions
+              nextLabel="Siguiente"
+              onNext={() => goNext(validateSplit)}
+              onBack={goBack}
             />
           </>
         ) : (
@@ -206,8 +247,13 @@ function ExpenseFormInner({ expense, expenseId, onDone, onRequestDelete, onSaved
 export function ExpenseForm({ expenseId, onDone, onRequestDelete, onSaved }: ExpenseFormProps) {
   const isEdit = expenseId != null && expenseId > 0
   const { data: expense, isLoading: loadingExpense } = useExpense(expenseId ?? 0)
+  // El reparto no viaja dentro del gasto: se pide aparte. Sin esto, editar un
+  // gasto repartido lo enviaría sin deudas y las borraría en silencio.
+  const { data: existingDebts, isLoading: loadingDebts } = useDebtsByExpense(
+    isEdit ? expenseId : undefined,
+  )
 
-  if (isEdit && loadingExpense) {
+  if (isEdit && (loadingExpense || loadingDebts)) {
     return <div className="px-4 py-8 text-sm" style={{ color: 'var(--text-muted)' }}>Cargando...</div>
   }
 
@@ -215,6 +261,7 @@ export function ExpenseForm({ expenseId, onDone, onRequestDelete, onSaved }: Exp
     <ExpenseFormInner
       key={expense?.id ?? 'new'}
       expense={expense}
+      initialDebts={existingDebts?.map((d) => ({ personName: d.personName, amount: d.amount })) ?? []}
       expenseId={expenseId}
       onDone={onDone}
       onRequestDelete={onRequestDelete}

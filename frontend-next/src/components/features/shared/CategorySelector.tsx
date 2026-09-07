@@ -1,10 +1,13 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
+
 import { motion } from 'framer-motion'
-import { Wallet } from 'lucide-react'
+import { Plus, Wallet } from 'lucide-react'
 
 import { categorySwatch } from '@/lib/utils/cardVisuals'
 import { CATEGORY_ICON_MAP } from '@/lib/utils/categoryIcons'
+import { useSheetStore } from '@/stores/sheetStore'
 import type { Category } from '@/types'
 
 interface CategorySelectorProps {
@@ -19,10 +22,17 @@ interface CategorySelectorProps {
  * tocar la elegida la deja elegida. Alternar dejaba el formulario sin categoría
  * con el mismo gesto que se usa para confirmarla.
  *
- * Tampoco crea categorías: eso vive en /categories. Un formulario de gasto no
- * es el lugar para dar de alta taxonomía.
+ * Tampoco crea categorías acá: el "+" del final LLEVA a /categories, que es
+ * donde vive esa gestión. Un formulario de gasto no es el lugar para dar de
+ * alta taxonomía, pero sí para notar que falta una y poder ir a crearla.
  */
 export function CategorySelector({ categories, selectedId, error, onSelect }: CategorySelectorProps) {
+  const router = useRouter()
+  /* El formulario puede estar montado en un sheet: sin cerrarlo, al llegar a
+     /categories seguiría encima tapando la pantalla. Cerrarlo es inocuo cuando
+     el formulario es una página propia (/expenses/new). */
+  const closeSheet = useSheetStore((s) => s.close)
+
   return (
     <>
       <p className="mb-2 mt-4 text-[10px] font-bold uppercase tracking-[0.1em]" style={{ color: 'var(--text-placeholder)' }}>
@@ -61,6 +71,20 @@ export function CategorySelector({ categories, selectedId, error, onSelect }: Ca
           )
         })}
 
+        {/* Mismo alto y radio que los chips, pero sin texto y con borde
+            discontinuo: es una salida hacia /categories, no una categoría más. */}
+        <motion.button
+          type="button"
+          onClick={() => { closeSheet(); router.push('/categories') }}
+          whileTap={{ scale: 0.95 }}
+          transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+          aria-label="Crear una categoría"
+          title="Crear una categoría"
+          className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-[13px] border border-dashed transition-colors"
+          style={{ borderColor: 'var(--border-default)', color: 'var(--text-muted)' }}
+        >
+          <Plus size={17} strokeWidth={2.2} />
+        </motion.button>
       </div>
       {error && <p className="mt-1.5 text-[11px]" style={{ color: 'var(--danger)' }}>{error}</p>}
     </>

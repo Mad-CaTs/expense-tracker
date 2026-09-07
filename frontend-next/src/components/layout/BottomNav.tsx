@@ -7,9 +7,10 @@ import { AnimatePresence, motion } from 'framer-motion'
 
 import { NavIcon, type NavIconName } from '@/components/layout/NavIcon'
 
+/* Sin /wallets: es la portada, no una pestaña. Se llega a ella deslizando la
+   tarjeta hacia abajo, y la navbar ni siquiera se muestra allí. */
 const NAV_ITEMS: { href: string; label: string; icon: NavIconName }[] = [
   { href: '/expenses', label: 'Finanzas', icon: 'finanzas' },
-  { href: '/wallets',  label: 'Billeteras',  icon: 'cuentas'  },
   { href: '/reports',  label: 'Reportes', icon: 'reportes' },
   { href: '/settings', label: 'Ajustes',  icon: 'cuenta'   },
 ]

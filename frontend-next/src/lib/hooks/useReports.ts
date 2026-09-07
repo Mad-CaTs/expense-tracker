@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 
-import { getCategoryBreakdown, getReportSummary } from '@/lib/api/reports'
+import { getDailyTotals, getCategoryBreakdown, getReportSummary } from '@/lib/api/reports'
 import type { Period } from '@/types'
 
 interface ReportFilters {
@@ -15,6 +15,14 @@ export function useReportSummary(filters: ReportFilters) {
   return useQuery({
     queryKey: ['reports', 'summary', filters],
     queryFn: () => getReportSummary(filters),
+  })
+}
+
+export function useDailyTotals(filters: ReportFilters, options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: ['reports', 'daily', filters],
+    queryFn: () => getDailyTotals(filters),
+    enabled: options?.enabled ?? true,
   })
 }
 

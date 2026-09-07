@@ -2,7 +2,6 @@
 
 import { useRouter } from 'next/navigation'
 
-import { motion } from 'framer-motion'
 import { KeyRound, LogOut } from 'lucide-react'
 
 import { AccessCard } from '@/components/features/shared/AccessCard'
@@ -102,23 +101,28 @@ export function SettingsScreen() {
 
       {/* Al pie y sin rótulo: cerrar sesión no es una preferencia más, es la
           salida. Empujado con mt-auto para que quede abajo aunque la pantalla
-          sobre espacio, y sin la sección "Sesión" que encabezaba un solo botón. */}
-      <motion.button
+          sobre espacio, y sin la sección "Sesión" que encabezaba un solo botón.
+
+          Misma anatomía que las AccessCard de arriba —cristal, icono en su
+          marco a la izquierda, título y caption— en vez del recuadro con borde
+          rojo, que era el único elemento con borde de toda la pantalla. El
+          peligro lo lleva el icono y el título en rojo, no una caja aparte. */}
+      <button
         type="button"
         onClick={handleLogout}
-        whileTap={{ scale: 0.98 }}
-        transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-        className="enter-pop mx-4 mt-auto flex w-[calc(100%-2rem)] cursor-pointer items-center justify-center gap-2 rounded-[18px] border p-[14px] text-[13px] font-extrabold"
-        style={{
-          ['--enter-i' as string]: 3,
-          color: 'var(--danger)',
-          borderColor: 'rgba(239,68,68,0.22)',
-          background: 'rgba(239,68,68,0.07)',
-        }}
+        className="enter-pop liquid-glass mx-4 mt-auto flex w-[calc(100%-2rem)] cursor-pointer items-center gap-3 rounded-[20px] py-[13px] pl-[18px] pr-[18px] text-left transition-transform active:scale-[0.985]"
+        style={{ ['--enter-i' as string]: 3 }}
       >
-        <LogOut size={15} strokeWidth={2} />
-        Cerrar sesión
-      </motion.button>
+        <span
+          className="flex h-10 w-10 flex-none items-center justify-center rounded-[12px]"
+          style={{ background: 'rgba(239,68,68,0.13)', color: 'var(--danger)' }}
+        >
+          <LogOut size={19} strokeWidth={2} />
+        </span>
+        <span className="min-w-0 flex-1 truncate text-[15px] font-bold tracking-[-0.02em]" style={{ color: 'var(--danger)' }}>
+          Cerrar sesión
+        </span>
+      </button>
     </div>
   )
 }

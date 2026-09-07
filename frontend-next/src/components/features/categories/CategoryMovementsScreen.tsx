@@ -49,6 +49,13 @@ function MovementRow({ movement, color, icon, categoryName }: { movement: Catego
         <span className="mono-amount block text-[13px] font-bold tracking-[-0.01em] tabular-nums" style={{ color: 'var(--text-primary)' }}>
           {formatAmount(movement.amount)}
         </span>
+        {/* Arriba lo que se pagó; debajo la parte propia, que es la que suma en
+            el total de arriba. Sin ella la resta no cuadra a ojo. */}
+        {(movement.reimbursable ?? 0) > 0 && (
+          <span className="mono-amount block text-[10.5px] font-bold tabular-nums" style={{ color: 'var(--danger)' }}>
+            tú {(Math.abs(movement.amount) - (movement.reimbursable ?? 0)).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </span>
+        )}
         {/* --text-tertiary y no --text-placeholder: la fecha es un dato de la
             fila, y el tono de relleno no se leía sobre el cristal. */}
         <time className="block text-[10.5px]" style={{ color: 'var(--text-tertiary)' }}>
@@ -74,7 +81,9 @@ export function CategoryMovementsScreen({ categoryId }: { categoryId: number }) 
   const type = category?.type === 'INCOME' ? 'INCOME' : 'EXPENSE'
 
   const { movements, isLoading } = useCategoryMovements(categoryId, name, type)
-  const total = movements.reduce((s, m) => s + Math.abs(m.amount), 0)
+  // La parte repartida es dinero de otros que solo pasó por la cuenta: el
+  // total de la categoría cuenta lo que gastaste TÚ.
+  const total = movements.reduce((s, m) => s + Math.abs(m.amount) - (m.reimbursable ?? 0), 0)
 
   const [query, setQuery] = useState('')
   const visible = query.trim()

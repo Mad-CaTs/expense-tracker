@@ -9,6 +9,9 @@ interface AmountFieldProps {
   inputId: string
   value: string
   error?: string
+  /** Tope propio del campo (p. ej. lo pendiente de una deuda). Nunca por
+   *  encima de MAX_AMOUNT. */
+  max?: number
   onChange: (value: string) => void
 }
 
@@ -19,7 +22,8 @@ function formatDisplay(val: string): string {
   return n.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
-export function AmountField({ label, inputId, value, error, onChange }: AmountFieldProps) {
+export function AmountField({ label, inputId, value, error, max, onChange }: AmountFieldProps) {
+  const ceiling = Math.min(max ?? MAX_AMOUNT, MAX_AMOUNT)
   const amountNum = parseFloat(value) || 0
 
   return (
@@ -36,7 +40,7 @@ export function AmountField({ label, inputId, value, error, onChange }: AmountFi
           inputMode="decimal"
           type="number"
           min="0"
-          max={MAX_AMOUNT}
+          max={ceiling}
           step="0.01"
           autoComplete="off"
           data-1p-ignore
@@ -45,7 +49,7 @@ export function AmountField({ label, inputId, value, error, onChange }: AmountFi
           value={value}
           onChange={(e) => {
             const v = e.target.value
-            if (v === '' || (/^\d*\.?\d{0,2}$/.test(v) && parseFloat(v) <= MAX_AMOUNT)) {
+            if (v === '' || (/^\d*\.?\d{0,2}$/.test(v) && parseFloat(v) <= ceiling)) {
               onChange(v)
             }
           }}

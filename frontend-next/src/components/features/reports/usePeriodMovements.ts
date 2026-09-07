@@ -18,7 +18,10 @@ export interface PeriodMovement {
   categoryColor?: string
   categoryIcon?: string
   attachmentCount?: number
+  /** Lo que salió de la billetera; en un gasto va en negativo. */
   amount: number
+  /** Parte que deben otros. El total del periodo la descuenta; la fila no. */
+  reimbursable?: number
   date: string
 }
 
@@ -73,6 +76,7 @@ export function usePeriodMovements(from: string, to: string, filters: MovementFi
         categoryIcon: e.categoryIcon,
         attachmentCount: e.attachmentCount,
         amount: -Math.abs(e.amount),
+        reimbursable: e.reimbursableAmount ?? 0,
         date: e.date,
       })),
       ...(wantIncomes ? incomes.data?.content ?? [] : []).filter((i) => keep(i.categoryId, i.walletId)).map((i) => ({
@@ -104,7 +108,10 @@ export function usePeriodMovements(from: string, to: string, filters: MovementFi
     let income = 0
     for (const day of days) {
       for (const m of day.movements) {
-        if (m.kind === 'expense') expense += Math.abs(m.amount)
+        // El gasto guarda lo que SALIÓ de la billetera, pero el total del
+        // periodo es lo que gastaste TÚ: la parte repartida es dinero de otros
+        // que solo pasó por tu cuenta.
+        if (m.kind === 'expense') expense += Math.abs(m.amount) - (m.reimbursable ?? 0)
         else income += m.amount
       }
     }

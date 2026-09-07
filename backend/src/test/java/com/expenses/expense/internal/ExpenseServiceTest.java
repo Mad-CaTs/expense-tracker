@@ -38,6 +38,7 @@ class ExpenseServiceTest {
     @Mock ExpenseRepository expenseRepository;
     @Mock CategoryFinder categoryFinder;
     @Mock WalletFinder walletFinder;
+    @Mock com.expenses.debt.DebtsForExpense debts;
     @Spy ExpenseMapper expenseMapper = Mappers.getMapper(ExpenseMapper.class);
     @InjectMocks ExpenseService expenseService;
 

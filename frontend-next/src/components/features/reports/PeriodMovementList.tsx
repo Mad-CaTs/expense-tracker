@@ -11,14 +11,12 @@ import { categorySwatch } from '@/lib/utils/cardVisuals'
 import { CATEGORY_ICON_MAP } from '@/lib/utils/categoryIcons'
 import { useSheetStore } from '@/stores/sheetStore'
 
-/** Alto de la lista: el viewport menos la cabecera, los chips, las cards de
- *  resumen y el bottom-nav. */
+
 const LIST_MAX_HEIGHT = 'calc(100dvh - 430px)'
 
 interface PeriodMovementListProps {
   days: MovementDay[]
   isLoading: boolean
-  /** Título de la card: "Gastos en agosto". */
   title: string
   period: string
 }
@@ -79,8 +77,18 @@ function Row({ movement }: { movement: PeriodMovement }) {
         </span>
       )}
 
-      <span className="mono-amount flex-none text-[13px] font-extrabold tabular-nums" style={{ color: 'var(--text-primary)' }}>
-        {isExpense ? '−' : '+'}S/ {Math.abs(movement.amount).toFixed(2)}
+      {/* Arriba lo que PAGASTE (cuadra con el banco); debajo tu parte, que es
+          lo que suma en los totales. Sin la segunda cifra la resta del periodo
+          no cuadra a ojo y parece un error. */}
+      <span className="flex flex-none flex-col items-end">
+        <span className="mono-amount text-[13px] font-extrabold tabular-nums" style={{ color: 'var(--text-primary)' }}>
+          {isExpense ? '−' : '+'}S/ {Math.abs(movement.amount).toFixed(2)}
+        </span>
+        {(movement.reimbursable ?? 0) > 0 && (
+          <span className="mono-amount text-[10.5px] font-bold tabular-nums" style={{ color: 'var(--danger)' }}>
+            tú {(Math.abs(movement.amount) - (movement.reimbursable ?? 0)).toFixed(2)}
+          </span>
+        )}
       </span>
 
     </button>
@@ -102,13 +110,6 @@ function Row({ movement }: { movement: PeriodMovement }) {
   )
 }
 
-/**
- * Movimientos del período, agrupados por día.
- *
- * El encabezado de día ("Hoy", "Ayer", "9 ago.") es un patrón que no existe en
- * las otras listas de la app: acá se justifica porque el rango abarca semanas y
- * sin él las fechas se pierden en la columna derecha de cada fila.
- */
 export function PeriodMovementList({ days, isLoading, title, period }: PeriodMovementListProps) {
   const [query, setQuery] = useState('')
 

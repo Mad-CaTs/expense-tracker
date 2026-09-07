@@ -6,9 +6,10 @@ import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 
 import { AnimatePresence, motion } from 'framer-motion'
 
+/* Sin /wallets, igual que en la navbar: es la portada desde la que se elige
+   billetera, no una sección a la que se salte. */
 const NAV_ITEMS = [
   { href: '/expenses', label: 'Finanzas', icon: ReceiptIcon },
-  { href: '/wallets', label: 'Billeteras', icon: WalletIcon },
   { href: '/reports', label: 'Reportes', icon: ChartIcon },
 ]
 
@@ -221,13 +222,4 @@ function ChartIcon({ size = 15 }: { size?: number }) {
   )
 }
 
-function WalletIcon({ size = 15 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 7a2 2 0 0 1 2-2h13a1 1 0 0 1 1 1v3" />
-      <path d="M3 7v10a2 2 0 0 0 2 2h14a1 1 0 0 0 1-1v-3" />
-      <path d="M21 11v4h-4a2 2 0 0 1 0-4h4Z" />
-    </svg>
-  )
-}
 

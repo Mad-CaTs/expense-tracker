@@ -1,5 +1,6 @@
 package com.expenses.income.internal;
 
+import com.expenses.shared.validation.FieldLimits;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 import java.math.BigDecimal;
@@ -12,14 +13,14 @@ public class IncomeRequest {
     @Positive(message = "El monto debe ser mayor a 0")
     private BigDecimal amount;
 
-    @Size(max = 500)
+    @Size(max = FieldLimits.DESCRIPTION)
     private String description;
 
     @NotNull(message = "La fecha es obligatoria")
     @PastOrPresent(message = "La fecha no puede ser futura")
     private LocalDate date;
 
-    @Size(max = 1000)
+    @Size(max = FieldLimits.NOTES)
     private String notes;
 
     private Long walletId;

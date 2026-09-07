@@ -5,13 +5,15 @@ import { useRouter } from 'next/navigation'
 
 import { AnimatePresence, motion } from 'framer-motion'
 
-import { WalletCarousel } from '@/components/features/expenses/WalletCarousel'
+import { DebtsNotice } from '@/components/features/expenses/DebtsNotice'
+import { WalletHeaderCard } from '@/components/features/expenses/WalletHeaderCard'
+import { WalletNoticeDialog } from '@/components/features/wallets/WalletNoticeDialog'
 import { BudgetCarousel } from '@/components/features/expenses/BudgetCarousel'
 import { MovementsRecurringSection } from '@/components/features/expenses/MovementsRecurringSection'
 import { ActionIcon, type ActionIconName } from '@/components/features/expenses/ActionIcon'
 import { SectionHeader } from '@/components/ui/SectionHeader'
 import { useActiveWallet } from '@/lib/hooks/useActiveWallet'
-import { useFilterStore } from '@/stores/filterStore'
+import { useWallets } from '@/lib/hooks/useWallets'
 import { useSheetStore } from '@/stores/sheetStore'
 
 type QuickActionKind = 'expense-form' | 'income-form' | 'transfer' | 'scan'
@@ -79,19 +81,21 @@ function QuickActions() {
 
 function ExpensesPageInner() {
   const router = useRouter()
-  const storeFilters = useFilterStore()
   const walletId = useActiveWallet()
-
-  function handleWalletSelect(id: number) {
-    storeFilters.setWalletId(id)
-    storeFilters.setPage(0)
-  }
+  const { data: wallets = [] } = useWallets()
+  const wallet = wallets.find((w) => w.id === walletId)
 
   return (
     <div className="mx-auto max-w-3xl pb-4">
-      <WalletCarousel selectedWalletId={walletId} onSelect={handleWalletSelect} />
+      {wallet && <WalletHeaderCard wallet={wallet} />}
+
+      {/* Al editar una billetera se vuelve acá: el aviso lo deja el formulario
+          y lo recoge la pantalla que llega después. */}
+      <WalletNoticeDialog />
 
       <QuickActions />
+
+      <DebtsNotice />
 
       <div className="pt-3">
         <MovementsRecurringSection />

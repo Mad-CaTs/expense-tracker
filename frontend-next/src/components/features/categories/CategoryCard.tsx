@@ -16,6 +16,8 @@ export interface CategoryCardData {
   total: number
   count: number
   percentage: number
+  /** No se ofrece al registrar desde la billetera activa. */
+  hidden?: boolean
 }
 
 export interface CategoryCardProps {
@@ -28,9 +30,11 @@ export interface CategoryCardProps {
 }
 
 export function CategoryCard({ category, index, onOpen, onEdit }: CategoryCardProps) {
-  const { name, icon, color, total, count, percentage } = category
+  const { name, icon, color, total, count, percentage, hidden } = category
   const Icon = CATEGORY_ICON_MAP[icon] ?? CATEGORY_ICON_MAP.ellipsis
-  const unused = total <= 0
+  // Una categoría oculta se atenúa como las sin uso: no se ofrece acá, aunque
+  // sus movimientos pasados sigan contando.
+  const unused = total <= 0 || Boolean(hidden)
 
   const aura = categoryAura(color)
   const iconColor = categorySwatch(color)
@@ -118,6 +122,21 @@ export function CategoryCard({ category, index, onOpen, onEdit }: CategoryCardPr
             backgroundSize: '11px 11px',
           }}
         />
+      )}
+
+      {/* Ojo tachado: solo en las ocultas. Cuando no ocultas nada —el caso
+          normal— la rejilla no muestra ningún control. */}
+      {hidden && (
+        <span
+          className="absolute right-2.5 top-2.5 z-[3] flex h-[22px] w-[22px] items-center justify-center rounded-full"
+          style={{ background: 'rgba(0,0,0,0.42)', color: '#fff' }}
+          title="No se muestra en esta billetera"
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
+            <path d="M3 3l18 18M10.6 10.6a2 2 0 002.8 2.8" />
+            <path d="M9.4 5.2A9.5 9.5 0 0112 5c5 0 9 4.5 9 7a11 11 0 01-2.2 3.1M6.2 6.7A11.4 11.4 0 003 12c0 2.5 4 7 9 7a9.6 9.6 0 003.5-.7" />
+          </svg>
+        </span>
       )}
 
       {/* Notch con el icono: recorta el borde superior contra el fondo de la

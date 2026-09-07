@@ -4,6 +4,7 @@ import com.expenses.expense.ExpenseQueries;
 import com.expenses.income.IncomeQueries;
 import com.expenses.income.UncategorizedIncome;
 import com.expenses.shared.query.CategoryBreakdownRow;
+import com.expenses.shared.query.DailyCategoryRow;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -102,5 +103,68 @@ class ReportServiceTest {
             @Override public String getColor() { return color; }
             @Override public String getIcon() { return icon; }
         };
+    }
+
+    // ── Totales por día (calendario del periodo) ───────────────────────────
+
+    private DailyCategoryRow dayRow(LocalDate date, String total, String cat, String icon) {
+        return new DailyCategoryRow() {
+            public LocalDate getDate() { return date; }
+            public BigDecimal getTotal() { return new BigDecimal(total); }
+            public String getCategoryName() { return cat; }
+            public String getCategoryColor() { return "#EF4444"; }
+            public String getCategoryIcon() { return icon; }
+        };
+    }
+
+    @Test
+    void getDailyTotals_sumsCategoriesOfTheSameDay() {
+        var from = LocalDate.of(2026, 8, 1);
+        var to = LocalDate.of(2026, 8, 31);
+        var day = LocalDate.of(2026, 8, 3);
+        when(expenseQueries.dailyByCategory(1L, from, to, 7L)).thenReturn(List.of(
+                dayRow(day, "100.00", "Comida", "utensils"),
+                dayRow(day, "50.00", "Transporte", "car")));
+
+        var result = reportService.getDailyTotals(from, to, 1L, "EXPENSE", 7L);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).total()).isEqualByComparingTo("150.00");
+    }
+
+    @Test
+    void getDailyTotals_picksTheDominantCategory() {
+        var from = LocalDate.of(2026, 8, 1);
+        var to = LocalDate.of(2026, 8, 31);
+        var day = LocalDate.of(2026, 8, 3);
+        when(expenseQueries.dailyByCategory(1L, from, to, null)).thenReturn(List.of(
+                dayRow(day, "30.00", "Transporte", "car"),
+                dayRow(day, "220.00", "Comida", "utensils")));
+
+        var result = reportService.getDailyTotals(from, to, 1L, "EXPENSE", null);
+
+        // La dominante es la de MAYOR importe, no la primera que llega.
+        assertThat(result.get(0).categoryName()).isEqualTo("Comida");
+        assertThat(result.get(0).categoryIcon()).isEqualTo("utensils");
+    }
+
+    @Test
+    void getDailyTotals_withIncome_usesIncomeQueries() {
+        var from = LocalDate.of(2026, 8, 1);
+        var to = LocalDate.of(2026, 8, 31);
+        when(incomeQueries.dailyByCategory(1L, from, to, null)).thenReturn(List.of());
+
+        reportService.getDailyTotals(from, to, 1L, "INCOME", null);
+
+        verify(expenseQueries, never()).dailyByCategory(anyLong(), any(), any(), any());
+    }
+
+    @Test
+    void getDailyTotals_whenNoMovements_returnsEmpty() {
+        var from = LocalDate.of(2026, 8, 1);
+        var to = LocalDate.of(2026, 8, 31);
+        when(expenseQueries.dailyByCategory(1L, from, to, null)).thenReturn(List.of());
+
+        assertThat(reportService.getDailyTotals(from, to, 1L, "EXPENSE", null)).isEmpty();
     }
 }

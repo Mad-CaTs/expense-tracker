@@ -21,7 +21,10 @@ function fullRange(): { from: string; to: string } {
 export interface CategoryMovement {
   key: string
   description: string
+  /** Lo que salió de la billetera; en un gasto va en negativo. */
   amount: number
+  /** Parte que deben otros. El total la descuenta; la fila no. */
+  reimbursable?: number
   date: string
   id: number
   createdAt?: string
@@ -61,6 +64,7 @@ export function useCategoryMovements(categoryId: number, categoryName: string, t
         id: e.id,
         description: e.description,
         amount: -Math.abs(e.amount),
+        reimbursable: e.reimbursableAmount ?? 0,
         date: e.date,
         createdAt: e.createdAt,
       }))

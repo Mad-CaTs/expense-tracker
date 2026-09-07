@@ -30,14 +30,17 @@ export function useExpense(id: number) {
 
 function useMovementMutation<TVars, TData>(fn: (vars: TVars) => Promise<TData>, keys: string[]) {
   const qc = useQueryClient()
-  const mutation = useMutation({ mutationFn: fn })
+  const mutation = useMutation({
+    mutationFn: fn,
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['debts'] }) },
+  })
   const refresh = useCallback(() => {
     keys.forEach((key) => qc.invalidateQueries({ queryKey: [key] }))
   }, [qc])
   return { ...mutation, refresh }
 }
 
-const EXPENSE_KEYS = ['expenses', 'wallets', 'reports']
+const EXPENSE_KEYS = ['expenses', 'wallets', 'reports', 'debts']
 
 export function useCreateExpense() {
   return useMovementMutation(createExpense, EXPENSE_KEYS)

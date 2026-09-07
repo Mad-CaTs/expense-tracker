@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/Select'
+import { useActiveWallet } from '@/lib/hooks/useActiveWallet'
 import { useCategories } from '@/lib/hooks/useCategories'
 import { EASE, MOTION_S } from '@/lib/utils/motion'
 import { useFilterStore } from '@/stores/filterStore'
@@ -23,7 +24,10 @@ const PERIODS: { value: Period; label: string }[] = [
 export function ExpenseFilters({ onNew }: { onNew?: () => void }) {
   const { period, categoryId, filtersOpen, setPeriod, setCategoryId, toggleFilters } =
     useFilterStore()
-  const { data: categories } = useCategories('EXPENSE')
+  // Filtrar por una categoría oculta en esta billetera no devolvería nada:
+  // acá no se registra nada con ella. El selector solo ofrece las visibles.
+  const activeWalletId = useActiveWallet()
+  const { data: categories } = useCategories('EXPENSE', activeWalletId)
 
   return (
     <div className="border-b px-4 pt-3 pb-2" style={{ borderColor: 'var(--border-subtle)' }}>

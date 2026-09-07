@@ -17,5 +17,7 @@ public record ExpenseResponse(
         int attachmentCount,
         Long walletId,
         String walletName,
+        /** Parte que deben otros; 0 en un gasto normal. */
+        BigDecimal reimbursableAmount,
         LocalDateTime createdAt) {
 }

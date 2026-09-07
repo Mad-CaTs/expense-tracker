@@ -49,6 +49,11 @@
   --border: var(--border-subtle);
   --ring: var(--accent-ring);
 
+  /* Rótulo de cabecera de columna/campo. `--text-placeholder` daba 1.7:1 sobre
+     una card: a 9.5px eso no se lee. Este llega a 4.9:1 sin competir con el
+     dato, que va en --text-primary. */
+  --text-label: #828a96;
+
   --skeleton-from: #252526;
   --skeleton-to: #303032;
   --inset-highlight: inset 0 1px 1px rgba(255,255,255,0.06), inset 0 -1px 0 rgba(0,0,0,0.4);
@@ -141,6 +146,9 @@
   --accent-foreground: var(--bg-base);
   --border: var(--border-subtle);
   --ring: var(--accent-ring);
+
+  /* 4.9:1 sobre blanco: mismo criterio que en oscuro. */
+  --text-label: #69727f;
 
   --skeleton-from: #e6eaf0;
   --skeleton-to:   #dbe0e8;
@@ -344,6 +352,22 @@ textarea::placeholder {
      Terminando antes de que el stagger avance, el contenido manda el ritmo. */
   animation: page-enter 0.3s var(--ease-sys) both;
 }
+
+/* Llegada desde el vuelo de la tarjeta: la página se monta DEBAJO de una
+   tarjeta que aún cubre la pantalla. Sus animaciones de entrada se congelan
+   hasta que esa tarjeta se retira — si corren aquí, se gastan sin que nadie
+   las vea y la página aparece ya quieta. `useCardTransition` quita la clase
+   al terminar. */
+body.card-covering .page-enter,
+body.card-covering .page-enter .enter-pop {
+  animation-play-state: paused;
+}
+
+/* En la IDA basta con pausar: la tarjeta crece y tapa la página. En la VUELTA
+   la tarjeta se ENCOGE, así que además hay que ocultar el contenido — si no,
+   /wallets asoma alrededor de la tarjeta antes de que ésta llegue. Se revela
+   cuando `useCardTransition` quita la clase, junto con sus animaciones. */
+body.card-covering.card-shrinking #main-content { visibility: hidden; }
 
 /* ── Navegación entre una lista y su detalle (categorías → movimientos) ──
    Reusa el MISMO gesto que la tarjeta de categoría (.enter-pop): sube con un
@@ -796,6 +820,63 @@ select:focus-visible,
   box-shadow: var(--soft-raised);
 }
 
+/* ── Profundidad blanda (calendario de estadísticas y su modal) ──
+   Referencia: tarjetas que flotan sobre el fondo por una sombra ANCHA y difusa,
+   sin borde ni anillo. El anillo de `--card-shadow` se lee como línea dibujada y
+   compite con la sombra; acá se omite a propósito.
+
+   `--depth-hole` es el negativo: el disco vacío del día está HUNDIDO en la
+   tarjeta, así que lleva sombra interior arriba (donde caería la luz) y un
+   filo claro abajo. Es la misma lógica de `--inset-highlight` invertida —
+   aquella eleva, esta excava. */
+:root {
+  --depth-card: 0 2px 5px rgba(0,0,0,0.34), 0 6px 16px rgba(0,0,0,0.22);
+  --depth-card-lift: 0 3px 8px rgba(0,0,0,0.40), 0 10px 24px rgba(0,0,0,0.28);
+  --depth-hole: inset 0 2px 3px rgba(0,0,0,0.34), inset 0 -1px 1px rgba(255,255,255,0.05);
+  --depth-chip: 0 1px 3px rgba(0,0,0,0.34);
+  --depth-panel: 0 8px 20px rgba(0,0,0,0.42), 0 24px 60px rgba(0,0,0,0.55);
+  /* Un hueco, no un agujero: apenas más oscuro que --surface-raised (#202021).
+     Con casi-negro la rejilla se leía perforada, no en relieve. */
+  --depth-hole-fill: #1a1a1c;
+}
+.light {
+  /* Azul-gris, nunca negro puro: sobre #f1f3f6 el negro se lee como suciedad
+     (mismo criterio que --wallet-drop). */
+  --depth-card: 0 1px 2px rgba(15,23,42,0.04), 0 6px 14px rgba(15,23,42,0.06);
+  --depth-card-lift: 0 2px 4px rgba(15,23,42,0.06), 0 10px 22px rgba(15,23,42,0.09);
+  --depth-hole: inset 0 2px 3px rgba(15,23,42,0.07), inset 0 -1px 1px rgba(255,255,255,0.9);
+  --depth-chip: 0 1px 2px rgba(15,23,42,0.10), 0 2px 6px rgba(15,23,42,0.08);
+  --depth-panel: 0 6px 16px rgba(15,23,42,0.10), 0 24px 60px rgba(15,23,42,0.16);
+  /* Un hueco, no un estado: más claro que --bg-hover, que se lee como relleno. */
+  --depth-hole-fill: #eef1f5;
+}
+
+/* Al pulsar, la tarjeta se HUNDE: baja y su sombra se encoge con ella. Solo
+   escalarla la haría chica sin acercarla al fondo, que es lo que delata que la
+   profundidad era pintada. */
+.day-cell {
+  transition:
+    box-shadow var(--dur-press) var(--ease-sys),
+    transform var(--dur-press) var(--ease-sys);
+}
+.day-cell-tap:active {
+  transform: translateY(1px) scale(0.96);
+  box-shadow: var(--depth-chip);
+}
+/* Pieza YA hundida: al pulsarla no puede "hundirse más" sin salirse del hueco,
+   así que responde oscureciéndose. Bajarla también la despegaría del rebaje. */
+.sunk-tap {
+  transition: filter var(--dur-press) var(--ease-sys);
+}
+.sunk-tap:active {
+  filter: brightness(0.94);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .day-cell, .sunk-tap { transition: none; }
+  .day-cell-tap:active { transform: none; }
+}
+
 /* ── Material "cristal líquido" (referencia Skylrk, variante F) ──
    Vidrio grueso: gradiente diagonal + specular highlight arriba + sombra
    interna abajo, con la transparencia atenuada para que el contenido
@@ -902,26 +983,40 @@ select:focus-visible,
    Coreografía por clases en la raíz .wd-screen: .is-detail (vuelo en curso u hoja abierta)
    y .is-settled (panel visible; la tarjeta aterrizó o está por encajar). */
 
-/* marco-billetera: la tarjeta vive METIDA en el bolsillo; solo asoma su banda superior */
-/* Alto proporcional: con 200px fijos, en pantallas de móvil (iPhone 11 ≈ 715px
-   útiles) la billetera + las cards de acceso consumían 520px y a la lista de
-   movimientos le quedaban 150px (≈1 fila). Cede alto en pantallas cortas. */
-/* El alto lo pedía el marco de cuero; ahora solo tiene que caber la tarjeta,
-   que a 2:1 y ancho completo (~358px) mide ~179px. */
-.wd-strip { position: relative; height: clamp(152px, 21.5vh, 182px); flex: none; margin-bottom: clamp(10px, 1.6vh, 18px); }
-/* Bloque de accesos (Categorías / Frecuentes / Presupuesto): separaciones
-   proporcionales, para no comerse la lista en pantallas cortas. */
-.wd-access { margin-top: clamp(10px, 1.8vh, 20px); gap: clamp(10px, 1.6vh, 16px); padding-bottom: clamp(8px, 1.5vh, 16px) !important; }
-.wd-access .liquid-glass { padding-top: clamp(9px, 1.4vh, 20px); padding-bottom: clamp(9px, 1.4vh, 20px); }
-/* Sin marco de cuero: el slot ya no se encaja dentro de un asset, así que la
-   tarjeta ocupa el ancho disponible y su propia proporción manda el alto.
-   Se centra porque `wd-strip` cede alto en pantallas cortas. */
-/* 2:1, no la proporción de una tarjeta física (1.53:1): a ancho completo esa
-   se iba a ~234px de alto y dominaba la pantalla. Achatada ocupa todo el ancho
-   —que es lo que da presencia— sin comerse la lista de movimientos. */
-.wd-card-slot {
-  position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%);
-  aspect-ratio: 2 / 1;
+/* Tarjeta de la billetera activa en la cabecera de /expenses: es la de
+   siempre (aurora + contenido), su propio alto manda. `touch-action: pan-x`
+   deja el gesto vertical al JS — sin esto el navegador se queda el arrastre y
+   la tarjeta no sigue al dedo. */
+.xp-card-slot {
+  touch-action: pan-x;
+  cursor: grab;
+  will-change: transform;
+}
+.xp-card-slot:active { cursor: grabbing; }
+/* Al irse, la tarjeta se apaga: a partir de acá manda la capa del vuelo. */
+.xp-card-slot.is-leaving { opacity: 0; }
+
+/* Tirador: indica que la tarjeta se puede arrastrar hacia abajo. */
+/* Tirador: indica que la tarjeta se arrastra hacia abajo. Se estira en bucle
+   en esa dirección — el propio objeto que se agarra insinúa el gesto, sin
+   añadir un icono nuevo. `transform-origin` arriba para que crezca hacia
+   abajo y no en las dos direcciones. */
+.xp-swipe-hint {
+  display: block; width: 38px; height: 4px; border-radius: 999px;
+  background: var(--text-muted); opacity: 0.26;
+  transform-origin: top center;
+  animation: xp-swipe-pull 2.8s ease-in-out infinite;
+}
+/* El estirón es leve y el ciclo, largo: se percibe de reojo sin llamar la
+   atención, y hay una pausa de quietud entre repeticiones (el pico está al
+   35% y vuelve al 70%, no justo antes de reiniciar). */
+@keyframes xp-swipe-pull {
+  0%, 70%, 100% { transform: translateY(0) scaleY(1); opacity: 0.26; }
+  35%           { transform: translateY(3px) scaleY(1.6); opacity: 0.42; }
+}
+/* Con movimiento reducido se queda quieto: es una pista, no información. */
+@media (prefers-reduced-motion: reduce) {
+  .xp-swipe-hint { animation: none; }
 }
 
 /* cara FRONTAL de la tarjeta: saldo grabado. Tipografía/padding en em sobre un
@@ -1010,128 +1105,14 @@ select:focus-visible,
 /* Misma sombra que lleva la tarjeta durante el vuelo (.wd-fx-card .wd-face.front):
    sin ella, al aterrizar la tarjeta se quedaba plana contra el fondo y el relevo
    entre la capa del vuelo y esta se notaba como un corte. */
-.wd-static-card { position: absolute; inset: 0; visibility: hidden; filter: drop-shadow(0 5px 9px rgba(0, 0, 0, 0.3)); }
-.wd-static-card.is-on { visibility: visible; }
-
-/* ── panel del detalle: PÁGINA ESTÁTICA (solo scrollea la lista de movimientos) ── */
-.wd-panel {
-  /* fixed a viewport (mismo plano que las capas de cuero fx en body): así el
-     sándwich trasero(z1) < panel(z10) < frontal(z40) se cumple por z-index reales.
-     left/width se fijan por JS (--wd-left/--wd-width) al ancho real del screen. */
-  position: fixed;
-  top: 0; bottom: 0;
-  left: var(--wd-left, 0px); width: var(--wd-width, 100%);
-  padding: 0 16px;
-  z-index: 10;
-  display: flex; flex-direction: column;
-  overflow: hidden;
-  opacity: 0; visibility: hidden; transform: translateY(16px);
-  transition: opacity 0.28s var(--ease-out-strong, cubic-bezier(0.23, 1, 0.32, 1)),
-              transform 0.28s var(--ease-out-strong, cubic-bezier(0.23, 1, 0.32, 1)),
-              visibility 0s 0.28s;
-}
-.wd-screen.is-settled .wd-panel {
-  opacity: 1; visibility: visible; transform: none;
-  transition: opacity 0.32s var(--ease-out-strong, cubic-bezier(0.23, 1, 0.32, 1)),
-              transform 0.32s var(--ease-out-strong, cubic-bezier(0.23, 1, 0.32, 1)),
-              visibility 0s;
-}
-.wd-screen.is-detail .wd-carousel { opacity: 0; pointer-events: none; }
+/* El carrusel de /wallets se atenua al despegar la tarjeta. */
 .wd-carousel { transition: opacity 0.42s cubic-bezier(0.23, 1, 0.32, 1); }
+/* Al despegar la tarjeta, /wallets se retira: el saldo y el carrusel dejan de
+   tener sentido en cuanto la tarjeta está en el aire, y quedaban flotando
+   sobre la animación. La capa del vuelo dibuja su propio cuero, así que no se
+   pierde nada de lo que se ve moverse. */
+body.card-launching .wd-carousel { opacity: 0; pointer-events: none; }
 
-/* scroll interno de la lista (scrollbar oculta, look móvil) */
-.wd-mv-scroll {
-  flex: 1; min-height: 0;
-  overflow-y: auto;
-  /* Reserva bajo la lista para que las últimas filas puedan subir por encima del
-     bolsillo. Proporcional al alto de pantalla: un valor fijo (190px) dejaba sin
-     espacio la lista en móviles y no se veían los movimientos. */
-  padding-bottom: clamp(96px, 15vh, 190px);
-  scrollbar-width: none;
-}
-.wd-mv-scroll::-webkit-scrollbar { display: none; }
-
-/* cards de acceso y Movimientos: entran RECIÉN cuando la tarjeta encaja (is-seated).
-   La SALIDA (al quitarse .is-seated) es más corta y sin escalonar: si dura lo
-   mismo que la entrada, el contenido se repliega con calma mientras la tarjeta
-   ya despega y se lee como que todo "encaja" antes de empezar la animación. */
-.wd-reveal {
-  opacity: 0; transform: translateY(14px);
-  transition: opacity 0.16s cubic-bezier(0.4, 0, 1, 1), transform 0.16s cubic-bezier(0.4, 0, 1, 1);
-  transition-delay: 0s;
-}
-.wd-screen.is-seated .wd-reveal {
-  transition: opacity 0.3s cubic-bezier(0.23, 1, 0.32, 1), transform 0.3s cubic-bezier(0.23, 1, 0.32, 1);
-}
-.wd-screen.is-seated .wd-reveal { opacity: 1; transform: none; }
-.wd-screen.is-seated .wd-reveal-2 { transition-delay: 0.05s; }
-.wd-screen.is-seated .wd-reveal-3 { transition-delay: 0.1s; }
-
-/* entrada de las filas: stagger gateado por el encaje. Al salir se van todas a
-   la vez y rápido — el escalonado invertido era lo que más se notaba al cerrar. */
-.wd-mv-item {
-  opacity: 0; transform: translateY(10px);
-  transition: opacity 0.14s cubic-bezier(0.4, 0, 1, 1), transform 0.14s cubic-bezier(0.4, 0, 1, 1);
-  transition-delay: 0s;
-}
-.wd-screen.is-seated .wd-mv-item {
-  transition: opacity 0.28s cubic-bezier(0.23, 1, 0.32, 1), transform 0.28s cubic-bezier(0.23, 1, 0.32, 1);
-}
-.wd-screen.is-seated .wd-mv-item { opacity: 1; transform: none; transition-delay: 0.1s; }
-.wd-screen.is-seated .wd-mv-item:nth-child(2) { transition-delay: 0.13s; }
-.wd-screen.is-seated .wd-mv-item:nth-child(3) { transition-delay: 0.16s; }
-.wd-screen.is-seated .wd-mv-item:nth-child(4) { transition-delay: 0.19s; }
-.wd-screen.is-seated .wd-mv-item:nth-child(5) { transition-delay: 0.22s; }
-.wd-screen.is-seated .wd-mv-item:nth-child(6) { transition-delay: 0.25s; }
-.wd-screen.is-seated .wd-mv-item:nth-child(7) { transition-delay: 0.28s; }
-.wd-screen.is-seated .wd-mv-item:nth-child(8) { transition-delay: 0.31s; }
-
-/* traspaso entrada → scroll: en flow-live el rAF manda (sin transiciones) */
-.wd-panel.wd-flow .wd-flow-el { transition: opacity 0.3s ease, transform 0.3s ease, filter 0.3s ease; }
-.wd-panel.wd-flow-live .wd-flow-el { transition: none; }
-
-/* Salida hacia un listado (Categorías / Frecuentes / Presupuestos): sin esto el
-   push era instantáneo. Solo opacidad — el panel es fixed y su geometría la
-   miden las capas del vuelo; moverlo con transform rompería el anclaje.
-   El selector repite .is-settled: esa regla (0-3-0) fija opacity:1 y le gana a
-   un .wd-panel.is-leaving suelto (0-2-0), que por eso no se veía. */
-.wd-screen.is-settled .wd-panel.is-leaving,
-.wd-panel.is-leaving {
-  opacity: 0;
-  transition: opacity var(--dur-layer) var(--ease-sys);
-  pointer-events: none;
-}
-
-/* Vuelta desde un listado: el panel entra completo (marco incluido) en vez de
-   aparecer de golpe. Las cards y la lista NO necesitan regla propia: ya las
-   anima .wd-reveal cuando el screen recibe .is-seated — basta con que ese
-   estado llegue un frame después del montaje (ver setRestoreSeated).
-
-   Duración propia (--dur-restore), NO --dur-layer: a 300ms en móvil el retorno
-   apenas se distinguía de un corte. Tampoco se alarga .wd-reveal, que es
-   compartida con el vuelo de apertura y desincronizaría el encaje. */
-@keyframes wd-restore {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: none; }
-}
-.wd-panel.is-restored {
-  animation: wd-restore var(--dur-restore) var(--ease-sys) backwards;
-}
-/* Las cards y la lista acompañan al panel: su .wd-reveal se alarga y escalona
-   SOLO en el retorno, sin tocar la de la apertura. */
-.wd-panel.is-restored .wd-reveal {
-  transition-duration: var(--dur-restore);
-}
-.wd-screen.is-seated .wd-panel.is-restored .wd-reveal-2 { transition-delay: 0.1s; }
-.wd-screen.is-seated .wd-panel.is-restored .wd-reveal-3 { transition-delay: 0.18s; }
-
-@media (prefers-reduced-motion: reduce) {
-  .wd-screen.is-settled .wd-panel.is-leaving,
-  .wd-panel.is-leaving { transition-duration: 1ms; }
-  .wd-panel.is-restored { animation: none; }
-}
-
-/* ── capas fx del vuelo (viewport-fixed; el dock cubre la bottom-nav z-30) ── */
 .wd-fx { position: fixed; inset: 0; pointer-events: none; }
 /* Las capas de cuero viven en <body>, fuera del panel: sin esto seguían a plena
    opacidad mientras el panel se desvanecía hacia un listado y desaparecían de
@@ -1156,12 +1137,28 @@ body.wd-leaving .wd-fx {
 /* sombra de la tarjeta EN VUELO: solo en la capa fx; el encaje la funde a cero
    (una tarjeta dentro del bolsillo no proyecta sombra) */
 .wd-fx-card .wd-face.front { filter: drop-shadow(0 5px 9px rgba(0, 0, 0, 0.3)); will-change: filter; }
-.wd-fx-card img { position: absolute; inset: 0; width: 100%; height: 100%; filter: drop-shadow(0 5px 9px rgba(0, 0, 0, 0.35)); }
+/* Las dos caras: mismo radio y sombra, para que el giro no cambie de silueta.
+   `.back` lleva el logo de la app; `.front` va en blanco (solo color) — allí
+   vivía el diseño viejo con saldo, chip y VISA. */
+.wd-fx-card .wd-face.back,
+.wd-fx-card .wd-face.front {
+  border-radius: 0.63em;
+  overflow: hidden;
+}
+/* `card-flat.webp` NO es un logo suelto: es la tarjeta entera (cuerpo metálico
+   con el logo grabado y sus propias esquinas). Ocupa la cara completa. */
+.wd-fx-logo {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: fill;
+}
+/* Tiñe el metal con el color de la billetera. La máscara recorta el tinte a la
+   silueta de la tarjeta para que no desborde por las esquinas redondeadas. */
 .wd-fx-card .wd-tint {
   position: absolute; inset: 0;
   background: var(--tint); mix-blend-mode: color; opacity: 0.55;
-  -webkit-mask: url('/wallets/card-flat.webp') center / contain no-repeat;
-  mask: url('/wallets/card-flat.webp') center / contain no-repeat;
+  -webkit-mask: url('/wallets/card-flat.webp') center / 100% 100% no-repeat;
+  mask: url('/wallets/card-flat.webp') center / 100% 100% no-repeat;
 }
 /* clon del bolsillo del marco: recorta la tarjeta al encajar; aparece con el panel */
 .wd-fx-strip-front {
@@ -1182,6 +1179,12 @@ body.wallet-detail-open .page-enter { transform: none !important; animation: non
    del vuelo depende de él). */
 body.wallet-detail-open .topbar-host,
 body.wallet-detail-open .bottomnav-host { opacity: 0; pointer-events: none; }
+/* Mientras la tarjeta cubre la pantalla, el chrome de /expenses se oculta SIN
+   transición: viven fuera de `.page-enter` y por encima de la capa del vuelo,
+   así que se transparentaban a través de la tarjeta. Aparecen cuando ella se
+   va, junto con el resto de la página. */
+body.card-covering .topbar-host,
+body.card-covering .bottomnav-host { opacity: 0; pointer-events: none; transition: none; }
 .topbar-host, .bottomnav-host { transition: opacity 0.3s ease; }
 
 /* Los sheets llevan `select-none`: montan bajo el dedo durante un long-press y

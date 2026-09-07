@@ -2,6 +2,8 @@ package com.expenses.income.internal;
 
 import com.expenses.wallet.PerWalletTotal;
 import com.expenses.shared.query.CategoryBreakdownRow;
+import com.expenses.shared.query.DailyCategoryRow;
+import com.expenses.shared.query.DailyTotalRow;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -49,4 +51,28 @@ public interface IncomeRepository extends JpaRepository<Income, Long>, JpaSpecif
            "WHERE i.user.id = :userId AND i.date BETWEEN :from AND :to AND i.category IS NULL " +
            "AND (:walletId IS NULL OR i.wallet.id = :walletId)")
     UncategorizedTotals findUncategorizedTotals(@Param("userId") Long userId, @Param("from") LocalDate from, @Param("to") LocalDate to, @Param("walletId") Long walletId);
+
+    /** Total por día del periodo: el soft-delete lo aplica @SQLRestriction. */
+    @Query("""
+        SELECT i.date AS date, SUM(i.amount) AS total
+        FROM Income i
+        WHERE i.user.id = :userId AND i.date BETWEEN :from AND :to
+          AND (:walletId IS NULL OR i.wallet.id = :walletId)
+        GROUP BY i.date
+        ORDER BY i.date
+        """)
+    List<DailyTotalRow> findDailyTotals(@Param("userId") Long userId, @Param("from") LocalDate from, @Param("to") LocalDate to, @Param("walletId") Long walletId);
+
+    /** Total por día Y categoría: el cliente pinta la dominante de cada día. */
+    @Query("""
+        SELECT i.date AS date, SUM(i.amount) AS total,
+               i.category.name AS categoryName, i.category.color AS categoryColor,
+               i.category.icon AS categoryIcon
+        FROM Income i
+        WHERE i.user.id = :userId AND i.date BETWEEN :from AND :to
+          AND (:walletId IS NULL OR i.wallet.id = :walletId)
+        GROUP BY i.date, i.category.name, i.category.color, i.category.icon
+        ORDER BY i.date
+        """)
+    List<DailyCategoryRow> findDailyByCategory(@Param("userId") Long userId, @Param("from") LocalDate from, @Param("to") LocalDate to, @Param("walletId") Long walletId);
 }

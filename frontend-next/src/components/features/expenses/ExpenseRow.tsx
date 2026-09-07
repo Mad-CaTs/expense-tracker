@@ -99,6 +99,25 @@ export function ExpenseRow({ expense, onEdit, onDelete, index, expanded, onToggl
             style={{ borderTop: '1px solid var(--border-subtle)', background: 'var(--bg-subtle)' }}
           >
             <div className="space-y-3 px-4 py-3.5">
+              {/* El gasto guarda lo que SALIÓ de la billetera; las estadísticas
+                  cuentan solo la parte propia. Mostrar ambas evita que el
+                  importe de la fila parezca un error. */}
+              {(expense.reimbursableAmount ?? 0) > 0 && (
+                <div
+                  className="flex items-center gap-2.5 rounded-[13px] px-3 py-2.5"
+                  style={{ background: 'rgba(74,222,128,0.09)', border: '1px solid rgba(74,222,128,0.18)' }}
+                >
+                  <span className="flex-1 text-[11.5px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                    Te deben{' '}
+                    <b style={{ color: 'var(--success)' }}>
+                      S/ {(expense.reimbursableAmount ?? 0).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </b>
+                    {' '}· tu parte es S/{' '}
+                    {(expense.amount - (expense.reimbursableAmount ?? 0)).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                </div>
+              )}
+
               {expense.notes && (
                 <div>
                   <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.15em]" style={{ color: 'var(--text-placeholder)' }}>

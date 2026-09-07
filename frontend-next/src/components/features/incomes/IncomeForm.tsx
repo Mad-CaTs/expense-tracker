@@ -6,12 +6,14 @@ import { useState } from 'react'
 import { AmountField } from '@/components/features/shared/AmountField'
 import { CategorySelector } from '@/components/features/shared/CategorySelector'
 import { DateField } from '@/components/features/shared/DateField'
+import { DescriptionField } from '@/components/features/shared/DescriptionField'
 import { SheetSteps } from '@/components/features/shared/SheetSteps'
 import { StepActions } from '@/components/features/shared/StepActions'
 import type { TxSummary } from '@/components/features/shared/txSummary'
 import { useFormSteps } from '@/components/features/shared/useFormSteps'
 import { NotesField } from '@/components/features/shared/NotesField'
 import { useActiveWallet } from '@/lib/hooks/useActiveWallet'
+import { FIELD_LIMITS } from '@/lib/utils/fieldLimits'
 import { useCategories } from '@/lib/hooks/useCategories'
 import { useCreateIncome, useIncome, useUpdateIncome } from '@/lib/hooks/useIncomes'
 import type { Income } from '@/types'
@@ -37,7 +39,6 @@ function IncomeFormInner({ income, incomeId, onDone, onRequestDelete, onSaved }:
   const isEdit = incomeId != null && incomeId > 0
   const embedded = onDone != null
 
-  const { data: categories } = useCategories('INCOME')
   const createIncome = useCreateIncome()
   const updateIncome = useUpdateIncome()
 
@@ -57,6 +58,8 @@ function IncomeFormInner({ income, incomeId, onDone, onRequestDelete, onSaved }:
    */
   const activeWalletId = useActiveWallet()
   const walletId = income?.walletId?.toString() ?? (activeWalletId?.toString() ?? '')
+  // Solo las ofrecidas en esta billetera: las ocultas no se listan.
+  const { data: categories } = useCategories('INCOME', walletId ? Number(walletId) : undefined)
   const [categoryId, setCategoryId] = useState(income?.categoryId?.toString() ?? '')
   const [notes, setNotes] = useState(income?.notes ?? '')
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -129,19 +132,13 @@ function IncomeFormInner({ income, incomeId, onDone, onRequestDelete, onSaved }:
               }}
             />
 
-            <p className="mb-2 mt-4 text-[10px] font-bold uppercase tracking-[0.1em]" style={{ color: 'var(--text-placeholder)' }}>
-              Descripción
-            </p>
-            <input
-              type="text"
+            <DescriptionField
               value={description}
-              onChange={(e) => { setDescription(e.target.value); setErrors(err => ({ ...err, description: '' })) }}
               placeholder="Ej. Salario, freelance, venta..."
-              autoComplete="off"
-              className="liquid-glass-ic h-[46px] w-full rounded-[16px] px-[15px] text-[14px] outline-none"
-              style={{ color: 'var(--text-primary)', ...(errors.description ? { borderColor: 'var(--danger)' } : {}) }}
+              limit={FIELD_LIMITS.description}
+              error={errors.description}
+              onChange={(v) => { setDescription(v); setErrors(err => ({ ...err, description: '' })) }}
             />
-            {errors.description && <p className="mt-1.5 text-[11px]" style={{ color: 'var(--danger)' }}>{errors.description}</p>}
 
             {categories && categories.length > 0 && (
               <CategorySelector

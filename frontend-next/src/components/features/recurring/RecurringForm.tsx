@@ -5,12 +5,14 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { CalendarDays, ChevronDown } from 'lucide-react'
 
+import { DescriptionField } from '@/components/features/shared/DescriptionField'
 import { DateWheelPicker } from '@/components/ui/DateWheelPicker'
 import { useCategories } from '@/lib/hooks/useCategories'
 import { useCreateRecurring } from '@/lib/hooks/useRecurring'
 import { useWallets } from '@/lib/hooks/useWallets'
 import { categorySwatch } from '@/lib/utils/cardVisuals'
 import { CATEGORY_ICON_MAP } from '@/lib/utils/categoryIcons'
+import { FIELD_LIMITS } from '@/lib/utils/fieldLimits'
 import { MOTION } from '@/lib/utils/motion'
 import { useFilterStore } from '@/stores/filterStore'
 import type { RecurringFrequency } from '@/types'
@@ -210,19 +212,14 @@ export function RecurringForm({ open, onClose, onCreated }: RecurringFormProps) 
                 </div>
               )}
 
-              <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.1em]" style={{ color: 'var(--text-placeholder)' }}>
-                Descripción
-              </p>
-              <input
-                type="text"
+              <DescriptionField
                 value={description}
-                onChange={(e) => { setDescription(e.target.value); setErrors((x) => ({ ...x, description: '' })) }}
                 placeholder="Ej. Netflix, Alquiler…"
-                autoComplete="off"
-                className="liquid-glass-ic h-[46px] w-full rounded-[16px] px-[15px] text-[14px] outline-none"
-                style={{ color: 'var(--text-primary)', ...(errors.description ? { borderColor: 'var(--danger)' } : {}) }}
+                limit={FIELD_LIMITS.description}
+                error={errors.description}
+                spaced={false}
+                onChange={(v) => { setDescription(v); setErrors((x) => ({ ...x, description: '' })) }}
               />
-              {errors.description && <p className="mt-1.5 text-[11px]" style={{ color: 'var(--danger)' }}>{errors.description}</p>}
 
               <p className="mb-2 mt-4 text-[10px] font-bold uppercase tracking-[0.1em]" style={{ color: 'var(--text-placeholder)' }}>
                 Categoría

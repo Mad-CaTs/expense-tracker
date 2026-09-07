@@ -1,5 +1,7 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
+
 import { ArrowDownLeft, ArrowUpRight } from 'lucide-react'
 
 import { CategoryIcon } from '@/components/features/categories/CategoryIcon'
@@ -123,6 +125,7 @@ function FlowRow({
 function MovementsCard() {
   const { from, to } = monthRange()
   const walletId = useActiveWallet()
+  const router = useRouter()
 
   const { data: incomeItems = [] } = useCategoryBreakdown({ period: 'CUSTOM', from, to, txType: 'INCOME', walletId }, { requireWallet: true })
   const { data: expenseItems = [] } = useCategoryBreakdown({ period: 'CUSTOM', from, to, txType: 'EXPENSE', walletId }, { requireWallet: true })
@@ -131,8 +134,10 @@ function MovementsCard() {
   const expenseTotal = expenseItems.reduce((acc, it) => acc + (it.total ?? 0), 0)
 
   return (
-    <div
-      className="liquid-glass flex flex-col gap-5 rounded-[20px] p-[22px]"
+    <button
+      type="button"
+      onClick={() => router.push('/reports')}
+      className="liquid-glass flex w-full cursor-pointer flex-col gap-5 rounded-[20px] p-[22px] text-left transition-transform active:scale-[0.99]"
     >
       <p className="text-[16px] font-bold tracking-[-0.02em]" style={{ color: 'var(--text-primary)' }}>
         Movimientos
@@ -140,7 +145,7 @@ function MovementsCard() {
 
       <FlowRow label="Ingresos" amount={incomeTotal} positive items={incomeItems} />
       <FlowRow label="Gastos" amount={expenseTotal} positive={false} items={expenseItems} />
-    </div>
+    </button>
   )
 }
 

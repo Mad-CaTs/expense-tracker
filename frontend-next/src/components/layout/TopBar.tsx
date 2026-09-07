@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react'
 
 import { AnimatePresence } from 'framer-motion'
 
+import { WalletActionsMenu } from '@/components/features/expenses/WalletActionsMenu'
 import { useStoredUsername } from '@/components/features/shared/useStoredUsername'
 import { DropdownMenu } from '@/components/ui/DropdownMenu'
 import { Plus } from 'lucide-react'
@@ -47,6 +48,9 @@ function HeaderAction({ pathname }: { pathname: string }) {
       </button>
     )
   }
+
+  // Acciones de la billetera activa: mismo sitio y mismo rango que el "+".
+  if (pathname.startsWith('/expenses')) return <WalletActionsMenu />
 
   return null
 }

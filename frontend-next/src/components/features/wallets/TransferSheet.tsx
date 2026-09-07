@@ -13,6 +13,7 @@ import { WalletSelector } from '@/components/features/shared/WalletSelector'
 import type { TxSummary } from '@/components/features/shared/txSummary'
 import { useFormSteps } from '@/components/features/shared/useFormSteps'
 import { useCreateTransfer } from '@/lib/hooks/useTransfers'
+import { FIELD_LIMITS } from '@/lib/utils/fieldLimits'
 import type { Wallet } from '@/types'
 
 interface TransferSheetProps {
@@ -107,9 +108,12 @@ export function TransferSheet({ wallets, presetFromId, onDone, onSaved }: Transf
           <>
             <DateField value={date} onChange={setDate} />
 
+            {/* Escribe en `description` de la transferencia, no en `notes`:
+                su columna es varchar(500), no 1000. */}
             <NotesField
               value={description}
               placeholder="Motivo de la transferencia (opcional)"
+              limit={FIELD_LIMITS.description}
               onChange={setDescription}
             />
 

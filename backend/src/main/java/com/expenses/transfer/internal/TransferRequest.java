@@ -1,5 +1,6 @@
 package com.expenses.transfer.internal;
 
+import com.expenses.shared.validation.FieldLimits;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 import java.math.BigDecimal;
@@ -12,7 +13,7 @@ public class TransferRequest {
     @Positive(message = "El monto debe ser mayor a 0")
     private BigDecimal amount;
 
-    @Size(max = 500)
+    @Size(max = FieldLimits.DESCRIPTION)
     private String description;
 
     @NotNull(message = "La fecha es obligatoria")

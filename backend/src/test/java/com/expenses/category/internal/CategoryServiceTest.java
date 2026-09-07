@@ -23,6 +23,7 @@ import static org.mockito.Mockito.*;
 class CategoryServiceTest {
 
     @Mock CategoryRepository categoryRepository;
+    @Mock CategoryVisibilityRepository visibilityRepository;
     @Spy CategoryMapper categoryMapper = Mappers.getMapper(CategoryMapper.class);
     @InjectMocks CategoryService categoryService;
 
@@ -46,7 +47,7 @@ class CategoryServiceTest {
     @Test
     void findAll_returnsUserCategories() {
         when(categoryRepository.findByUserId(1L)).thenReturn(List.of(category));
-        List<CategoryResponse> result = categoryService.findAll(1L, null);
+        List<CategoryResponse> result = categoryService.findAll(1L, null, null);
         assertThat(result).hasSize(1);
         assertThat(result.get(0).name()).isEqualTo("Comida");
     }
@@ -54,7 +55,7 @@ class CategoryServiceTest {
     @Test
     void findAll_withType_filtersByType() {
         when(categoryRepository.findByUserIdAndType(1L, CategoryType.INCOME)).thenReturn(List.of());
-        List<CategoryResponse> result = categoryService.findAll(1L, CategoryType.INCOME);
+        List<CategoryResponse> result = categoryService.findAll(1L, CategoryType.INCOME, null);
         assertThat(result).isEmpty();
         verify(categoryRepository, never()).findByUserId(anyLong());
     }
@@ -105,5 +106,77 @@ class CategoryServiceTest {
         when(categoryRepository.findByIdAndUserId(99L, 1L)).thenReturn(Optional.empty());
         assertThatThrownBy(() -> categoryService.delete(99L, 1L))
                 .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    // ── Visibilidad por billetera ──────────────────────────────────────────
+
+    @Test
+    void findAll_withWalletId_excludesHiddenCategories() {
+        category.setId(1L);
+        when(categoryRepository.findByUserId(1L)).thenReturn(List.of(category));
+        when(visibilityRepository.findHiddenCategoryIds(7L)).thenReturn(List.of(1L));
+
+        List<CategoryResponse> result = categoryService.findAll(1L, null, 7L);
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void findAll_withWalletId_keepsVisibleCategories() {
+        category.setId(1L);
+        when(categoryRepository.findByUserId(1L)).thenReturn(List.of(category));
+        when(visibilityRepository.findHiddenCategoryIds(7L)).thenReturn(List.of(99L));
+
+        List<CategoryResponse> result = categoryService.findAll(1L, null, 7L);
+
+        assertThat(result).hasSize(1);
+    }
+
+    @Test
+    void findAll_withoutWalletId_neverFiltersByVisibility() {
+        when(categoryRepository.findByUserId(1L)).thenReturn(List.of(category));
+
+        categoryService.findAll(1L, null, null);
+
+        // Reportes y presupuestos piden sin billetera: deben ver TODO.
+        verify(visibilityRepository, never()).findHiddenCategoryIds(anyLong());
+    }
+
+    @Test
+    void setHidden_true_savesRowOnce() {
+        when(categoryRepository.findByIdAndUserId(1L, 1L)).thenReturn(Optional.of(category));
+        when(visibilityRepository.existsByCategoryIdAndWalletId(1L, 7L)).thenReturn(false);
+
+        categoryService.setHidden(1L, 7L, true, 1L);
+
+        verify(visibilityRepository).save(any(CategoryVisibility.class));
+    }
+
+    @Test
+    void setHidden_true_whenAlreadyHidden_doesNotDuplicate() {
+        when(categoryRepository.findByIdAndUserId(1L, 1L)).thenReturn(Optional.of(category));
+        when(visibilityRepository.existsByCategoryIdAndWalletId(1L, 7L)).thenReturn(true);
+
+        categoryService.setHidden(1L, 7L, true, 1L);
+
+        verify(visibilityRepository, never()).save(any());
+    }
+
+    @Test
+    void setHidden_false_removesRow() {
+        when(categoryRepository.findByIdAndUserId(1L, 1L)).thenReturn(Optional.of(category));
+
+        categoryService.setHidden(1L, 7L, false, 1L);
+
+        verify(visibilityRepository).deleteByCategoryIdAndWalletId(1L, 7L);
+    }
+
+    @Test
+    void setHidden_whenCategoryIsNotOwned_throwsAndWritesNothing() {
+        when(categoryRepository.findByIdAndUserId(99L, 1L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> categoryService.setHidden(99L, 7L, true, 1L))
+                .isInstanceOf(ResourceNotFoundException.class);
+        verify(visibilityRepository, never()).save(any());
     }
 }

@@ -39,6 +39,16 @@ public class Expense extends Auditable {
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal amount;
 
+    /**
+     * Parte del gasto que corresponde a otros (ver módulo {@code debt}).
+     *
+     * <p>{@code amount} sigue siendo lo que salió de la billetera —es lo que
+     * cuadra con el banco—; las estadísticas suman
+     * {@code amount - reimbursableAmount}, que es el gasto propio.
+     */
+    @Column(name = "reimbursable_amount", nullable = false, precision = 12, scale = 2)
+    private BigDecimal reimbursableAmount = BigDecimal.ZERO;
+
     @Column(length = 500)
     private String description;
 

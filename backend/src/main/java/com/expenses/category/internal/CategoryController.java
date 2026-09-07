@@ -17,9 +17,11 @@ public class CategoryController {
     private final CategoryService categoryService;
     private final AuthenticatedUserResolver userResolver;
 
+    /** `walletId` opcional: filtra las ocultas en esa billetera (ver CategoryService). */
     @GetMapping
-    public List<CategoryResponse> findAll(@RequestParam(required = false) CategoryType type) {
-        return categoryService.findAll(userResolver.getCurrentUserId(), type);
+    public List<CategoryResponse> findAll(@RequestParam(required = false) CategoryType type,
+                                          @RequestParam(required = false) Long walletId) {
+        return categoryService.findAll(userResolver.getCurrentUserId(), type, walletId);
     }
 
     @GetMapping("/{id}")
@@ -37,6 +39,19 @@ public class CategoryController {
     @PutMapping("/{id}")
     public CategoryResponse update(@PathVariable Long id, @Valid @RequestBody CategoryRequest request) {
         return categoryService.update(id, request, userResolver.getCurrentUserId());
+    }
+
+    /** En qué billeteras está oculta esta categoría. */
+    @GetMapping("/{id}/hidden-in")
+    public List<Long> hiddenIn(@PathVariable Long id) {
+        return categoryService.hiddenIn(id, userResolver.getCurrentUserId());
+    }
+
+    /** Oculta o vuelve a mostrar la categoría en una billetera. */
+    @PutMapping("/{id}/visibility")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void setVisibility(@PathVariable Long id, @Valid @RequestBody CategoryVisibilityRequest request) {
+        categoryService.setHidden(id, request.walletId(), request.hidden(), userResolver.getCurrentUserId());
     }
 
     @DeleteMapping("/{id}")

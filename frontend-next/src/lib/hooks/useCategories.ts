@@ -6,15 +6,39 @@ import {
   createCategory,
   deleteCategory,
   getCategories,
+  getHiddenIn,
+  setCategoryVisibility,
   updateCategory,
 } from '@/lib/api/categories'
 import type { Category, CategoryType } from '@/types'
 
-export function useCategories(type?: CategoryType) {
+/** `walletId` filtra las ocultas en esa billetera; sin él, todas. */
+export function useCategories(type?: CategoryType, walletId?: number) {
   return useQuery({
-    queryKey: ['categories', type ?? 'all'],
-    queryFn: () => getCategories(type),
+    queryKey: ['categories', type ?? 'all', walletId ?? 'todas'],
+    queryFn: () => getCategories(type, walletId),
     staleTime: 5 * 60 * 1000,
+  })
+}
+
+/** En qué billeteras está oculta una categoría. */
+export function useHiddenIn(categoryId?: number) {
+  return useQuery({
+    queryKey: ['category-hidden-in', categoryId],
+    queryFn: () => getHiddenIn(categoryId as number),
+    enabled: categoryId != null,
+  })
+}
+
+export function useSetCategoryVisibility() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ categoryId, walletId, hidden }: { categoryId: number; walletId: number; hidden: boolean }) =>
+      setCategoryVisibility(categoryId, walletId, hidden),
+    onSuccess: (_d, v) => {
+      qc.invalidateQueries({ queryKey: ['categories'] })
+      qc.invalidateQueries({ queryKey: ['category-hidden-in', v.categoryId] })
+    },
   })
 }
 

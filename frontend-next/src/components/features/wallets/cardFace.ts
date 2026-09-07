@@ -35,7 +35,7 @@ function setLuma(rgb: [number, number, number], target: number): [number, number
  * Color plano de la tarjeta: reproduce `mix-blend-mode: color` (0.55) del tinte del
  * wallet sobre el metal de card.webp — el mismo acabado que en el carrusel.
  */
-function metallicTintColor(tint: string): string {
+export function metallicTintColor(tint: string): string {
   const blended = setLuma(hexToRgb(tint), CARD_METAL_LUMA)
   const grey = CARD_METAL_LUMA * 255
   const mix = (c: number) => grey * (1 - TINT_OPACITY) + c * TINT_OPACITY

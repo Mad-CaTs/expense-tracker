@@ -26,6 +26,22 @@ export function rangeOf(granularity: Granularity, date: Date): { from: string; t
   return { from: iso(new Date(y, date.getMonth(), 1)), to: iso(new Date(y, date.getMonth() + 1, 0)) }
 }
 
+/** Días que abarca un rango ISO, ambos extremos incluidos. */
+export function daysBetween(from: string, to: string): number {
+  const a = new Date(from + 'T00:00:00')
+  const b = new Date(to + 'T00:00:00')
+  return Math.round((b.getTime() - a.getTime()) / 86400000) + 1
+}
+
+/** La fecha equivalente un periodo atrás: mes, trimestre o año anterior. */
+export function previousDate(granularity: Granularity, date: Date): Date {
+  const d = new Date(date)
+  if (granularity === 'YEARLY') d.setFullYear(d.getFullYear() - 1)
+  else if (granularity === 'QUARTERLY') d.setMonth(d.getMonth() - 3)
+  else d.setMonth(d.getMonth() - 1)
+  return d
+}
+
 export function labelOf(granularity: Granularity, date: Date): string {
   if (granularity === 'YEARLY') return String(date.getFullYear())
   if (granularity === 'QUARTERLY') {

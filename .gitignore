@@ -21,3 +21,6 @@ Thumbs.db
 docs/
 .superpowers/
 frontend-next/.claude/
+
+# Datos de usuarios locales: contiene hashes bcrypt, nunca al repo.
+create-user.sql

@@ -11,6 +11,7 @@ import { fromReportQuery, toReportQuery } from '@/components/features/reports/re
 import { usePeriodMovements } from '@/components/features/reports/usePeriodMovements'
 import { usePeriodRange } from '@/components/features/reports/usePeriodRange'
 import { useCategories } from '@/lib/hooks/useCategories'
+import { useActiveWallet } from '@/lib/hooks/useActiveWallet'
 import { useWallets } from '@/lib/hooks/useWallets'
 
 
@@ -37,10 +38,18 @@ export function ReportsScreen() {
   const [picked, setPicked] = useState<number | null>(seed.walletId)
   const [txType, setTxType] = useState<ReportTxType>(seed.txType)
 
-  const { data: categories = [] } = useCategories(txType === 'ALL' ? undefined : txType)
   const { data: wallets = [] } = useWallets()
+  const activeWalletId = useActiveWallet()
+  // El selector solo ofrece las categorías visibles en esta billetera.
+  const { data: categories = [] } = useCategories(
+    txType === 'ALL' ? undefined : txType,
+    activeWalletId,
+  )
 
-  const walletId = picked ?? wallets[0]?.id ?? null
+  /* La billetera activa manda: se eligió en /wallets y se arrastra por toda la
+     app. `picked` solo existe para respetar un ?walletId= de una URL guardada;
+     ya no hay selector en pantalla que lo cambie. */
+  const walletId = picked ?? activeWalletId ?? null
 
   const { days, totals, isLoading: loadingMovements } = usePeriodMovements(range.from, range.to, { categoryIds, walletId: walletId ?? undefined, txType })
 
@@ -62,7 +71,7 @@ export function ReportsScreen() {
     <div className="mx-auto max-w-3xl px-4 pb-4 pt-[11px]">
       {wallets.length > 0 && (
         <div className="enter-pop -mx-4" style={{ ['--enter-i' as string]: 0 }}>
-          <WalletScopeCard wallets={wallets} walletId={walletId ?? 0} onSelect={setPicked} />
+          <WalletScopeCard wallets={wallets} walletId={walletId ?? 0} />
         </div>
       )}
 

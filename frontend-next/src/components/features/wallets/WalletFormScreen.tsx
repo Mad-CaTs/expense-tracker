@@ -7,6 +7,7 @@ import { motion } from 'framer-motion'
 import { COLOR_PRESETS } from '@/components/features/shared/colorPresets'
 import { leaveNotice } from '@/components/features/shared/pendingNotice'
 import { useSubPageExit } from '@/components/features/shared/useSubPageExit'
+import { useFilterStore } from '@/stores/filterStore'
 import { toLeatherId } from '@/components/features/wallets/leathers'
 import { WalletAppearance } from '@/components/features/wallets/WalletAppearance'
 import { SubPageHeader } from '@/components/layout/SubPageHeader'
@@ -39,6 +40,7 @@ interface WalletFormScreenProps {
  */
 export function WalletFormScreen({ wallet }: WalletFormScreenProps) {
   const { exitClass, open, goBack } = useSubPageExit()
+  const setWalletId = useFilterStore((s) => s.setWalletId)
   const create = useCreateWallet()
   const update = useUpdateWallet()
   const editing = wallet != null
@@ -82,7 +84,15 @@ export function WalletFormScreen({ wallet }: WalletFormScreenProps) {
       })
     }
     leaveNotice<WalletNotice>({ name: trimmed, kind: editing ? 'updated' : 'created' })
-    if (editing) open(`/wallets?w=${wallet.id}`)
+    // Al editar se vuelve a /expenses, que es la pantalla de la billetera: se
+    // edita desde su menú y allí se ven los cambios. El destino de antes
+    // (`/wallets?w=…`) abría el detalle, una pantalla que ya no existe.
+    if (editing) {
+      // La billetera editada pasa a ser la activa: /expenses monta mostrándola
+      // a ella y no la que estuviera seleccionada antes.
+      if (wallet) setWalletId(wallet.id)
+      open('/expenses')
+    }
     else goBack()
   }
 

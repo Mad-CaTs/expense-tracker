@@ -186,6 +186,6 @@ class RecurringOccurrenceServiceTest {
     private ExpenseResponse expenseResponse(Long id) {
         return new ExpenseResponse(id, new BigDecimal("45.00"), "Netflix", LocalDate.now(),
                 3L, null, "Suscripciones", "#8B5CF6", "film", 0, 7L, "Principal",
-                LocalDateTime.now());
+                java.math.BigDecimal.ZERO, LocalDateTime.now());
     }
 }
