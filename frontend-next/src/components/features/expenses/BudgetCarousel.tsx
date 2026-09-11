@@ -83,7 +83,7 @@ function BudgetMiniCard({ budget, index, onOpen }: { budget: Budget; index: numb
 
         <p className="text-[11px] font-medium" style={{ color: 'rgba(255,255,255,0.75)' }}>Gastado</p>
         <p className="text-[21px] font-extrabold leading-none tracking-[-0.02em]" style={{ textShadow: '0 1px 10px rgba(0,0,0,0.25)' }}>
-          {sym}{spent.toFixed(0)} <span className="text-[12px] font-medium" style={{ color: 'rgba(255,255,255,0.7)' }}>/ {amount.toFixed(0)}</span>
+          {sym}{spent.toFixed(2)} <span className="text-[12px] font-medium" style={{ color: 'rgba(255,255,255,0.7)' }}>/ {amount.toFixed(0)}</span>
         </p>
 
         {/* Barra (deja libre la zona del FAB) — fill anima con scaleX (GPU), no width */}
@@ -95,7 +95,7 @@ function BudgetMiniCard({ budget, index, onOpen }: { budget: Budget; index: numb
         </div>
 
         <p className="mr-[42px] mt-2 text-[11px] font-medium" style={{ color: 'rgba(255,255,255,0.85)' }}>
-          {isOver ? `+${sym}${Math.abs(remaining).toFixed(0)} excedido` : `${sym}${remaining.toFixed(0)} rest.`}
+          {isOver ? `+${sym}${Math.abs(remaining).toFixed(2)} excedido` : `${sym}${remaining.toFixed(2)} rest.`}
         </p>
       </div>
 

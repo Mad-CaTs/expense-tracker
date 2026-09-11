@@ -6,7 +6,7 @@ import { useWalletCurrency } from '@/lib/hooks/useWallets'
 import { symbolOf } from '@/lib/utils/currency'
 
 const money = (n: number) =>
-  n.toLocaleString('es-PE', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
+  n.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
 /** A partir de acá el presupuesto se considera "en riesgo". */
 const WARN_RATIO = 0.8

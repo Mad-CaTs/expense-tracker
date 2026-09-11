@@ -136,10 +136,10 @@ export function SpokeDonut({ breakdown, activeIndex, onSelect, label }: SpokeDon
         <text
           x={C} y={C + 18}
           textAnchor="middle"
-          className="mono-amount text-[23px] font-extrabold tabular-nums"
+          className="mono-amount text-[19px] font-extrabold tabular-nums"
           fill="var(--text-primary)"
         >
-          {sym} {shownTotal.toLocaleString('es-PE', { maximumFractionDigits: 0 })}
+          {sym} {shownTotal.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </text>
       </svg>
     </div>

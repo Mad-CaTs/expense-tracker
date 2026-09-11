@@ -65,7 +65,7 @@ export function buildDeltas(
 }
 
 const money = (n: number) =>
-  n.toLocaleString('es-PE', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
+  n.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
 interface CategoryDeltasProps {
   deltas: CategoryDelta[]

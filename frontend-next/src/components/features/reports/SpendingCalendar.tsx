@@ -10,7 +10,7 @@ import { symbolOf } from '@/lib/utils/currency'
 const WEEKDAYS = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
 
 const money = (n: number) =>
-  n.toLocaleString('es-PE', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
+  n.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
 const pad = (n: number) => String(n).padStart(2, '0')
 const isoOf = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`

@@ -33,7 +33,7 @@ function monthRange(now = new Date()) {
 }
 
 function formatAmount(n: number) {
-  return n.toLocaleString('es-PE', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
+  return n.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
 /** Barra horizontal segmentada por categoría. Construida solo con flex, sin librerías. */

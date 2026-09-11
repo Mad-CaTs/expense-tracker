@@ -22,7 +22,7 @@ import { COLOR_PRESETS } from '@/components/features/shared/colorPresets'
 
 import { ICON_LABELS, ICON_OPTIONS } from './categoryConstants'
 import { useWalletCurrency } from '@/lib/hooks/useWallets'
-import { symbolOf } from '@/lib/utils/currency'
+import { formatMoney } from '@/lib/utils/currency'
 
 export interface CategorySheetProps {
   type: CategoryType
@@ -48,7 +48,7 @@ function Preview({ name, icon, color, total, percentage }: {
   total: number
   percentage: number
 }) {
-  const sym = symbolOf(useWalletCurrency())
+  const currency = useWalletCurrency()
   const Icon = CATEGORY_ICON_MAP[icon] ?? CATEGORY_ICON_MAP.ellipsis
   const aura = categoryAura(color)
   return (
@@ -88,7 +88,7 @@ function Preview({ name, icon, color, total, percentage }: {
           className="mono-amount block text-[20px] font-extrabold leading-none tracking-[-0.02em] tabular-nums"
           style={{ textShadow: '0 1px 10px rgba(0,0,0,0.25)' }}
         >
-          {sym}{total.toLocaleString('es-PE', { maximumFractionDigits: 0 })}
+          {formatMoney(total, currency)}
         </span>
         <span className="mt-[11px] block h-[6px] overflow-hidden rounded-full" style={{ background: 'rgba(255,255,255,0.25)' }}>
           <span

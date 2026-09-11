@@ -43,7 +43,7 @@ export function FlowCard({ kind, total, onClick }: FlowCardProps) {
 
       <span className="mono-amount mt-[11px] block text-[21px] font-extrabold tracking-[-0.03em] tabular-nums" style={{ color: 'var(--text-primary)' }}>
         <small className="mono-amount mr-1 text-[13px] font-bold" style={{ color: 'var(--text-tertiary)' }}>{sym}</small>
-        <AnimatedAmount value={total} fractionDigits={0} animateOnMount />
+        <AnimatedAmount value={total} animateOnMount />
       </span>
 
     </button>

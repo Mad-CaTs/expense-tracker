@@ -70,7 +70,7 @@ function Preview({ budget, limit }: { budget: Budget; limit: number }) {
           {budget.categoryName ?? 'Sin categoría'}
         </span>
         <span className="mono-amount block text-[19px] font-extrabold leading-none tracking-[-0.02em] tabular-nums">
-          {sym}{spent.toFixed(0)}{' '}
+          {sym}{spent.toFixed(2)}{' '}
           <span className="text-[11px] font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>
             / {limit > 0 ? limit.toFixed(0) : '—'}
           </span>
@@ -89,8 +89,8 @@ function Preview({ budget, limit }: { budget: Budget; limit: number }) {
           {limit <= 0
             ? 'Define un límite'
             : isOver
-              ? `+${sym}${Math.abs(remaining).toFixed(0)} excedido`
-              : `${sym}${remaining.toFixed(0)} rest.`}
+              ? `+${sym}${Math.abs(remaining).toFixed(2)} excedido`
+              : `${sym}${remaining.toFixed(2)} rest.`}
         </span>
       </span>
     </div>

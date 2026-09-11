@@ -12,7 +12,8 @@ import { toLeatherId } from '@/components/features/wallets/leathers'
 import { CurrencySignButton } from '@/components/features/wallets/CurrencySignButton'
 import { WalletAppearance } from '@/components/features/wallets/WalletAppearance'
 import { SubPageHeader } from '@/components/layout/SubPageHeader'
-import { useCreateWallet, useUpdateWallet } from '@/lib/hooks/useWallets'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { useCreateWallet, useDeleteWallet, useUpdateWallet } from '@/lib/hooks/useWallets'
 import { DEFAULT_CURRENCY, type CurrencyId } from '@/lib/utils/currency'
 import type { Wallet } from '@/types'
 
@@ -45,6 +46,7 @@ export function WalletFormScreen({ wallet }: WalletFormScreenProps) {
   const setWalletId = useFilterStore((s) => s.setWalletId)
   const create = useCreateWallet()
   const update = useUpdateWallet()
+  const remove = useDeleteWallet()
   const editing = wallet != null
 
   const [name, setName] = useState(wallet?.name ?? '')
@@ -69,8 +71,27 @@ export function WalletFormScreen({ wallet }: WalletFormScreenProps) {
     balanceTick.start({ scale: [1, 1.035, 1], transition: { duration: 0.4, ease: [0.32, 0.72, 0, 1] } })
   }, [currencyTaps, balanceTick])
   const [error, setError] = useState('')
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
 
-  const pending = create.isPending || update.isPending
+  const pending = create.isPending || update.isPending || remove.isPending
+
+  /**
+   * Elimina la billetera y todo lo que colgaba de ella.
+   *
+   * <p>El backend hace soft-delete y publica `WalletDeletedEvent`, así que los
+   * gastos, ingresos, transferencias y deudas de esta billetera desaparecen con
+   * ella. Por eso la confirmación advierte de los movimientos en vez de hablar
+   * solo de la billetera.
+   */
+  async function handleDelete() {
+    if (!wallet) return
+    await remove.mutateAsync(wallet.id)
+    // La billetera activa deja de existir: si no se limpia, /expenses monta
+    // apuntando a un id borrado y se queda sin datos que mostrar.
+    setWalletId(undefined)
+    leaveNotice<WalletNotice>({ name: wallet.name, kind: 'deleted' })
+    open('/wallets')
+  }
 
   async function handleSubmit() {
     const trimmed = name.trim()
@@ -152,23 +173,25 @@ export function WalletFormScreen({ wallet }: WalletFormScreenProps) {
               EUR. Está aquí y no en "Personalizar" porque la moneda no es
               decoración —decide cómo se lee cada cifra de la billetera— y
               enterrada en el sheet no se encontraba. */}
-          <div className="mt-5 flex items-baseline justify-center">
-            {/* Un pulso de escala al cambiar de moneda: dice que el símbolo que
-                se acaba de tocar es el de ESTE importe. Va con `animate` y no
-                con una `key`: remontar el wrapper le quitaría el foco al input
-                mientras se escribe el saldo. */}
-            <motion.div className="relative" animate={balanceTick}>
-              {/* Anclado al borde izquierdo de la CIFRA y fuera del flujo: en
-                  el flujo empujaba el importe a la derecha y el bloque quedaba
-                  descentrado respecto al nombre y a la pista de abajo. */}
-              <span className="absolute right-full top-1/2 -translate-y-1/2 pr-[2px]">
-                <CurrencySignButton
-                  value={currency}
-                  /* Al crear nunca está fijada; al editar lo dice el backend. */
-                  locked={wallet?.currencyLocked ?? false}
-                  onChange={(c) => { setCurrency(c); setCurrencyTaps((n) => n + 1) }}
-                />
-              </span>
+          {/* Signo y cifra van EN EL FLUJO, no anclados: así lo que se centra
+              es el conjunto «S/ 1285», que es como se lee. Antes el signo iba
+              absoluto para que la cifra mandara el centrado, pero eso dejaba
+              el bloque entero desplazado respecto al nombre.
+              `items-baseline` asienta el signo sobre la misma línea que el
+              número en vez de centrarlo en una caja cuyo alto cambia con el
+              contenido — que es por lo que en «crear» aparecía más arriba que
+              en «editar». */}
+          <motion.div
+            className="mt-5 flex items-baseline justify-center gap-[3px]"
+            animate={balanceTick}
+          >
+            <CurrencySignButton
+              value={currency}
+              /* Al crear nunca está fijada; al editar lo dice el backend. */
+              locked={wallet?.currencyLocked ?? false}
+              onChange={(c) => { setCurrency(c); setCurrencyTaps((n) => n + 1) }}
+            />
+            <div>
               <input
                 type="text"
                 inputMode="decimal"
@@ -181,11 +204,31 @@ export function WalletFormScreen({ wallet }: WalletFormScreenProps) {
                 className="search-input mono-amount bg-transparent text-center text-[30px] font-extrabold tracking-[-0.03em] tabular-nums outline-none"
                 style={{ color: parseFloat(balance) > 0 ? 'var(--text-primary)' : 'var(--text-placeholder)' }}
               />
-            </motion.div>
-          </div>
+            </div>
+          </motion.div>
           <p className="mt-1 text-[10.5px]" style={{ color: 'var(--text-dim)' }}>
             {editing ? 'Saldo actual' : 'Saldo inicial'}
           </p>
+
+          {/* Solo al editar, y separado del pie: el pie son Cancelar/Guardar,
+              las dos salidas normales. Eliminar es destructivo y no debe
+              quedar pegado a ellas, donde se pulsa por inercia. En texto y no
+              como botón sólido por el mismo motivo. */}
+          {editing && (
+            <div className="mt-9 flex justify-center">
+              <motion.button
+                type="button"
+                onClick={() => setConfirmingDelete(true)}
+                disabled={pending}
+                whileTap={{ scale: 0.96 }}
+                transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                className="cursor-pointer rounded-full px-4 py-2 text-[12px] font-bold disabled:opacity-60"
+                style={{ color: 'var(--danger)' }}
+              >
+                Eliminar billetera
+              </motion.button>
+            </div>
+          )}
 
         </div>
       </div>
@@ -216,6 +259,17 @@ export function WalletFormScreen({ wallet }: WalletFormScreenProps) {
           {pending ? 'Guardando...' : editing ? 'Guardar' : 'Crear billetera'}
         </motion.button>
       </div>
+
+      {/* Nombra los movimientos, no solo la billetera: el backend los borra
+          con ella (WalletDeletedEvent) y es lo que de verdad se pierde. */}
+      <ConfirmDialog
+        open={confirmingDelete}
+        title="¿Eliminar billetera?"
+        description={`"${wallet?.name ?? ''}" y todos sus movimientos (gastos, ingresos, transferencias y deudas) se eliminarán.`}
+        confirmLabel="Eliminar"
+        onConfirm={() => { setConfirmingDelete(false); void handleDelete() }}
+        onCancel={() => setConfirmingDelete(false)}
+      />
     </div>
   )
 }

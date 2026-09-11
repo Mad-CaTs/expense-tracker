@@ -149,16 +149,18 @@ export function OnboardingScreen() {
                   {error || 'Nombre de la billetera'}
                 </p>
 
-                <div className="mt-5 flex items-baseline justify-center">
-                  <motion.div className="relative" animate={balanceTick}>
-                    {/* Mismo control y mismo anclaje que al editar: fuera del
-                        flujo para que la cifra mande el centrado. */}
-                    <span className="absolute right-full top-1/2 -translate-y-1/2 pr-[2px]">
-                      <CurrencySignButton
-                        value={currency}
-                        onChange={(c) => { setCurrency(c); setCurrencyTaps((n) => n + 1) }}
-                      />
-                    </span>
+                {/* Mismo layout que al editar: signo y cifra en el flujo, para
+                    que se centre el conjunto y el signo se asiente sobre la
+                    línea base del número. */}
+                <motion.div
+                  className="mt-5 flex items-baseline justify-center gap-[3px]"
+                  animate={balanceTick}
+                >
+                  <CurrencySignButton
+                    value={currency}
+                    onChange={(c) => { setCurrency(c); setCurrencyTaps((n) => n + 1) }}
+                  />
+                  <div>
                     <input
                       type="text"
                       inputMode="decimal"
@@ -171,8 +173,8 @@ export function OnboardingScreen() {
                       className="search-input mono-amount bg-transparent text-center text-[30px] font-extrabold tracking-[-0.03em] tabular-nums outline-none"
                       style={{ color: parseFloat(initialBalance) > 0 ? 'var(--text-primary)' : 'var(--text-placeholder)' }}
                     />
-                  </motion.div>
-                </div>
+                  </div>
+                </motion.div>
                 <p className="mt-1 text-[10.5px]" style={{ color: 'var(--text-dim)' }}>
                   Saldo inicial
                 </p>

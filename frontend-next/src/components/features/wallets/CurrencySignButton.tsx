@@ -54,7 +54,7 @@ export function CurrencySignButton({ value, onChange, size = 23, locked = false 
       aria-label={locked
         ? `Moneda: ${value}. No se puede cambiar: la billetera ya tiene movimientos`
         : `Moneda: ${value}. Toca para cambiar`}
-      className={`border-0 bg-transparent p-0 leading-none${interactive ? ' cursor-pointer' : ''}${interactive && !used ? ' cur-tap-hint' : ''}`}
+      className={`block border-0 bg-transparent p-0 align-baseline leading-none${interactive ? ' cursor-pointer' : ''}${interactive && !used ? ' cur-tap-hint' : ''}`}
     >
       {/* `key` en el glifo: al cambiar, React lo remonta y la entrada se
           vuelve a disparar en cada toque. */}
@@ -63,7 +63,7 @@ export function CurrencySignButton({ value, onChange, size = 23, locked = false 
         initial={{ opacity: 0, y: 9 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: 'spring', stiffness: 520, damping: 26 }}
-        className="block font-bold leading-none"
+        className="block align-baseline font-bold leading-none"
         style={{ fontSize: size, color: 'var(--text-tertiary)' }}
       >
         {symbolOf(value)}
