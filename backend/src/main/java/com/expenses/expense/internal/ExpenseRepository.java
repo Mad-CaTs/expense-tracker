@@ -101,4 +101,11 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long>, JpaSpec
         ORDER BY e.date
         """)
     List<DailyCategoryRow> findDailyByCategory(@Param("userId") Long userId, @Param("from") LocalDate from, @Param("to") LocalDate to, @Param("walletId") Long walletId);
+
+    /**
+     * ¿Queda algún registro vivo en esa billetera? Decide si la moneda de la
+     * billetera todavía puede cambiarse. `@SQLRestriction` excluye los
+     * borrados, así que un movimiento eliminado no la bloquea.
+     */
+    boolean existsByUserIdAndWalletId(Long userId, Long walletId);
 }

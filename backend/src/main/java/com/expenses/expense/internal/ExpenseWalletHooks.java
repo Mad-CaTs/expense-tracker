@@ -37,6 +37,11 @@ class ExpenseWalletHooks implements WalletBalanceContribution {
         return toMap(expenseRepository.sumAmountByUserIdGroupedByWallet(userId));
     }
 
+    @Override
+    public boolean hasMovements(Long userId, Long walletId) {
+        return expenseRepository.existsByUserIdAndWalletId(userId, walletId);
+    }
+
     @EventListener
     public void on(WalletDeletedEvent event) {
         expenseRepository.softDeleteByWalletId(event.userId(), event.walletId(), event.deletedAt());

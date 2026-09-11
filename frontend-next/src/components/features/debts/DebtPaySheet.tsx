@@ -9,7 +9,8 @@ import { WalletSelector } from '@/components/features/shared/WalletSelector'
 import { Sheet } from '@/components/ui/Sheet'
 import { useActiveWallet } from '@/lib/hooks/useActiveWallet'
 import { usePayDebt } from '@/lib/hooks/useDebts'
-import { useWallets } from '@/lib/hooks/useWallets'
+import { useWalletCurrency, useWallets } from '@/lib/hooks/useWallets'
+import { symbolOf } from '@/lib/utils/currency'
 import type { Debt } from '@/types'
 
 const money = (n: number) =>
@@ -48,11 +49,14 @@ export function DebtPaySheet({ debt, personName, onClose, onDone }: DebtPaySheet
     debt.walletId ? String(debt.walletId) : activeWalletId ? String(activeWalletId) : '',
   )
   const [error, setError] = useState('')
+  // La billetera ELEGIDA en la hoja: es a donde entra (o de donde sale) el
+  // abono, así que es su moneda la que debe rotular los importes.
+  const sym = symbolOf(useWalletCurrency(walletId ? Number(walletId) : undefined))
 
   async function handleSubmit() {
     const amount = Number(rawAmount)
     if (!amount || amount <= 0) { setError('Monto inválido'); return }
-    if (amount > debt.pending) { setError(`No puedes ${iOwe ? 'pagar' : 'cobrar'} más de S/ ${money(debt.pending)}`); return }
+    if (amount > debt.pending) { setError(`No puedes ${iOwe ? 'pagar' : 'cobrar'} más de ${sym} ${money(debt.pending)}`); return }
     if (!walletId) { setError('Elige una billetera'); return }
 
     await payDebt.mutateAsync({ id: debt.id, amount, walletId: Number(walletId), paidOn: date })
@@ -64,12 +68,13 @@ export function DebtPaySheet({ debt, personName, onClose, onDone }: DebtPaySheet
       <div className="px-4 pb-4">
         <p className="mb-3 text-center text-[11.5px]" style={{ color: 'var(--text-tertiary)' }}>
           {debt.description || 'Préstamo'} · te {iOwe ? 'faltan' : 'deben'}{' '}
-          <b style={{ color: 'var(--text-secondary)' }}>S/ {money(debt.pending)}</b>
+          <b style={{ color: 'var(--text-secondary)' }}>{sym} {money(debt.pending)}</b>
         </p>
 
         <AmountField
           label={iOwe ? 'Cuánto pagas' : 'Cuánto te pagó'}
           inputId="debt-pay-amount"
+          walletId={walletId ? Number(walletId) : undefined}
           value={rawAmount}
           error={error}
           /* No deja teclear por encima de lo pendiente: avisar solo al enviar

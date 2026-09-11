@@ -1,5 +1,6 @@
 'use client'
 
+import { symbolOf } from '@/lib/utils/currency'
 import { motion } from 'framer-motion'
 
 import { categorySwatch } from '@/lib/utils/cardVisuals'
@@ -49,7 +50,7 @@ export function WalletSelector({ wallets, selectedId, error, onSelect, label = '
                 {w.name}
               </span>
               <span className="mono-amount text-[11px] tabular-nums" style={{ color: tint }}>
-                S/ {Number(w.balance).toFixed(2)}
+                {symbolOf(w.currency)} {Number(w.balance).toFixed(2)}
               </span>
             </motion.button>
           )

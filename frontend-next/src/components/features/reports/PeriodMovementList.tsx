@@ -10,6 +10,8 @@ import type { MovementDay, PeriodMovement } from '@/components/features/reports/
 import { categorySwatch } from '@/lib/utils/cardVisuals'
 import { CATEGORY_ICON_MAP } from '@/lib/utils/categoryIcons'
 import { useSheetStore } from '@/stores/sheetStore'
+import { useWalletCurrency } from '@/lib/hooks/useWallets'
+import { symbolOf } from '@/lib/utils/currency'
 
 
 const LIST_MAX_HEIGHT = 'calc(100dvh - 430px)'
@@ -22,6 +24,7 @@ interface PeriodMovementListProps {
 }
 
 function Row({ movement }: { movement: PeriodMovement }) {
+  const sym = symbolOf(useWalletCurrency())
   const open = useSheetStore((s) => s.open)
   const [showAttachments, setShowAttachments] = useState(false)
   const raw = movement.categoryColor ?? '#d4af37'
@@ -82,7 +85,7 @@ function Row({ movement }: { movement: PeriodMovement }) {
           no cuadra a ojo y parece un error. */}
       <span className="flex flex-none flex-col items-end">
         <span className="mono-amount text-[13px] font-extrabold tabular-nums" style={{ color: 'var(--text-primary)' }}>
-          {isExpense ? '−' : '+'}S/ {Math.abs(movement.amount).toFixed(2)}
+          {isExpense ? '−' : '+'}{sym} {Math.abs(movement.amount).toFixed(2)}
         </span>
         {(movement.reimbursable ?? 0) > 0 && (
           <span className="mono-amount text-[10.5px] font-bold tabular-nums" style={{ color: 'var(--danger)' }}>

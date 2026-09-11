@@ -42,4 +42,12 @@ public interface TransferRepository extends JpaRepository<Transfer, Long> {
     @Query("UPDATE Transfer t SET t.deletedAt = :now WHERE t.user.id = :userId " +
            "AND (t.fromWallet.id = :walletId OR t.toWallet.id = :walletId) AND t.deletedAt IS NULL")
     int softDeleteByWalletId(@Param("userId") Long userId, @Param("walletId") Long walletId, @Param("now") LocalDateTime now);
+
+    /**
+     * ¿Queda algún registro vivo en esa billetera? Decide si la moneda de la
+     * billetera todavía puede cambiarse. `@SQLRestriction` excluye los
+     * borrados, así que un movimiento eliminado no la bloquea.
+     */
+    boolean existsByUserIdAndFromWalletIdOrUserIdAndToWalletId(
+            Long fromUserId, Long fromWalletId, Long toUserId, Long toWalletId);
 }

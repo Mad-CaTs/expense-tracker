@@ -7,6 +7,8 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { CATEGORY_ICON_MAP } from '@/lib/utils/categoryIcons'
 import type { CategoryBreakdown } from '@/types'
 import { categorySwatch } from '@/lib/utils/cardVisuals'
+import { useWalletCurrency } from '@/lib/hooks/useWallets'
+import { symbolOf } from '@/lib/utils/currency'
 
 interface SmartEmptyBudgetsProps {
   breakdown?: CategoryBreakdown[]
@@ -14,6 +16,7 @@ interface SmartEmptyBudgetsProps {
 }
 
 export function SmartEmptyBudgets({ breakdown, onPick }: SmartEmptyBudgetsProps) {
+  const sym = symbolOf(useWalletCurrency())
   const top = (breakdown ?? [])
     .filter((b) => (b.total ?? 0) > 0 && b.categoryName !== 'Sin categoría')
     .slice(0, 4)
@@ -56,7 +59,7 @@ export function SmartEmptyBudgets({ breakdown, onPick }: SmartEmptyBudgetsProps)
               <div className="min-w-0 flex-1">
                 <p className="truncate text-[13px] font-semibold" style={{ color: 'var(--text-primary)' }}>{b.categoryName}</p>
                 <p className="mono-amount text-[11px]" style={{ color: 'var(--text-muted)' }}>
-                  S/ {(b.total ?? 0).toFixed(2)} gastado este mes
+                  {sym} {(b.total ?? 0).toFixed(2)} gastado este mes
                 </p>
               </div>
               <span

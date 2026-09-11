@@ -4,6 +4,8 @@ import React from 'react'
 
 import { CATEGORY_ICON_MAP } from '@/lib/utils/categoryIcons'
 import { categoryAura, categorySwatch } from '@/lib/utils/cardVisuals'
+import { useWalletCurrency } from '@/lib/hooks/useWallets'
+import { symbolOf } from '@/lib/utils/currency'
 
 /** Milisegundos de presión sostenida que abren el editor. */
 const HOLD_MS = 550
@@ -30,11 +32,14 @@ export interface CategoryCardProps {
 }
 
 export function CategoryCard({ category, index, onOpen, onEdit }: CategoryCardProps) {
+  const sym = symbolOf(useWalletCurrency())
   const { name, icon, color, total, count, percentage, hidden } = category
   const Icon = CATEGORY_ICON_MAP[icon] ?? CATEGORY_ICON_MAP.ellipsis
-  // Una categoría oculta se atenúa como las sin uso: no se ofrece acá, aunque
-  // sus movimientos pasados sigan contando.
-  const unused = total <= 0 || Boolean(hidden)
+  /* Atenuado SOLO por falta de uso. Antes también lo hacía `hidden`, y una
+     categoría oculta con gasto se veía igual que una sin movimientos: dos
+     cosas distintas con la misma pinta. Ahora el estado lo dice la pestaña
+     Activas/Ocultas, y el ojo tachado lo remata dentro de la tarjeta. */
+  const unused = total <= 0
 
   const aura = categoryAura(color)
   const iconColor = categorySwatch(color)
@@ -178,7 +183,7 @@ export function CategoryCard({ category, index, onOpen, onEdit }: CategoryCardPr
             ...(unused ? {} : { textShadow: '0 1px 10px rgba(0,0,0,0.25)' }),
           }}
         >
-          S/{total.toLocaleString('es-PE', { maximumFractionDigits: 0 })}
+          {sym}{total.toLocaleString('es-PE', { maximumFractionDigits: 0 })}
         </span>
 
         {/* Porción del gasto del mes. En las sin movimientos la barra queda

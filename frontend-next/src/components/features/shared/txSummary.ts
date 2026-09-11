@@ -1,3 +1,5 @@
+import { formatMoney } from '@/lib/utils/currency'
+
 /** Resultado de guardar un movimiento, para el aviso de éxito. */
 export interface TxSummary {
   kind: 'expense' | 'income' | 'transfer'
@@ -8,6 +10,8 @@ export interface TxSummary {
   label: string
   /** true si el movimiento se eliminó; el monto no aplica en ese caso. */
   deleted?: boolean
+  /** Moneda de la billetera del movimiento. Sin ella, soles. */
+  currency?: string
 }
 
 export function txDialogTitle(s: TxSummary): string {
@@ -19,7 +23,7 @@ export function txDialogTitle(s: TxSummary): string {
 
 export function txDialogDescription(s: TxSummary): string {
   if (s.deleted) return 'El movimiento ya no aparece en tus registros.'
-  const amount = `S/ ${s.amount.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  const amount = formatMoney(s.amount, s.currency)
   if (s.kind === 'transfer') return `${amount} · ${s.label}.`
   return s.label ? `"${s.label}" por ${amount}.` : `${amount}.`
 }

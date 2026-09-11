@@ -3,6 +3,8 @@
 import { motion } from 'framer-motion'
 
 import { AnimatedAmount } from '@/components/features/shared/AnimatedAmount'
+import { useWalletCurrency } from '@/lib/hooks/useWallets'
+import { symbolOf } from '@/lib/utils/currency'
 import { EASE, MOTION_S } from '@/lib/utils/motion'
 import type { RecurringExpense } from '@/types'
 
@@ -42,6 +44,7 @@ function shortDate(iso: string): string {
  * anual. Los pausados no cuentan — no van a ejecutarse.
  */
 export function RecurringHero({ items }: { items: RecurringExpense[] }) {
+  const sym = symbolOf(useWalletCurrency())
   const active = items.filter((r) => r.active)
   const paused = items.length - active.length
 
@@ -60,7 +63,7 @@ export function RecurringHero({ items }: { items: RecurringExpense[] }) {
       {/* El total recorre hasta su nuevo valor: al pausar un frecuente o crear
           otro, un salto de cifra se lee como parpadeo y no se ve si subió. */}
       <p className="mono-amount mt-[7px] text-[31px] font-extrabold leading-[1.05] tracking-[-0.03em] tabular-nums" style={{ color: 'var(--text-primary)' }}>
-        <small className="mr-[5px] text-[18px] font-bold" style={{ color: 'var(--text-tertiary)' }}>S/</small>
+        <small className="mono-amount mr-[5px] text-[18px] font-bold" style={{ color: 'var(--text-tertiary)' }}>{sym}</small>
         <AnimatedAmount value={monthly} animateOnMount />
       </p>
       <div className="mt-3.5 flex gap-4 border-t pt-3.5" style={{ borderColor: 'var(--border-subtle)' }}>

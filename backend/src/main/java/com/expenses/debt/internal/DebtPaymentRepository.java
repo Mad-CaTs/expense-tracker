@@ -42,4 +42,11 @@ public interface DebtPaymentRepository extends JpaRepository<DebtPayment, Long> 
     void softDeleteByDebtIds(@Param("userId") Long userId,
                              @Param("debtIds") List<Long> debtIds,
                              @Param("deletedAt") LocalDateTime deletedAt);
+
+    /**
+     * ¿Queda algún registro vivo en esa billetera? Decide si la moneda de la
+     * billetera todavía puede cambiarse. `@SQLRestriction` excluye los
+     * borrados, así que un movimiento eliminado no la bloquea.
+     */
+    boolean existsByUserIdAndWalletId(Long userId, Long walletId);
 }

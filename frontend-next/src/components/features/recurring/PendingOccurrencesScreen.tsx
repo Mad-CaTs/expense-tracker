@@ -17,6 +17,8 @@ import { categorySwatch } from '@/lib/utils/cardVisuals'
 import { MOTION } from '@/lib/utils/motion'
 import { CATEGORY_ICON_MAP } from '@/lib/utils/categoryIcons'
 import type { RecurringOccurrence } from '@/types'
+import { useWalletCurrency } from '@/lib/hooks/useWallets'
+import { symbolOf } from '@/lib/utils/currency'
 
 function dueLabel(iso: string): string {
   const due = new Date(iso + 'T12:00:00')
@@ -38,6 +40,7 @@ export interface OccurrenceOutcome {
 }
 
 function OccurrenceCard({ item, onDone }: { item: RecurringOccurrence; onDone: (o: OccurrenceOutcome) => void }) {
+  const sym = symbolOf(useWalletCurrency())
   const confirm = useConfirmOccurrence()
   const reject = useRejectOccurrence()
   const [leaving, setLeaving] = useState(false)
@@ -83,7 +86,7 @@ function OccurrenceCard({ item, onDone }: { item: RecurringOccurrence; onDone: (
           </span>
         </span>
         <span className="mono-amount flex-none text-[13.5px] font-extrabold tabular-nums" style={{ color: 'var(--text-primary)' }}>
-          S/ {(item.amount ?? 0).toFixed(2)}
+          {sym} {(item.amount ?? 0).toFixed(2)}
         </span>
       </div>
 
@@ -121,13 +124,14 @@ function OccurrenceCard({ item, onDone }: { item: RecurringOccurrence; onDone: (
  * card de acceso del resumen.
  */
 export function PendingOccurrencesScreen() {
+  const sym = symbolOf(useWalletCurrency())
   const { exitClass, goBack } = useSubPageExit()
   const { data: items = [], isLoading } = usePendingOccurrences()
   const [done, setDone] = useState<OccurrenceOutcome | null>(null)
   /** Solo por su `refresh`: la lista se recarga al descartar el aviso, no antes. */
   const confirm = useConfirmOccurrence()
 
-  const amount = done ? `S/ ${done.amount.toFixed(2)}` : ''
+  const amount = done ? `${sym} ${done.amount.toFixed(2)}` : ''
 
   return (
     <div className={`subpage-in ${exitClass}`}>

@@ -3,6 +3,8 @@
 import { categorySwatch } from '@/lib/utils/cardVisuals'
 import { getCategoryColor } from '@/lib/utils/categoryColors'
 import type { CategoryBreakdown } from '@/types'
+import { useWalletCurrency } from '@/lib/hooks/useWallets'
+import { symbolOf } from '@/lib/utils/currency'
 
 /** Marcas del eje Y, de arriba a abajo. */
 const TICKS = 4
@@ -30,6 +32,7 @@ function short(name: string): string {
  * las columnas conservan la proporción a cualquier número.
  */
 export function CategoryBars({ breakdown, activeIndex, onSelect }: CategoryBarsProps) {
+  const sym = symbolOf(useWalletCurrency())
   if (!breakdown.length) return null
 
   const max = niceMax(Math.max(...breakdown.map((b) => b.total ?? 0)))
@@ -39,7 +42,7 @@ export function CategoryBars({ breakdown, activeIndex, onSelect }: CategoryBarsP
     <>
       <div className="flex gap-2.5">
         <div className="flex w-[38px] flex-col justify-between py-1 text-right text-[9.5px] font-bold" style={{ color: 'var(--text-dim)', height: 186 }}>
-          {ticks.map((t) => <span key={t}>S/{t}</span>)}
+          {ticks.map((t) => <span key={t}>{sym}{t}</span>)}
         </div>
 
         <div
@@ -54,7 +57,7 @@ export function CategoryBars({ breakdown, activeIndex, onSelect }: CategoryBarsP
                 key={item.categoryName}
                 type="button"
                 onClick={() => onSelect(i)}
-                aria-label={`${item.categoryName}: S/ ${(item.total ?? 0).toFixed(2)}`}
+                aria-label={`${item.categoryName}: ${sym} ${(item.total ?? 0).toFixed(2)}`}
                 className="flex h-full max-w-[34px] flex-1 cursor-pointer flex-col justify-end"
                 style={{
                   opacity: activeIndex === null || activeIndex === i ? 1 : 0.35,

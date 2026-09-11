@@ -72,6 +72,7 @@ export function DebtCreateSheet({ direction, onClose, onDone }: DebtCreateSheetP
         <AmountField
           label={iOwe ? 'Cuánto te prestaron' : 'Cuánto prestaste'}
           inputId="debt-new-amount"
+          walletId={walletId ? Number(walletId) : undefined}
           value={rawAmount}
           error={errors.amount}
           onChange={(v) => { setRawAmount(v); setErrors((e) => ({ ...e, amount: '' })) }}

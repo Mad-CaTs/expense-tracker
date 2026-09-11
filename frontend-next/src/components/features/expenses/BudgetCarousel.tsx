@@ -9,8 +9,11 @@ import { useActiveWallet } from '@/lib/hooks/useActiveWallet'
 import { useBudgets } from '@/lib/hooks/useBudgets'
 import { categoryAura, categorySwatch } from '@/lib/utils/cardVisuals'
 import type { Budget } from '@/types'
+import { useWalletCurrency } from '@/lib/hooks/useWallets'
+import { symbolOf } from '@/lib/utils/currency'
 
 function BudgetMiniCard({ budget, index, onOpen }: { budget: Budget; index: number; onOpen: () => void }) {
+  const sym = symbolOf(useWalletCurrency())
   const spent = budget.spent ?? 0
   const amount = budget.amount ?? 0
   const remaining = amount - spent
@@ -80,7 +83,7 @@ function BudgetMiniCard({ budget, index, onOpen }: { budget: Budget; index: numb
 
         <p className="text-[11px] font-medium" style={{ color: 'rgba(255,255,255,0.75)' }}>Gastado</p>
         <p className="text-[21px] font-extrabold leading-none tracking-[-0.02em]" style={{ textShadow: '0 1px 10px rgba(0,0,0,0.25)' }}>
-          S/{spent.toFixed(0)} <span className="text-[12px] font-medium" style={{ color: 'rgba(255,255,255,0.7)' }}>/ {amount.toFixed(0)}</span>
+          {sym}{spent.toFixed(0)} <span className="text-[12px] font-medium" style={{ color: 'rgba(255,255,255,0.7)' }}>/ {amount.toFixed(0)}</span>
         </p>
 
         {/* Barra (deja libre la zona del FAB) — fill anima con scaleX (GPU), no width */}
@@ -92,7 +95,7 @@ function BudgetMiniCard({ budget, index, onOpen }: { budget: Budget; index: numb
         </div>
 
         <p className="mr-[42px] mt-2 text-[11px] font-medium" style={{ color: 'rgba(255,255,255,0.85)' }}>
-          {isOver ? `+S/${Math.abs(remaining).toFixed(0)} excedido` : `S/${remaining.toFixed(0)} rest.`}
+          {isOver ? `+${sym}${Math.abs(remaining).toFixed(0)} excedido` : `${sym}${remaining.toFixed(0)} rest.`}
         </p>
       </div>
 

@@ -6,6 +6,8 @@ import { useCountUp } from '@/components/features/shared/useCountUp'
 import { categorySwatch } from '@/lib/utils/cardVisuals'
 import { getCategoryColor } from '@/lib/utils/categoryColors'
 import type { CategoryBreakdown } from '@/types'
+import { useWalletCurrency } from '@/lib/hooks/useWallets'
+import { symbolOf } from '@/lib/utils/currency'
 
 const SPOKES = 60
 const R_IN = 62
@@ -31,6 +33,7 @@ interface Spoke {
 }
 
 export function SpokeDonut({ breakdown, activeIndex, onSelect, label }: SpokeDonutProps) {
+  const sym = symbolOf(useWalletCurrency())
   const svg = useRef<SVGSVGElement>(null)
 
   const total = breakdown.reduce((sum, b) => sum + (b.total ?? 0), 0)
@@ -136,7 +139,7 @@ export function SpokeDonut({ breakdown, activeIndex, onSelect, label }: SpokeDon
           className="mono-amount text-[23px] font-extrabold tabular-nums"
           fill="var(--text-primary)"
         >
-          S/ {shownTotal.toLocaleString('es-PE', { maximumFractionDigits: 0 })}
+          {sym} {shownTotal.toLocaleString('es-PE', { maximumFractionDigits: 0 })}
         </text>
       </svg>
     </div>

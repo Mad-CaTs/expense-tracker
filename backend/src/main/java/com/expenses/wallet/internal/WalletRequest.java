@@ -45,5 +45,8 @@ public class WalletRequest {
              message = "Acabado de cuero inválido")
     private String leather;
 
+    @Pattern(regexp = "^(PEN|USD|EUR)$", message = "Moneda inválida")
+    private String currency;
+
     private Long backgroundId;
 }

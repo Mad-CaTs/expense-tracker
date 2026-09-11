@@ -5,7 +5,9 @@ import { useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ChevronDown } from 'lucide-react'
 
+import { useWallets } from '@/lib/hooks/useWallets'
 import { categorySwatch } from '@/lib/utils/cardVisuals'
+import { symbolOf } from '@/lib/utils/currency'
 import { EASE, MOTION_S } from '@/lib/utils/motion'
 import type { Debt, DebtPersonGroup } from '@/types'
 
@@ -14,27 +16,39 @@ import { DebtPaymentsPrefetch } from './DebtPaymentsPrefetch'
 import { debtHue } from './debtHue'
 
 const money = (n: number) =>
-  n.toLocaleString('es-PE', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
+  n.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
 const SHORT_DATE = new Intl.DateTimeFormat('es-PE', { day: 'numeric', month: 'short' })
 
 interface DebtPersonCardProps {
   group: DebtPersonGroup
+  /** Posición en la lista: alimenta el stagger de `enter-pop`. */
+  index: number
   iOwe: boolean
   open: boolean
   onToggle: () => void
   onCollect: (debt: Debt) => void
 }
 
-export function DebtPersonCard({ group, iOwe, open, onToggle, onCollect }: DebtPersonCardProps) {
+export function DebtPersonCard({ group, index, iOwe, open, onToggle, onCollect }: DebtPersonCardProps) {
   const tint = debtHue(group.personName)
   const count = group.debts.length
   /* Los abonos se piden solo al abrir su historial: la mayoría de deudas se
      cobran de una vez y no tienen nada que mostrar. */
   const [openHistory, setOpenHistory] = useState<number | null>(null)
+  /* Un lookup y no un hook por deuda: la lista varía de largo. Cada deuda
+     lleva su billetera, así que una persona puede deberte en dos monedas. */
+  const { data: wallets } = useWallets()
+  const symOf = (id?: number) => symbolOf(wallets?.find((w) => w.id === id)?.currency)
+  /* El total de la persona SUMA sus deudas, y esas pueden estar en billeteras
+     de monedas distintas. Sumar soles con dólares da una cifra que no existe,
+     así que el símbolo solo se pone cuando todas coinciden; si no, la suma se
+     muestra desnuda y el desglose de abajo dice en qué moneda va cada una. */
+  const symbols = new Set(group.debts.map((d) => symOf(d.walletId)))
+  const groupSym = symbols.size === 1 ? [...symbols][0] : ''
 
   return (
-    <div className="mx-4 mb-[7px]">
+    <div className="enter-pop mx-4 mb-[7px]" style={{ ['--enter-i' as string]: index }}>
       <button
         type="button"
         onClick={onToggle}
@@ -58,7 +72,7 @@ export function DebtPersonCard({ group, iOwe, open, onToggle, onCollect }: DebtP
         </span>
 
         <span className="mono-amount flex-none text-[15px] font-extrabold tabular-nums" style={{ color: 'var(--text-primary)' }}>
-          S/ {money(group.pending)}
+          {groupSym && `${groupSym} `}{money(group.pending)}
         </span>
 
         <ChevronDown
@@ -104,7 +118,7 @@ export function DebtPersonCard({ group, iOwe, open, onToggle, onCollect }: DebtP
                     </span>
 
                     <span className="mono-amount flex-none text-[13.5px] font-bold tabular-nums" style={{ color: 'var(--text-primary)' }}>
-                      S/ {money(d.pending)}
+                      {symOf(d.walletId)} {money(d.pending)}
                     </span>
 
                     <button
@@ -127,7 +141,7 @@ export function DebtPersonCard({ group, iOwe, open, onToggle, onCollect }: DebtP
                       className="mt-1.5 flex cursor-pointer items-center gap-1 text-[11px] font-bold"
                       style={{ color: 'var(--text-tertiary)' }}
                     >
-                      {`Pagó S/ ${money(d.paidAmount)} de ${money(d.amount)}`}
+                      {`Pagó ${symOf(d.walletId)} ${money(d.paidAmount)} de ${money(d.amount)}`}
                       <ChevronDown
                         size={12}
                         className="transition-transform duration-200"

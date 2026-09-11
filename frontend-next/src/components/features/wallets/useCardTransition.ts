@@ -3,6 +3,7 @@
 import { useCallback } from 'react'
 
 import { metallicTintColor } from './cardFace'
+import { DEFAULT_LEATHER, leatherSrc } from './leathers'
 
 /** Tarjeta con el logo de la app: la cara principal del vuelo. */
 const CARD_FLAT_SRC = '/wallets/card-flat.webp'
@@ -108,6 +109,13 @@ const finished = (anims: Animation[]) => Promise.allSettled(anims.map((a) => a.f
 export function predictedSlot(screenW: number, topOffset: number, sideGutter: number): Rect {
   const width = screenW - sideGutter * 2
   return { left: sideGutter, top: topOffset, width, height: width * DEST_RATIO }
+}
+
+
+function fallbackOrigin(tint: string) {
+  const slot = predictedSlot(window.innerWidth, 0, RETREAT_GUTTER)
+  slot.top = Math.round((window.innerHeight - slot.height) / 2)
+  return { card: slot, wallet: slot, leatherSrc: leatherSrc(DEFAULT_LEATHER), tint }
 }
 
 interface Layer {
@@ -345,14 +353,16 @@ export function useCardTransition(reduceMotion: boolean) {
     async (tint: string, balance: number) => {
       if (reduceMotion) return
 
+      /* `launch` guarda la geometría del origen, pero puede no estar: se entró
+         a /expenses sin volar (recarga, enlace directo, o la pestaña se
+         restauró tras un rato y sessionStorage ya no la tenía). Antes se
+         retornaba en seco y quedaba lo peor de los dos mundos — la pantalla ya
+         había decidido irse, así que navegaba sin animación y con la tarjeta
+         congelada. Se deduce un origen plausible y la vuelta se anima igual. */
       const raw = sessionStorage.getItem(ORIGIN_KEY)
-      if (!raw) return
-      const origin = JSON.parse(raw) as {
-        card: Rect
-        wallet: Rect
-        leatherSrc: string
-        tint: string
-      }
+      const origin = raw
+        ? (JSON.parse(raw) as { card: Rect; wallet: Rect; leatherSrc: string; tint: string })
+        : fallbackOrigin(tint)
 
       const full: Rect = {
         left: -EXPAND_BLEED,
@@ -371,6 +381,11 @@ export function useCardTransition(reduceMotion: boolean) {
       // contenido: acá la tarjeta MENGUA y no tapa la página por sí sola.
       document.body.classList.add(COVERING_CLASS, SHRINKING_CLASS)
 
+      /* Desde acá todo va en try/finally: si algo revienta a mitad del vuelo
+         —un asset que no carga, la pestaña que se va al fondo— estas clases
+         ocultan el contenido, la top-bar y la navbar. Sin el finally la app
+         quedaba en blanco y solo se recuperaba recargando. */
+      try {
       const layer = buildLayer(
         {
           walletEl: document.body,
@@ -458,12 +473,18 @@ export function useCardTransition(reduceMotion: boolean) {
         ),
       ])
 
-      layer.under.remove()
-      layer.over.remove()
-      liveLayer.current = null
-      sessionStorage.removeItem(ORIGIN_KEY)
-      // Suelta /wallets: sus animaciones de entrada corren ahora, no antes.
-      document.body.classList.remove(COVERING_CLASS, SHRINKING_CLASS, LAUNCHING_CLASS)
+        layer.under.remove()
+        layer.over.remove()
+      } finally {
+        // Idempotente: en el camino normal las capas ya se quitaron arriba y
+        // `liveLayer` sigue apuntando a ellas, así que esto no hace nada.
+        liveLayer.current?.under.remove()
+        liveLayer.current?.over.remove()
+        liveLayer.current = null
+        sessionStorage.removeItem(ORIGIN_KEY)
+        // Suelta /wallets: sus animaciones de entrada corren ahora, no antes.
+        document.body.classList.remove(COVERING_CLASS, SHRINKING_CLASS, LAUNCHING_CLASS)
+      }
     },
     [reduceMotion],
   )

@@ -16,6 +16,14 @@ import { CategoryCard } from './CategoryCard'
 import { CategorySheet } from './CategorySheet'
 import { useCategoryCards } from './useCategoryCards'
 
+type Scope = 'VISIBLE' | 'HIDDEN'
+
+/** Dos ámbitos y no tres: "todas" volvía a mezclar lo que este filtro separa. */
+const SCOPES: { id: Scope; label: string }[] = [
+  { id: 'VISIBLE', label: 'Activas' },
+  { id: 'HIDDEN', label: 'Ocultas' },
+]
+
 const TABS: { type: CategoryType; label: string }[] = [
   { type: 'EXPENSE', label: 'Gasto' },
   { type: 'INCOME', label: 'Ingreso' },
@@ -57,7 +65,14 @@ function GridSkeleton() {
 export function CategoriesScreen() {
   const { exitClass, open, goBack } = useSubPageExit()
   const [activeType, setActiveType] = useState<CategoryType>('EXPENSE')
+  const [scope, setScope] = useState<Scope>('VISIBLE')
   const { cards, isLoading, total, topCategory, movementCount } = useCategoryCards(activeType)
+
+  /* El hero sigue contando TODAS: es el gasto del mes en esta billetera y no
+     depende de qué pestaña se esté mirando. */
+  const visibleCards = cards.filter((c) => !c.hidden)
+  const hiddenCards = cards.filter((c) => c.hidden)
+  const shown = scope === 'HIDDEN' ? hiddenCards : visibleCards
 
   const deleteCategory = useDeleteCategory()
   const createCategory = useCreateCategory()
@@ -105,23 +120,41 @@ export function CategoriesScreen() {
       </div>
 
       <div className="flex items-center justify-between px-[18px] pb-2 pt-1">
-        <h2 className="text-[15.5px] font-extrabold tracking-[-0.02em]" style={{ color: 'var(--text-primary)' }}>
-          Todas
-        </h2>
-        <span className="text-[11.5px] font-semibold" style={{ color: 'var(--text-tertiary)' }}>
-          {isLoading ? ' ' : `${cards.length} activa${cards.length === 1 ? '' : 's'}`}
-        </span>
+        {/* Activas / Ocultas en vez del rótulo "Todas": las ocultas son una
+            EXCEPCIÓN por billetera, y mezcladas en la rejilla se veían igual
+            que las que simplemente no se han usado este mes. Separarlas además
+            da un sitio desde donde volver a mostrarlas. */}
+        <div className="flex gap-2">
+          {SCOPES.map(({ id, label }) => {
+            const on = scope === id
+            return (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setScope(id)}
+                className="cursor-pointer rounded-full px-[13px] py-[6px] text-[12px] font-bold transition-colors"
+                style={on
+                  ? { background: 'var(--accent-light)', color: 'var(--bg-base)' }
+                  : { background: 'var(--bg-hover)', color: 'var(--text-tertiary)' }}
+              >
+                {label}
+              </button>
+            )
+          })}
+        </div>
       </div>
 
       {isLoading ? (
         <GridSkeleton />
-      ) : cards.length === 0 ? (
-        <p className="px-4 py-8 text-center text-[13px]" style={{ color: 'var(--text-muted)' }}>
-          Sin categorías. Crea una para empezar.
+      ) : shown.length === 0 ? (
+        <p className="px-8 py-8 text-center text-[13px] leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+          {scope === 'HIDDEN'
+            ? 'Ninguna oculta en esta billetera. Puedes ocultar una desde su editor.'
+            : 'Sin categorías. Crea una para empezar.'}
         </p>
       ) : (
         <div className="grid grid-cols-2 gap-[11px] px-4">
-          {cards.map((c, i) => (
+          {shown.map((c, i) => (
             <CategoryCard
               key={c.id}
               category={c}

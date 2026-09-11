@@ -71,6 +71,15 @@ class DebtWalletHooks implements WalletBalanceContribution {
      * salieron de ella. Las deudas ligadas a un gasto NO cuelgan de la billetera
      * (su wallet es nula): las arrastra el borrado del gasto.
      */
+    @Override
+    public boolean hasMovements(Long userId, Long walletId) {
+        // Préstamos sueltos y abonos: ambos mueven dinero en la billetera.
+        // Una deuda nacida de un gasto no tiene billetera propia, así que no
+        // aparece aquí — la bloquea el gasto que la originó.
+        return debtRepository.existsByUserIdAndWalletId(userId, walletId)
+                || paymentRepository.existsByUserIdAndWalletId(userId, walletId);
+    }
+
     @EventListener
     @Transactional
     public void on(WalletDeletedEvent event) {

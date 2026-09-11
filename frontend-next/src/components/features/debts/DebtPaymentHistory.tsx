@@ -1,6 +1,8 @@
 'use client'
 
 import { useDebtPayments } from '@/lib/hooks/useDebts'
+import { useWalletCurrency, useWallets } from '@/lib/hooks/useWallets'
+import { symbolOf } from '@/lib/utils/currency'
 
 const money = (n: number) =>
   n.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -22,6 +24,12 @@ interface DebtPaymentHistoryProps {
  */
 export function DebtPaymentHistory({ debtId, pending, iOwe }: DebtPaymentHistoryProps) {
   const { data: payments = [], isLoading } = useDebtPayments(debtId)
+  const sym = symbolOf(useWalletCurrency())
+  // Un lookup, no un hook por fila: la cantidad de abonos varía y llamar a
+  // `useWalletCurrency` dentro del map rompería las reglas de hooks.
+  const { data: wallets } = useWallets()
+  const symOfWallet = (id?: number) =>
+    symbolOf(wallets?.find((w) => w.id === id)?.currency)
 
   if (isLoading) {
     return (
@@ -49,7 +57,7 @@ export function DebtPaymentHistory({ debtId, pending, iOwe }: DebtPaymentHistory
             )}
           </span>
           <span className="mono-amount flex-none text-[12.5px] font-bold tabular-nums" style={{ color: 'var(--text-primary)' }}>
-            {iOwe ? '−' : '+'}S/ {money(p.amount)}
+            {iOwe ? '−' : '+'}{symOfWallet(p.walletId)} {money(p.amount)}
           </span>
         </div>
       ))}
@@ -63,7 +71,7 @@ export function DebtPaymentHistory({ debtId, pending, iOwe }: DebtPaymentHistory
             Falta
           </span>
           <span className="mono-amount text-[12.5px] font-extrabold tabular-nums" style={{ color: 'var(--text-primary)' }}>
-            S/ {money(pending)}
+            {sym} {money(pending)}
           </span>
         </div>
       )}

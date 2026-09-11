@@ -3,9 +3,11 @@
 import { useRouter } from 'next/navigation'
 
 import { useDebtSummary } from '@/lib/hooks/useDebts'
+import { useWalletCurrency } from '@/lib/hooks/useWallets'
+import { symbolOf } from '@/lib/utils/currency'
 
 const money = (n: number) =>
-  n.toLocaleString('es-PE', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
+  n.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
 /**
  * Aviso de deudas pendientes bajo las acciones rápidas.
@@ -15,6 +17,7 @@ const money = (n: number) =>
  * por completo cuando no hay nada pendiente — un cero permanente sería ruido.
  */
 export function DebtsNotice() {
+  const sym = symbolOf(useWalletCurrency())
   const router = useRouter()
   const { data } = useDebtSummary()
 
@@ -44,13 +47,13 @@ export function DebtsNotice() {
       <span className="flex-1 text-[12.5px]" style={{ color: 'var(--text-secondary)' }}>
         {theyOwe > 0 && (
           <>
-            Te deben <b style={{ color: 'var(--text-primary)' }}>S/ {money(theyOwe)}</b>
+            Te deben <b style={{ color: 'var(--text-primary)' }}>{sym} {money(theyOwe)}</b>
           </>
         )}
         {theyOwe > 0 && iOwe > 0 && ' · '}
         {iOwe > 0 && (
           <>
-            Debes <b style={{ color: 'var(--text-primary)' }}>S/ {money(iOwe)}</b>
+            Debes <b style={{ color: 'var(--text-primary)' }}>{sym} {money(iOwe)}</b>
           </>
         )}
       </span>

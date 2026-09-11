@@ -2,6 +2,9 @@
 
 import { motion } from 'framer-motion'
 
+import { useWalletCurrency } from '@/lib/hooks/useWallets'
+import { symbolOf } from '@/lib/utils/currency'
+
 const MAX_AMOUNT = 999999.99
 
 interface AmountFieldProps {
@@ -12,6 +15,9 @@ interface AmountFieldProps {
   /** Tope propio del campo (p. ej. lo pendiente de una deuda). Nunca por
    *  encima de MAX_AMOUNT. */
   max?: number
+  /** Billetera a la que va el importe. Por defecto, la activa — que es la que
+   *  los formularios traen preseleccionada. */
+  walletId?: number | null
   onChange: (value: string) => void
 }
 
@@ -22,7 +28,8 @@ function formatDisplay(val: string): string {
   return n.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
-export function AmountField({ label, inputId, value, error, max, onChange }: AmountFieldProps) {
+export function AmountField({ label, inputId, value, error, max, walletId, onChange }: AmountFieldProps) {
+  const sym = symbolOf(useWalletCurrency(walletId))
   const ceiling = Math.min(max ?? MAX_AMOUNT, MAX_AMOUNT)
   const amountNum = parseFloat(value) || 0
 
@@ -62,7 +69,7 @@ export function AmountField({ label, inputId, value, error, max, onChange }: Amo
           className="mono-amount text-[40px] font-extrabold leading-none tracking-[-0.03em]"
           style={{ color: amountNum > 0 ? 'var(--accent-light)' : 'var(--text-placeholder)' }}
         >
-          S/ {formatDisplay(value)}
+          {sym} {formatDisplay(value)}
         </motion.p>
       </div>
       {error && <p className="mt-2 text-[11px]" style={{ color: 'var(--danger)' }}>{error}</p>}

@@ -12,5 +12,6 @@ public interface WalletMapper {
     @Mapping(target = "balance", source = "balance")
     @Mapping(target = "backgroundId", source = "wallet.background.id")
     @Mapping(target = "backgroundUrl", source = "wallet.background.imageUrl")
-    WalletResponse toResponse(Wallet wallet, BigDecimal balance);
+    @Mapping(target = "currencyLocked", source = "currencyLocked")
+    WalletResponse toResponse(Wallet wallet, BigDecimal balance, boolean currencyLocked);
 }

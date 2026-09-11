@@ -1,5 +1,7 @@
 import type { CSSProperties } from 'react'
 
+import { symbolOf } from '@/lib/utils/currency'
+
 type Kind = 'expense' | 'income' | 'neutral'
 
 interface MoneyTextProps {
@@ -9,6 +11,8 @@ interface MoneyTextProps {
   style?: CSSProperties
   /** Oculta la cifra con bullets (modo privacidad). */
   hidden?: boolean
+  /** Moneda de la billetera a la que pertenece el importe. Sin ella, soles. */
+  currency?: string | null
 }
 
 function formatAmount(n: number): string {
@@ -21,14 +25,15 @@ function formatAmount(n: number): string {
  * - income:  verde, prefijo '+'
  * - neutral: color de texto normal, sin signo
  */
-export function MoneyText({ amount, kind = 'neutral', className = '', style, hidden = false }: MoneyTextProps) {
+export function MoneyText({ amount, kind = 'neutral', className = '', style, hidden = false, currency }: MoneyTextProps) {
+  const sym = symbolOf(currency)
   const color = kind === 'income' ? 'var(--success)' : 'var(--text-primary)'
   const sign = kind === 'income' ? '+' : kind === 'expense' ? '-' : ''
   const abs = Math.abs(amount)
 
   return (
     <span className={`mono-amount ${className}`} style={{ color, ...style }}>
-      {hidden ? 'S/ ••••••' : `${sign}S/ ${formatAmount(abs)}`}
+      {hidden ? `${sym} ••••••` : `${sign}${sym} ${formatAmount(abs)}`}
     </span>
   )
 }

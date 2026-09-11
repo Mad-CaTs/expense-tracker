@@ -18,6 +18,7 @@ export async function createWallet(data: {
   color?: string
   icon?: string
   leather?: string
+  currency?: string
   backgroundId?: number | null
 }): Promise<Wallet> {
   const res = await apiClient.post<Wallet>('/wallets', data)
@@ -42,6 +43,8 @@ export async function updateWallet(
     color?: string
     icon?: string
     leather?: string
+    /** Como `leather`: el PUT reemplaza, así que debe ir siempre. */
+    currency?: string
     backgroundId?: number | null
   }
 ): Promise<Wallet> {

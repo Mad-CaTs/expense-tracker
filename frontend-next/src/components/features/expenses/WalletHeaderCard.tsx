@@ -1,5 +1,6 @@
 'use client'
 
+import { symbolOf } from '@/lib/utils/currency'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
@@ -161,9 +162,9 @@ export function WalletHeaderCard({ wallet }: WalletHeaderCardProps) {
                   className="text-[32px] font-bold leading-none tracking-[-0.03em] tabular-nums"
                   style={{ color: '#fff', textShadow: '0 1px 18px rgba(0,0,0,0.25)' }}
                 >
-                  {hidden ? 'S/ ••••••' : (
+                  {hidden ? `${symbolOf(wallet.currency)} ••••••` : (
                     <>
-                      S/{' '}
+                      {symbolOf(wallet.currency)}{' '}
                       <WalletBalanceAmount walletId={wallet.id} balance={balance} />
                     </>
                   )}

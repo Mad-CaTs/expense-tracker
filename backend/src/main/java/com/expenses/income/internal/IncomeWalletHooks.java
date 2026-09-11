@@ -37,6 +37,11 @@ class IncomeWalletHooks implements WalletBalanceContribution {
         return Map.of();
     }
 
+    @Override
+    public boolean hasMovements(Long userId, Long walletId) {
+        return incomeRepository.existsByUserIdAndWalletId(userId, walletId);
+    }
+
     @EventListener
     public void on(WalletDeletedEvent event) {
         incomeRepository.softDeleteByWalletId(event.userId(), event.walletId(), event.deletedAt());

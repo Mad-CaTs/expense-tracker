@@ -13,6 +13,8 @@ import { CATEGORY_ICON_MAP } from '@/lib/utils/categoryIcons'
 
 import { useCategoryMovements, type CategoryMovement } from './useCategoryMovements'
 import { categorySwatch } from '@/lib/utils/cardVisuals'
+import { useWalletCurrency } from '@/lib/hooks/useWallets'
+import { symbolOf } from '@/lib/utils/currency'
 
 /** Fecha corta de una fila: Hoy / Ayer / "7 jul". */
 function movementDay(iso: string): string {
@@ -24,13 +26,14 @@ function movementDay(iso: string): string {
   return day.toLocaleDateString('es-PE', { day: 'numeric', month: 'short' })
 }
 
-function formatAmount(n: number): string {
-  return `${n < 0 ? '-' : '+'}S/ ${Math.abs(n).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+function formatAmount(n: number, sym: string): string {
+  return `${n < 0 ? '-' : '+'}${sym} ${Math.abs(n).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
 
 /** Misma fila que el detalle de billetera: icono redondo tintado, descripción
  *  con la categoría debajo, y a la derecha el monto con la fecha bajo él. */
 function MovementRow({ movement, color, icon, categoryName }: { movement: CategoryMovement; color: string; icon: string; categoryName: string }) {
+  const sym = symbolOf(useWalletCurrency())
   const Icon = CATEGORY_ICON_MAP[icon] ?? CATEGORY_ICON_MAP.ellipsis
   return (
     <div className="flex items-center gap-3 rounded-2xl px-3.5 py-[11px]">
@@ -47,7 +50,7 @@ function MovementRow({ movement, color, icon, categoryName }: { movement: Catego
       </span>
       <span className="flex-none text-right">
         <span className="mono-amount block text-[13px] font-bold tracking-[-0.01em] tabular-nums" style={{ color: 'var(--text-primary)' }}>
-          {formatAmount(movement.amount)}
+          {formatAmount(movement.amount, sym)}
         </span>
         {/* Arriba lo que se pagó; debajo la parte propia, que es la que suma en
             el total de arriba. Sin ella la resta no cuadra a ojo. */}
@@ -72,6 +75,7 @@ function MovementRow({ movement, color, icon, categoryName }: { movement: Catego
  * transacciones individuales, así que no servía como destino.
  */
 export function CategoryMovementsScreen({ categoryId }: { categoryId: number }) {
+  const sym = symbolOf(useWalletCurrency())
   const { data: categories = [] } = useCategories()
   const category = useMemo(() => categories.find((c) => c.id === categoryId), [categories, categoryId])
 
@@ -120,7 +124,7 @@ export function CategoryMovementsScreen({ categoryId }: { categoryId: number }) 
               {type === 'INCOME' ? 'Recibido' : 'Gastado'}
             </p>
             <p className="mono-amount mt-[7px] text-[31px] font-extrabold leading-none tracking-[-0.03em] tabular-nums" style={{ color: '#fff', textShadow: '0 1px 18px rgba(0,0,0,0.25)' }}>
-              <small className="mr-[5px] text-[18px] font-bold" style={{ color: 'rgba(255,255,255,0.7)' }}>S/</small>
+              <small className="mono-amount mr-[5px] text-[18px] font-bold" style={{ color: 'rgba(255,255,255,0.7)' }}>{sym}</small>
               <AnimatedAmount value={total} animateOnMount />
             </p>
           </div>

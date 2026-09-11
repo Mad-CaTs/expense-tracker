@@ -6,6 +6,8 @@ import { AnimatePresence, motion } from 'framer-motion'
 
 import { AttachmentsModal } from '@/components/features/expenses/AttachmentsModal'
 import { CATEGORY_ICON_MAP } from '@/lib/utils/categoryIcons'
+import { useWalletCurrency } from '@/lib/hooks/useWallets'
+import { symbolOf } from '@/lib/utils/currency'
 import { EASE, MOTION_S } from '@/lib/utils/motion'
 import type { Expense } from '@/types'
 import { categorySwatch } from '@/lib/utils/cardVisuals'
@@ -23,6 +25,9 @@ export function ExpenseRow({ expense, onEdit, onDelete, index, expanded, onToggl
   const [showAttachments, setShowAttachments] = React.useState(false)
   const Icon = expense.categoryIcon ? (CATEGORY_ICON_MAP[expense.categoryIcon] ?? Wallet) : Wallet
   const color = expense.categoryColor ?? '#d4af37'
+  // La billetera DEL GASTO, no la activa: en /reports y en las listas por
+  // categoría se ven movimientos de otras billeteras.
+  const sym = symbolOf(useWalletCurrency(expense.walletId))
 
   const formattedDate = new Date(expense.date + 'T12:00:00').toLocaleDateString('es-PE', {
     day: 'numeric',
@@ -82,7 +87,7 @@ export function ExpenseRow({ expense, onEdit, onDelete, index, expanded, onToggl
           </time>
 
           <span className="mono-amount flex-shrink-0 text-[13px] font-bold tracking-tight" style={{ color: 'var(--danger)' }}>
-            - S/ {(expense.amount ?? 0).toFixed(2)}
+            - {sym} {(expense.amount ?? 0).toFixed(2)}
           </span>
         </div>
       </motion.button>
@@ -110,9 +115,9 @@ export function ExpenseRow({ expense, onEdit, onDelete, index, expanded, onToggl
                   <span className="flex-1 text-[11.5px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
                     Te deben{' '}
                     <b style={{ color: 'var(--success)' }}>
-                      S/ {(expense.reimbursableAmount ?? 0).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      {sym} {(expense.reimbursableAmount ?? 0).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </b>
-                    {' '}· tu parte es S/{' '}
+                    {' '}· tu parte es {sym}{' '}
                     {(expense.amount - (expense.reimbursableAmount ?? 0)).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                 </div>

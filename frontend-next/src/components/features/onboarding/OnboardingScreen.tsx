@@ -1,18 +1,20 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-import { motion } from 'framer-motion'
+import { motion, useAnimationControls } from 'framer-motion'
 
 import { INTRO_SLIDES } from '@/components/features/onboarding/introSlides'
 import { markOnboardingSeen, useHasSeenOnboarding } from '@/components/features/onboarding/onboardingState'
 import { completeOnboarding } from '@/lib/api/auth'
 import { COLOR_PRESETS } from '@/components/features/shared/colorPresets'
 import { DEFAULT_LEATHER } from '@/components/features/wallets/leathers'
+import { CurrencySignButton } from '@/components/features/wallets/CurrencySignButton'
 import { WalletAppearance } from '@/components/features/wallets/WalletAppearance'
 import { SuccessDialog } from '@/components/ui/SuccessDialog'
 import { useCreateWallet } from '@/lib/hooks/useWallets'
+import { DEFAULT_CURRENCY, type CurrencyId } from '@/lib/utils/currency'
 import { MOTION } from '@/lib/utils/motion'
 
 const FORM_STEP = INTRO_SLIDES.length
@@ -33,6 +35,16 @@ export function OnboardingScreen() {
   // deja elegir cualquier hex, así que se guarda el valor tal cual.
   const [color, setColor] = useState<string>(COLOR_PRESETS[3])
   const [leather, setLeather] = useState(DEFAULT_LEATHER)
+  const [currency, setCurrency] = useState<CurrencyId>(DEFAULT_CURRENCY)
+  /* Mismo pulso del saldo que al editar. Atado a un contador de toques y no a
+     `currency`, para que no se dispare al montar la pantalla. */
+  const [currencyTaps, setCurrencyTaps] = useState(0)
+  const balanceTick = useAnimationControls()
+
+  useEffect(() => {
+    if (currencyTaps === 0) return
+    balanceTick.start({ scale: [1, 1.035, 1], transition: { duration: 0.4, ease: [0.32, 0.72, 0, 1] } })
+  }, [currencyTaps, balanceTick])
   const [error, setError] = useState('')
   const [saved, setSaved] = useState<string | null>(null)
 
@@ -50,6 +62,7 @@ export function OnboardingScreen() {
       initialBalance: parseFloat(initialBalance) || 0,
       color,
       leather,
+      currency,
       backgroundId: null,
     })
 
@@ -136,20 +149,29 @@ export function OnboardingScreen() {
                   {error || 'Nombre de la billetera'}
                 </p>
 
-                <div className="mt-5 flex items-baseline justify-center gap-1.5">
-                  <span className="text-[19px] font-bold" style={{ color: 'var(--text-tertiary)' }}>S/</span>
-                  <input
-                    type="text"
-                    inputMode="decimal"
-                    value={initialBalance}
-                    onChange={(e) => setInitialBalance(e.target.value.replace(/[^\d.]/g, ''))}
-                    placeholder="0.00"
-                    autoComplete="off"
-                    aria-label="Saldo inicial"
-                    size={Math.max(4, initialBalance.length || 4)}
-                    className="search-input mono-amount bg-transparent text-center text-[30px] font-extrabold tracking-[-0.03em] tabular-nums outline-none"
-                    style={{ color: parseFloat(initialBalance) > 0 ? 'var(--text-primary)' : 'var(--text-placeholder)' }}
-                  />
+                <div className="mt-5 flex items-baseline justify-center">
+                  <motion.div className="relative" animate={balanceTick}>
+                    {/* Mismo control y mismo anclaje que al editar: fuera del
+                        flujo para que la cifra mande el centrado. */}
+                    <span className="absolute right-full top-1/2 -translate-y-1/2 pr-[2px]">
+                      <CurrencySignButton
+                        value={currency}
+                        onChange={(c) => { setCurrency(c); setCurrencyTaps((n) => n + 1) }}
+                      />
+                    </span>
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      value={initialBalance}
+                      onChange={(e) => setInitialBalance(e.target.value.replace(/[^\d.]/g, ''))}
+                      placeholder="0.00"
+                      autoComplete="off"
+                      aria-label="Saldo inicial"
+                      size={Math.max(4, initialBalance.length || 4)}
+                      className="search-input mono-amount bg-transparent text-center text-[30px] font-extrabold tracking-[-0.03em] tabular-nums outline-none"
+                      style={{ color: parseFloat(initialBalance) > 0 ? 'var(--text-primary)' : 'var(--text-placeholder)' }}
+                    />
+                  </motion.div>
                 </div>
                 <p className="mt-1 text-[10.5px]" style={{ color: 'var(--text-dim)' }}>
                   Saldo inicial

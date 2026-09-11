@@ -4,6 +4,8 @@ import { ChevronDown, TrendingUp } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 
 import { CATEGORY_ICON_MAP } from '@/lib/utils/categoryIcons'
+import { useWalletCurrency } from '@/lib/hooks/useWallets'
+import { symbolOf } from '@/lib/utils/currency'
 import { categorySwatch } from '@/lib/utils/cardVisuals'
 import type { Income } from '@/types'
 
@@ -18,6 +20,7 @@ interface IncomeRowProps {
 
 export function IncomeRow({ income, onEdit, onDelete, index, expanded, onToggle }: IncomeRowProps) {
   const color = income.categoryColor ?? '#4ade80'
+  const sym = symbolOf(useWalletCurrency(income.walletId))
   const Icon = income.categoryIcon ? (CATEGORY_ICON_MAP[income.categoryIcon] ?? TrendingUp) : TrendingUp
 
   const formattedDate = new Date(income.date + 'T12:00:00').toLocaleDateString('es-PE', {
@@ -66,7 +69,7 @@ export function IncomeRow({ income, onEdit, onDelete, index, expanded, onToggle 
           </time>
 
           <span className="mono-amount flex-shrink-0 text-[13px] font-bold tracking-tight" style={{ color: 'var(--success)' }}>
-            + S/ {(income.amount ?? 0).toFixed(2)}
+            + {sym} {(income.amount ?? 0).toFixed(2)}
           </span>
         </div>
       </motion.button>

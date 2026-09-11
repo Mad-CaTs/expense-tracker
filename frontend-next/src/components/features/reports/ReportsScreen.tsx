@@ -47,9 +47,15 @@ export function ReportsScreen() {
   )
 
   /* La billetera activa manda: se eligió en /wallets y se arrastra por toda la
-     app. `picked` solo existe para respetar un ?walletId= de una URL guardada;
-     ya no hay selector en pantalla que lo cambie. */
-  const walletId = picked ?? activeWalletId ?? null
+     app. `picked` (el ?wallet= de una URL guardada) solo se usa mientras la
+     activa no se conoce.
+
+     Antes era al revés y el saldo de /reports podía discrepar del de /expenses:
+     `picked` se congela al montar, así que una URL con ?wallet= —guardada, o
+     recuperada con el botón atrás— dejaba la pantalla anclada a esa billetera
+     aunque el usuario ya hubiera cambiado de billetera en la portada. Y el
+     efecto que reescribe la URL volvía a estampar ese id, perpetuándolo. */
+  const walletId = activeWalletId ?? picked ?? null
 
   const { days, totals, isLoading: loadingMovements } = usePeriodMovements(range.from, range.to, { categoryIds, walletId: walletId ?? undefined, txType })
 

@@ -16,6 +16,8 @@ import { FIELD_LIMITS } from '@/lib/utils/fieldLimits'
 import { MOTION } from '@/lib/utils/motion'
 import { useFilterStore } from '@/stores/filterStore'
 import type { RecurringFrequency } from '@/types'
+import { useWalletCurrency } from '@/lib/hooks/useWallets'
+import { symbolOf } from '@/lib/utils/currency'
 
 export interface CreatedRecurring {
   description: string
@@ -40,6 +42,7 @@ function shortDate(iso: string): string {
 }
 
 export function RecurringForm({ open, onClose, onCreated }: RecurringFormProps) {
+  const sym = symbolOf(useWalletCurrency())
   const activeWalletId = useFilterStore((s) => s.walletId)
   const { data: categories = [] } = useCategories('EXPENSE')
   const { data: wallets = [] } = useWallets()
@@ -154,7 +157,7 @@ export function RecurringForm({ open, onClose, onCreated }: RecurringFormProps) 
         </span>
       </span>
       <span className="mono-amount flex-none text-[15px] font-extrabold tabular-nums" style={{ color: 'var(--text-primary)' }}>
-        S/ {isNaN(parsedAmount) ? '0.00' : parsedAmount.toFixed(2)}
+        {sym} {isNaN(parsedAmount) ? '0.00' : parsedAmount.toFixed(2)}
       </span>
     </div>
   )

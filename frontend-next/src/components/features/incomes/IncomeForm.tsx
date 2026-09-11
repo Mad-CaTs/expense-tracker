@@ -124,6 +124,7 @@ function IncomeFormInner({ income, incomeId, onDone, onRequestDelete, onSaved }:
             <AmountField
               label="Monto del ingreso"
               inputId="income-amount-input"
+              walletId={walletId ? Number(walletId) : undefined}
               value={rawAmount}
               error={errors.amount}
               onChange={(v) => {

@@ -68,7 +68,8 @@ function ExpenseFormInner({ expense, initialDebts, expenseId, onDone, onRequestD
   const { data: categories } = useCategories('EXPENSE', walletId ? Number(walletId) : undefined)
   const [notes, setNotes] = useState(expense?.notes ?? '')
   const [debts, setDebts] = useState<SplitRow[]>(
-    initialDebts.map((d, i) => ({ ...d, key: `init${i}` })),
+    // El monto viaja como número y la fila lo lleva como texto (ver SplitRow).
+    initialDebts.map((d, i) => ({ ...d, amount: String(d.amount), key: `init${i}` })),
   )
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([])
@@ -122,8 +123,9 @@ function ExpenseFormInner({ expense, initialDebts, expenseId, onDone, onRequestD
       // debe llegar al backend.
       debts: debts
         .filter((d) => d.personName.trim() && Number(d.amount) > 0)
-        // `key` es solo de UI (ver SplitRow): no viaja al backend.
-        .map(({ personName, amount }) => ({ personName, amount })),
+        // `key` es solo de UI y el monto se teclea como texto (ver SplitRow):
+        // al backend va limpio y numérico.
+        .map(({ personName, amount }) => ({ personName: personName.trim(), amount: Number(amount) })),
     }
     if (isEdit && expenseId) {
       await updateExpense.mutateAsync({ id: expenseId, data: payload })
@@ -167,6 +169,7 @@ function ExpenseFormInner({ expense, initialDebts, expenseId, onDone, onRequestD
             <AmountField
               label="Monto del gasto"
               inputId="amount-keyboard-input"
+              walletId={walletId ? Number(walletId) : undefined}
               value={rawAmount}
               error={errors.amount}
               onChange={(v) => {

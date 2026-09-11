@@ -1019,6 +1019,39 @@ select:focus-visible,
   .xp-swipe-hint { animation: none; }
 }
 
+/* Pista del SIGNO DE MONEDA: indica que el símbolo del saldo se toca para
+   cambiar de moneda. Mismo planteamiento que `.xp-swipe-hint` —el propio
+   objeto insinúa el gesto, sin añadir un icono nuevo— pero aquí el gesto es
+   TOCAR, no arrastrar, así que en vez de estirarse late: un halo concéntrico
+   que nace en el glifo y se expande, como el eco de un toque.
+   Va en un ::after del botón para no ocupar espacio en el layout: el signo
+   está centrado respecto al saldo y cualquier caja extra lo descuadraría. */
+.cur-tap-hint { position: relative; }
+.cur-tap-hint::after {
+  content: '';
+  position: absolute;
+  left: 50%; top: 50%;
+  width: 34px; height: 34px;
+  margin: -17px 0 0 -17px;
+  border-radius: 999px;
+  border: 1.5px solid var(--text-muted);
+  opacity: 0;
+  pointer-events: none;
+  animation: cur-tap-pulse 2s ease-out infinite;
+}
+/* Ciclo corto pero con pausa: el halo sale al 15% y ya se ha apagado al 55%,
+   así que casi la mitad del ciclo el signo está quieto. Sin esa pausa el
+   latido sería continuo y competiría con el saldo, que es lo que manda. */
+@keyframes cur-tap-pulse {
+  0%        { transform: scale(0.55); opacity: 0; }
+  15%       { opacity: 0.34; }
+  55%, 100% { transform: scale(1.5);  opacity: 0; }
+}
+/* Con movimiento reducido se queda quieto: es una pista, no información. */
+@media (prefers-reduced-motion: reduce) {
+  .cur-tap-hint::after { animation: none; }
+}
+
 /* cara FRONTAL de la tarjeta: saldo grabado. Tipografía/padding en em sobre un
    font-size proporcional al ancho (lo fija el JS) → idéntica en vuelo y adoptada */
 .wd-card-front {

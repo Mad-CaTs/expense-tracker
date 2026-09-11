@@ -35,7 +35,10 @@ export function useCategoryCards(type: CategoryType): CategoryCardsResult {
   const activeWalletId = useActiveWallet()
   const { data: visibles } = useCategories(undefined, activeWalletId)
   const { from, to } = useMemo(() => monthRange(), [])
-  const { data: breakdown, isLoading: loadingBreakdown } = useCategoryBreakdown({ period: 'CUSTOM', from, to, txType: type })
+  const { data: breakdown, isLoading: loadingBreakdown } = useCategoryBreakdown(
+    { period: 'CUSTOM', from, to, txType: type, walletId: activeWalletId },
+    { requireWallet: true },
+  )
 
   const isLoading = loadingCategories || loadingBreakdown
 

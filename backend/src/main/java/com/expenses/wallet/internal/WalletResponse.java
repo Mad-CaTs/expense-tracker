@@ -10,6 +10,9 @@ public record WalletResponse(
         String color,
         String icon,
         String leather,
+        String currency,
+        /** false si la billetera ya tiene movimientos: la moneda queda fijada. */
+        boolean currencyLocked,
         Long backgroundId,
         String backgroundUrl) {
 }

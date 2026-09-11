@@ -14,9 +14,15 @@ import { DebtCreateSheet } from './DebtCreateSheet'
 import { DebtPaySheet } from './DebtPaySheet'
 import { DebtPersonCard } from './DebtPersonCard'
 import { DebtSettledRow } from './DebtSettledRow'
+import { useWalletCurrency, useWallets } from '@/lib/hooks/useWallets'
+import { symbolOf } from '@/lib/utils/currency'
 
 const money = (n: number) =>
-  n.toLocaleString('es-PE', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
+  n.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+
+/* Tope del escalonado: a 120ms por posición, la fila 10 entraría 1,2s después
+   de la primera. Pasado este índice todas comparten el mismo retraso. */
+const STAGGER_MAX = 6
 
 const TABS: { direction: DebtDirection; label: string }[] = [
   { direction: 'THEY_OWE', label: 'Me deben' },
@@ -53,6 +59,7 @@ function SegmentedTabs({
 }
 
 export function DebtsScreen() {
+  const sym = symbolOf(useWalletCurrency())
   const { exitClass, goBack } = useSubPageExit()
   const [direction, setDirection] = useState<DebtDirection>('THEY_OWE')
   const [paying, setPaying] = useState<{ debt: Debt; personName: string } | null>(null)
@@ -86,6 +93,18 @@ export function DebtsScreen() {
     .sort((a, b) => (b.debt.settledOn ?? '').localeCompare(a.debt.settledOn ?? ''))
 
   const total = pending.reduce((acc, g) => acc + g.pending, 0)
+  /* Las deudas viven en distintas billeteras, y esas pueden estar en monedas
+     distintas. Este total las SUMA, así que solo se rotula con un símbolo
+     cuando todas coinciden; mezcladas, la cifra va desnuda y cada tarjeta de
+     abajo dice en qué moneda está la suya. Sumar soles con dólares y ponerle
+     "S/" delante sería afirmar algo falso. */
+  const { data: allWallets } = useWallets()
+  const pendingSymbols = new Set(
+    pending.flatMap((g) =>
+      g.debts.map((d) => symbolOf(allWallets?.find((w) => w.id === d.walletId)?.currency)),
+    ),
+  )
+  const totalSym = pendingSymbols.size === 1 ? [...pendingSymbols][0] : ''
 
   return (
     <div className={exitClass}>
@@ -105,69 +124,89 @@ export function DebtsScreen() {
         }
       />
 
-      <SegmentedTabs active={direction} onChange={setDirection} />
+      <SegmentedTabs
+        active={direction}
+        onChange={(next) => {
+          setDirection(next)
+          setOpenPerson(null)
+        }}
+      />
 
-      <div className="liquid-glass enter-pop mx-4 mb-[18px] rounded-[22px] px-[18px] py-4" style={{ ['--enter-i' as string]: 0 }}>
-        <p className="mb-1.5 text-[10px] font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--text-label)' }}>
-          {iOwe ? 'Total que debo' : 'Total por cobrar'}
-        </p>
-        <div
-          className="mono-amount text-[34px] font-extrabold leading-none tracking-[-0.03em] tabular-nums"
-          style={{ color: 'var(--text-primary)' }}
-        >
-          S/ {money(total)}
+      {/* `key` por pestaña para que la entrada vuelva a correr: los hijos ya
+          traen `enter-pop` con su stagger, que es como entra el contenido en
+          toda la app. El deslizamiento lateral es de los formularios por
+          pasos, no de un cambio de pestaña. */}
+      <div key={direction}>
+        <div className="liquid-glass enter-pop mx-4 mb-[18px] rounded-[22px] px-[18px] py-4" style={{ ['--enter-i' as string]: 0 }}>
+          <p className="mb-1.5 text-[10px] font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--text-label)' }}>
+            {iOwe ? 'Total que debo' : 'Total por cobrar'}
+          </p>
+          <div
+            className="mono-amount text-[34px] font-extrabold leading-none tracking-[-0.03em] tabular-nums"
+            style={{ color: 'var(--text-primary)' }}
+          >
+            {totalSym && `${totalSym} `}{money(total)}
+          </div>
+          <p className="mt-[7px] text-[11.5px]" style={{ color: 'var(--text-tertiary)' }}>
+            {pending.length === 0
+              ? 'Nada pendiente'
+              : `${pending.length} ${pending.length === 1 ? 'persona' : 'personas'}`}
+          </p>
         </div>
-        <p className="mt-[7px] text-[11.5px]" style={{ color: 'var(--text-tertiary)' }}>
-          {pending.length === 0
-            ? 'Nada pendiente'
-            : `${pending.length} ${pending.length === 1 ? 'persona' : 'personas'}`}
-        </p>
+
+        {isLoading ? (
+          <div className="px-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="mb-2.5 h-[104px] animate-pulse rounded-[22px]" style={{ background: 'var(--skeleton-from)' }} />
+            ))}
+          </div>
+        ) : groups.length === 0 ? (
+          <p className="px-8 py-10 text-center text-[12.5px] leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+            {iOwe
+              ? 'No debes nada. Con + registras dinero que te prestaron.'
+              : 'Nadie te debe. Al registrar un gasto puedes marcar qué parte deben otros, o usa + para un préstamo suelto.'}
+          </p>
+        ) : (
+          <>
+            {pending.length > 0 && (
+              <>
+                <p className="px-[18px] pb-2 text-[10px] font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--text-label)' }}>
+                  Pendientes
+                </p>
+                {pending.map((g, i) => (
+                  <DebtPersonCard
+                    key={g.personName}
+                    group={g}
+                    index={Math.min(i + 1, STAGGER_MAX)}
+                    iOwe={iOwe}
+                    open={openPerson === g.personName}
+                    onToggle={() => setOpenPerson((cur) => (cur === g.personName ? null : g.personName))}
+                    onCollect={(debt) => setPaying({ debt, personName: g.personName })}
+                  />
+                ))}
+              </>
+            )}
+
+            {settled.length > 0 && (
+              <>
+                <p className="mt-4 px-[18px] pb-2 text-[10px] font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--text-label)' }}>
+                  Saldadas
+                </p>
+                {settled.map(({ debt, personName }, i) => (
+                  <DebtSettledRow
+                    key={debt.id}
+                    debt={debt}
+                    personName={personName}
+                    index={Math.min(pending.length + i + 1, STAGGER_MAX)}
+                    iOwe={iOwe}
+                  />
+                ))}
+              </>
+            )}
+          </>
+        )}
+
       </div>
-
-      {isLoading ? (
-        <div className="px-4">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="mb-2.5 h-[104px] animate-pulse rounded-[22px]" style={{ background: 'var(--skeleton-from)' }} />
-          ))}
-        </div>
-      ) : groups.length === 0 ? (
-        <p className="px-8 py-10 text-center text-[12.5px] leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-          {iOwe
-            ? 'No debes nada. Con + registras dinero que te prestaron.'
-            : 'Nadie te debe. Al registrar un gasto puedes marcar qué parte deben otros, o usa + para un préstamo suelto.'}
-        </p>
-      ) : (
-        <>
-          {pending.length > 0 && (
-            <>
-              <p className="px-[18px] pb-2 text-[10px] font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--text-label)' }}>
-                Pendientes
-              </p>
-              {pending.map((g) => (
-                <DebtPersonCard
-                  key={g.personName}
-                  group={g}
-                  iOwe={iOwe}
-                  open={openPerson === g.personName}
-                  onToggle={() => setOpenPerson((cur) => (cur === g.personName ? null : g.personName))}
-                  onCollect={(debt) => setPaying({ debt, personName: g.personName })}
-                />
-              ))}
-            </>
-          )}
-
-          {settled.length > 0 && (
-            <>
-              <p className="mt-4 px-[18px] pb-2 text-[10px] font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--text-label)' }}>
-                Saldadas
-              </p>
-              {settled.map(({ debt, personName }) => (
-                <DebtSettledRow key={debt.id} debt={debt} personName={personName} iOwe={iOwe} />
-              ))}
-            </>
-          )}
-        </>
-      )}
 
       {creating && (
         <DebtCreateSheet
@@ -192,8 +231,8 @@ export function DebtsScreen() {
         description={
           created
             ? iOwe
-              ? `Le debes S/ ${money(created.amount)} a ${created.personName}. El dinero entró a tu billetera.`
-              : `${created.personName} te debe S/ ${money(created.amount)}. El dinero salió de tu billetera.`
+              ? `Le debes ${sym} ${money(created.amount)} a ${created.personName}. El dinero entró a tu billetera.`
+              : `${created.personName} te debe ${sym} ${money(created.amount)}. El dinero salió de tu billetera.`
             : undefined
         }
         onClose={() => setCreated(null)}
@@ -204,7 +243,7 @@ export function DebtsScreen() {
         title={iOwe ? 'Pagado' : 'Cobrado'}
         description={
           collected !== null
-            ? `S/ ${money(collected)} ${iOwe ? 'salieron de' : 'entraron a'} tu billetera.`
+            ? `${sym} ${money(collected)} ${iOwe ? 'salieron de' : 'entraron a'} tu billetera.`
             : undefined
         }
         onClose={() => setCollected(null)}

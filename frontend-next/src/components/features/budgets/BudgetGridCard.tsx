@@ -6,6 +6,8 @@ import { BudgetCategoryIcon } from '@/components/features/budgets/BudgetCategory
 import { NEAR_LIMIT_PCT } from '@/components/features/budgets/BudgetsHero'
 import { categoryAura, categorySwatch } from '@/lib/utils/cardVisuals'
 import type { Budget } from '@/types'
+import { useWalletCurrency } from '@/lib/hooks/useWallets'
+import { symbolOf } from '@/lib/utils/currency'
 
 const HOLD_MS = 550
 
@@ -17,6 +19,7 @@ export interface BudgetGridCardProps {
 }
 
 export function BudgetGridCard({ budget, index, onOpen, onEdit }: BudgetGridCardProps) {
+  const sym = symbolOf(useWalletCurrency())
   const spent = budget.spent ?? 0
   const amount = budget.amount ?? 0
   const remaining = amount - spent
@@ -144,7 +147,7 @@ export function BudgetGridCard({ budget, index, onOpen, onEdit }: BudgetGridCard
         </span>
 
         <span className="mono-amount block text-[20px] font-extrabold leading-none tracking-[-0.02em] tabular-nums" style={{ textShadow: '0 1px 10px rgba(0,0,0,0.25)' }}>
-          S/{spent.toFixed(0)}{' '}
+          {sym}{spent.toFixed(0)}{' '}
           <span className="text-[11.5px] font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>
             / {amount.toFixed(0)}
           </span>
@@ -155,7 +158,7 @@ export function BudgetGridCard({ budget, index, onOpen, onEdit }: BudgetGridCard
         </span>
 
         <span className="mt-[7px] block text-[11px] font-semibold" style={{ color: 'rgba(255,255,255,0.85)' }}>
-          {isOver ? `+S/${Math.abs(remaining).toFixed(0)} excedido` : `S/${remaining.toFixed(0)} rest.`}
+          {isOver ? `+${sym}${Math.abs(remaining).toFixed(0)} excedido` : `${sym}${remaining.toFixed(0)} rest.`}
         </span>
       </span>
 

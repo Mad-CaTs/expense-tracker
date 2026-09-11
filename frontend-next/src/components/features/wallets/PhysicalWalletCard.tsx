@@ -1,5 +1,6 @@
 'use client'
 
+import { symbolOf } from '@/lib/utils/currency'
 import { motion } from 'framer-motion'
 import { ArrowLeftRight, Pencil, TrendingDown, TrendingUp, Trash2, Wallet as WalletIcon } from 'lucide-react'
 
@@ -56,7 +57,7 @@ export function PhysicalWalletCard({
         </div>
         <p className="mt-3 text-[10px] font-medium uppercase tracking-[0.14em]" style={{ color: 'rgba(255,255,255,0.6)' }}>Saldo</p>
         <p className="mono-amount text-[28px] font-extrabold leading-none" style={{ color: '#fff' }}>
-          S/ {formatBalance(balance)}
+          {symbolOf(wallet.currency)} {formatBalance(balance)}
         </p>
       </button>
 

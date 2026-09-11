@@ -6,6 +6,8 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { Check } from 'lucide-react'
 
 import { categorySwatch } from '@/lib/utils/cardVisuals'
+import { useWalletCurrency } from '@/lib/hooks/useWallets'
+import { symbolOf } from '@/lib/utils/currency'
 import { EASE, MOTION_S } from '@/lib/utils/motion'
 import type { Debt } from '@/types'
 
@@ -13,12 +15,14 @@ import { DebtPaymentHistory } from './DebtPaymentHistory'
 import { debtHue } from './debtHue'
 
 const money = (n: number) =>
-  n.toLocaleString('es-PE', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
+  n.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
 const SHORT_DATE = new Intl.DateTimeFormat('es-PE', { day: 'numeric', month: 'short' })
 
 interface DebtSettledRowProps {
   debt: Debt
+  /** Posición en la lista: alimenta el stagger de `enter-pop`. */
+  index: number
   personName: string
   iOwe: boolean
 }
@@ -31,13 +35,17 @@ interface DebtSettledRowProps {
  * hecho con su fecha. Agruparlas obligaba además a mostrar un "S/ 0" por
  * persona, que no dice nada — acá el importe es lo que te devolvieron.
  */
-export function DebtSettledRow({ debt, personName, iOwe }: DebtSettledRowProps) {
+export function DebtSettledRow({ debt, personName, index, iOwe }: DebtSettledRowProps) {
   const tint = debtHue(personName)
+  const sym = symbolOf(useWalletCurrency(debt.walletId))
   const day = debt.settledOn ?? debt.incurredOn
   const [showHistory, setShowHistory] = useState(false)
 
   return (
-    <div className="mx-4 mb-[7px] rounded-[16px] px-[15px] py-[11px]" style={{ background: 'var(--bg-subtle)' }}>
+    <div
+      className="enter-pop mx-4 mb-[7px] rounded-[16px] px-[15px] py-[11px]"
+      style={{ background: 'var(--bg-subtle)', ['--enter-i' as string]: index }}
+    >
       <button
         type="button"
         onClick={() => setShowHistory((v) => !v)}
@@ -62,7 +70,7 @@ export function DebtSettledRow({ debt, personName, iOwe }: DebtSettledRowProps) 
 
         {/* El importe devuelto, no un "S/ 0": es el dato con valor de un saldado. */}
         <span className="mono-amount flex-none text-[13px] font-bold tabular-nums" style={{ color: 'var(--text-tertiary)' }}>
-          S/ {money(debt.amount)}
+          {sym} {money(debt.amount)}
         </span>
 
         <Check size={14} strokeWidth={2.5} className="flex-none" style={{ color: 'var(--text-muted)' }} />

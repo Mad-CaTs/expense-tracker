@@ -1,5 +1,6 @@
 'use client'
 
+import { symbolOf } from '@/lib/utils/currency'
 import { useRef, useState } from 'react'
 import { preload } from 'react-dom'
 
@@ -145,7 +146,7 @@ export function WalletLeatherCarousel({ onOpenActive }: WalletLeatherCarouselPro
           {titleCase(activeWallet.name)}
         </p>
         <p className="mt-1.5 text-[40px] font-extrabold leading-none tracking-[-0.03em] tabular-nums" style={{ color: 'var(--text-primary)' }}>
-          <small className="mr-1 text-[22px] font-bold" style={{ color: 'var(--text-tertiary)' }}>S/</small>
+          <small className="mono-amount mr-[7px] align-baseline text-[22px] font-bold" style={{ color: 'var(--text-tertiary)' }}>{symbolOf(activeWallet.currency)}</small>
           <WalletBalanceAmount walletId={activeWallet.id} balance={Number(activeWallet.balance)} />
         </p>
       </div>

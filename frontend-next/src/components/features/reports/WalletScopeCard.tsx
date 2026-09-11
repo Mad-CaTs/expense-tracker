@@ -2,6 +2,7 @@
 
 import { AnimatedAmount } from '@/components/features/shared/AnimatedAmount'
 import { WalletChip } from '@/components/features/reports/WalletChip'
+import { symbolOf } from '@/lib/utils/currency'
 import type { Wallet } from '@/types'
 
 interface WalletScopeCardProps {
@@ -17,7 +18,10 @@ interface WalletScopeCardProps {
  * salirse de esa billetera sin que la pantalla anterior se enterara.
  */
 export function WalletScopeCard({ wallets, walletId }: WalletScopeCardProps) {
-  const active = wallets.find((w) => w.id === walletId) ?? wallets[0]
+  /* Sin `?? wallets[0]`: ese respaldo pintaba el saldo de OTRA billetera
+     cuando el id no existía —borrada, o de otra sesión— y la cifra parecía
+     válida. Mejor no mostrar nada que mostrar el número equivocado. */
+  const active = wallets.find((w) => w.id === walletId)
   if (!active) return null
 
   return (
@@ -44,7 +48,7 @@ export function WalletScopeCard({ wallets, walletId }: WalletScopeCardProps) {
         className="mono-amount mt-1 text-[32px] font-extrabold leading-[1.05] tracking-[-0.035em] tabular-nums"
         style={{ color: 'var(--text-primary)' }}
       >
-        S/ <AnimatedAmount value={Number(active.balance)} />
+        {symbolOf(active.currency)} <AnimatedAmount value={Number(active.balance)} />
       </p>
       <p className="mt-1 text-[11.5px]" style={{ color: 'var(--text-muted)' }}>
         Saldo disponible

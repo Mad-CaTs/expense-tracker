@@ -12,6 +12,8 @@ import { useRecurring } from '@/lib/hooks/useRecurring'
 import { useActiveWallet } from '@/lib/hooks/useActiveWallet'
 import type { CategoryBreakdown } from '@/types'
 import { categorySwatch } from '@/lib/utils/cardVisuals'
+import { useWalletCurrency } from '@/lib/hooks/useWallets'
+import { symbolOf } from '@/lib/utils/currency'
 
 const MONTHS_ES = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -93,6 +95,7 @@ function FlowRow({
   positive: boolean
   items: CategoryBreakdown[]
 }) {
+  const sym = symbolOf(useWalletCurrency())
   const monthLabel = monthRange().label
 
   return (
@@ -112,7 +115,7 @@ function FlowRow({
             ? <ArrowUpRight size={15} strokeWidth={2.4} style={{ color: 'var(--text-secondary)' }} />
             : <ArrowDownLeft size={15} strokeWidth={2.4} style={{ color: 'var(--text-secondary)' }} />}
           <span className="text-[15px] font-bold tabular-nums leading-none" style={{ color: 'var(--text-primary)' }}>
-            {positive ? '+' : '-'}S/{formatAmount(Math.abs(amount))}
+            {positive ? '+' : '-'}{sym}{formatAmount(Math.abs(amount))}
           </span>
         </div>
       </div>

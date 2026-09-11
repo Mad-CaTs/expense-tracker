@@ -5,6 +5,8 @@ import { motion } from 'framer-motion'
 import { categorySwatch } from '@/lib/utils/cardVisuals'
 import { getCategoryColor } from '@/lib/utils/categoryColors'
 import type { CategoryBreakdown } from '@/types'
+import { useWalletCurrency } from '@/lib/hooks/useWallets'
+import { symbolOf } from '@/lib/utils/currency'
 
 interface CategoryTilesProps {
   breakdown: CategoryBreakdown[]
@@ -13,6 +15,7 @@ interface CategoryTilesProps {
 }
 
 export function CategoryTiles({ breakdown, activeIndex, onSelect }: CategoryTilesProps) {
+  const sym = symbolOf(useWalletCurrency())
   if (!breakdown.length) return null
 
   return (
@@ -38,7 +41,7 @@ export function CategoryTiles({ breakdown, activeIndex, onSelect }: CategoryTile
               {item.categoryName}
             </span>
             <span className="mono-amount flex-none text-[11.5px] font-extrabold tabular-nums" style={{ color: 'var(--text-primary)' }}>
-              S/ {(item.total ?? 0).toLocaleString('es-PE', { maximumFractionDigits: 0 })}
+              {sym} {(item.total ?? 0).toLocaleString('es-PE', { maximumFractionDigits: 0 })}
             </span>
           </motion.button>
         )

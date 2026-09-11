@@ -6,6 +6,8 @@ import { X } from 'lucide-react'
 import { categorySwatch } from '@/lib/utils/cardVisuals'
 import { CATEGORY_ICON_MAP } from '@/lib/utils/categoryIcons'
 import type { PeriodMovement } from './usePeriodMovements'
+import { useWalletCurrency } from '@/lib/hooks/useWallets'
+import { symbolOf } from '@/lib/utils/currency'
 
 const money = (n: number) =>
   n.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -19,6 +21,7 @@ interface DayMovementsDialogProps {
 }
 
 export function DayMovementsDialog({ date, movements, onClose }: DayMovementsDialogProps) {
+  const sym = symbolOf(useWalletCurrency())
   const total = movements.reduce((acc, m) => acc + m.amount + (m.reimbursable ?? 0), 0)
   const formatted = date ? LONG_DATE.format(new Date(`${date}T12:00:00`)) : ''
   const title = formatted ? formatted[0].toUpperCase() + formatted.slice(1) : ''
@@ -115,7 +118,7 @@ export function DayMovementsDialog({ date, movements, onClose }: DayMovementsDia
                           className="mono-amount text-[13px] font-bold tabular-nums"
                           style={{ color: income ? 'var(--success)' : 'var(--text-primary)' }}
                         >
-                          {income ? '+' : '−'}S/ {money(Math.abs(m.amount))}
+                          {income ? '+' : '−'}{sym} {money(Math.abs(m.amount))}
                         </span>
                         {(m.reimbursable ?? 0) > 0 && (
                           <span
@@ -134,7 +137,7 @@ export function DayMovementsDialog({ date, movements, onClose }: DayMovementsDia
               <p className="mt-3 text-center text-[11.5px]" style={{ color: 'var(--text-muted)' }}>
                 Total del día:{' '}
                 <b className="mono-amount tabular-nums" style={{ color: 'var(--text-secondary)' }}>
-                  {total < 0 ? '−' : '+'}S/ {money(Math.abs(total))}
+                  {total < 0 ? '−' : '+'}{sym} {money(Math.abs(total))}
                 </b>
               </p>
             </div>

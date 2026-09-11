@@ -1,17 +1,19 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
-import { motion } from 'framer-motion'
+import { motion, useAnimationControls } from 'framer-motion'
 
 import { COLOR_PRESETS } from '@/components/features/shared/colorPresets'
 import { leaveNotice } from '@/components/features/shared/pendingNotice'
 import { useSubPageExit } from '@/components/features/shared/useSubPageExit'
 import { useFilterStore } from '@/stores/filterStore'
 import { toLeatherId } from '@/components/features/wallets/leathers'
+import { CurrencySignButton } from '@/components/features/wallets/CurrencySignButton'
 import { WalletAppearance } from '@/components/features/wallets/WalletAppearance'
 import { SubPageHeader } from '@/components/layout/SubPageHeader'
 import { useCreateWallet, useUpdateWallet } from '@/lib/hooks/useWallets'
+import { DEFAULT_CURRENCY, type CurrencyId } from '@/lib/utils/currency'
 import type { Wallet } from '@/types'
 
 /** Lo que /wallets necesita para anunciar el resultado de una acción. */
@@ -53,6 +55,19 @@ export function WalletFormScreen({ wallet }: WalletFormScreenProps) {
   // que se conserva tal cual en vez de buscarlo en `COLOR_PRESETS`.
   const [color, setColor] = useState(wallet?.color ?? COLOR_PRESETS[0])
   const [leather, setLeather] = useState(() => toLeatherId(wallet?.leather))
+  const [currency, setCurrency] = useState<CurrencyId>(
+    (wallet?.currency as CurrencyId | undefined) ?? DEFAULT_CURRENCY,
+  )
+  /* Cuenta los toques al signo. El pulso del saldo se ata a él y no a
+     `currency`, para que no se dispare al montar la pantalla —ahí no ha
+     cambiado nada y un saldo que late solo se lee como un fallo. */
+  const [currencyTaps, setCurrencyTaps] = useState(0)
+  const balanceTick = useAnimationControls()
+
+  useEffect(() => {
+    if (currencyTaps === 0) return
+    balanceTick.start({ scale: [1, 1.035, 1], transition: { duration: 0.4, ease: [0.32, 0.72, 0, 1] } })
+  }, [currencyTaps, balanceTick])
   const [error, setError] = useState('')
 
   const pending = create.isPending || update.isPending
@@ -62,8 +77,9 @@ export function WalletFormScreen({ wallet }: WalletFormScreenProps) {
     if (!trimmed) { setError('Ponle un nombre a la billetera'); return }
 
     if (editing) {
-      // `leather` va SIEMPRE: el PUT reemplaza el recurso entero y omitirlo lo
-      // pondría a null, borrando el acabado de la billetera que se edita.
+      // `leather` y `currency` van SIEMPRE: el PUT reemplaza el recurso entero
+      // y omitirlos los pondría a null, borrando el acabado y la moneda de la
+      // billetera que se edita.
       await update.mutateAsync({
         id: wallet.id,
         data: {
@@ -71,6 +87,7 @@ export function WalletFormScreen({ wallet }: WalletFormScreenProps) {
           currentBalance: parseFloat(balance) || 0,
           color,
           leather,
+          currency,
           backgroundId: wallet.backgroundId ?? null,
         },
       })
@@ -80,6 +97,7 @@ export function WalletFormScreen({ wallet }: WalletFormScreenProps) {
         initialBalance: parseFloat(balance) || 0,
         color,
         leather,
+        currency,
         backgroundId: null,
       })
     }
@@ -130,20 +148,40 @@ export function WalletFormScreen({ wallet }: WalletFormScreenProps) {
           {/* Al editar también: la billetera refleja una cuenta real, y el
               usuario debe poder cuadrarla con el saldo que esa cuenta tiene hoy
               sin recalcular a mano el inicial. */}
-          <div className="mt-5 flex items-baseline justify-center gap-1.5">
-            <span className="text-[19px] font-bold" style={{ color: 'var(--text-tertiary)' }}>S/</span>
-            <input
-              type="text"
-              inputMode="decimal"
-              value={balance}
-              onChange={(e) => setBalance(e.target.value.replace(/[^\d.]/g, ''))}
-              placeholder="0.00"
-              autoComplete="off"
-              aria-label={editing ? 'Saldo actual' : 'Saldo inicial'}
-              size={Math.max(4, balance.length || 4)}
-              className="search-input mono-amount bg-transparent text-center text-[30px] font-extrabold tracking-[-0.03em] tabular-nums outline-none"
-              style={{ color: parseFloat(balance) > 0 ? 'var(--text-primary)' : 'var(--text-placeholder)' }}
-            />
+          {/* El signo ES el selector de moneda: se toca y avanza PEN → USD →
+              EUR. Está aquí y no en "Personalizar" porque la moneda no es
+              decoración —decide cómo se lee cada cifra de la billetera— y
+              enterrada en el sheet no se encontraba. */}
+          <div className="mt-5 flex items-baseline justify-center">
+            {/* Un pulso de escala al cambiar de moneda: dice que el símbolo que
+                se acaba de tocar es el de ESTE importe. Va con `animate` y no
+                con una `key`: remontar el wrapper le quitaría el foco al input
+                mientras se escribe el saldo. */}
+            <motion.div className="relative" animate={balanceTick}>
+              {/* Anclado al borde izquierdo de la CIFRA y fuera del flujo: en
+                  el flujo empujaba el importe a la derecha y el bloque quedaba
+                  descentrado respecto al nombre y a la pista de abajo. */}
+              <span className="absolute right-full top-1/2 -translate-y-1/2 pr-[2px]">
+                <CurrencySignButton
+                  value={currency}
+                  /* Al crear nunca está fijada; al editar lo dice el backend. */
+                  locked={wallet?.currencyLocked ?? false}
+                  onChange={(c) => { setCurrency(c); setCurrencyTaps((n) => n + 1) }}
+                />
+              </span>
+              <input
+                type="text"
+                inputMode="decimal"
+                value={balance}
+                onChange={(e) => setBalance(e.target.value.replace(/[^\d.]/g, ''))}
+                placeholder="0.00"
+                autoComplete="off"
+                aria-label={editing ? 'Saldo actual' : 'Saldo inicial'}
+                size={Math.max(4, balance.length || 4)}
+                className="search-input mono-amount bg-transparent text-center text-[30px] font-extrabold tracking-[-0.03em] tabular-nums outline-none"
+                style={{ color: parseFloat(balance) > 0 ? 'var(--text-primary)' : 'var(--text-placeholder)' }}
+              />
+            </motion.div>
           </div>
           <p className="mt-1 text-[10.5px]" style={{ color: 'var(--text-dim)' }}>
             {editing ? 'Saldo actual' : 'Saldo inicial'}

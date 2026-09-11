@@ -3,6 +3,7 @@
 import { useMemo } from 'react'
 
 import { byRecent } from '@/components/features/shared/movementOrder'
+import { useActiveWallet } from '@/lib/hooks/useActiveWallet'
 import { useExpenses } from '@/lib/hooks/useExpenses'
 import { useIncomes } from '@/lib/hooks/useIncomes'
 import type { CategoryType } from '@/types'
@@ -34,15 +35,18 @@ export function useCategoryMovements(categoryId: number, categoryName: string, t
   const isIncome = type === 'INCOME'
   const { from, to } = fullRange()
 
+  const walletId = useActiveWallet()
+
   const expenses = useExpenses({
     period: 'CUSTOM',
     startDate: from,
     endDate: to,
     categoryId,
+    walletId,
     page: 0,
     size: PAGE_SIZE,
   })
-  const incomes = useIncomes({ from, to, page: 0, size: PAGE_SIZE })
+  const incomes = useIncomes({ from, to, walletId, page: 0, size: PAGE_SIZE })
 
   const movements = useMemo<CategoryMovement[]>(() => {
     if (isIncome) {

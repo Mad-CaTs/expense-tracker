@@ -46,6 +46,10 @@ public class Wallet extends Auditable {
     @Column(length = 16)
     private String leather;
 
+    /** Moneda de la billetera. Solo cambia el símbolo: no hay conversión. */
+    @Column(length = 3, nullable = false)
+    private String currency = "PEN";
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "background_id")
     @ToString.Exclude

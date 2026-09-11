@@ -117,15 +117,31 @@ export function useSwipeDownCard({ onCommit, disabled = false }: Options) {
       settle()
     }
 
+    /* Si la salida no llegó a navegar —la animación se cortó, o la pestaña
+       volvió del fondo a medias—, `committed` se quedaba en true y el gesto
+       moría para siempre: la tarjeta ya no respondía al dedo. Volver a la
+       pantalla lo rearma. */
+    const rearm = () => {
+      if (document.visibilityState !== 'visible') return
+      committed.current = false
+      drag.current = null
+      el.style.transition = ''
+      el.style.transform = ''
+    }
+
     el.addEventListener('pointerdown', onDown)
     el.addEventListener('pointermove', onMove)
     el.addEventListener('pointerup', finish)
     el.addEventListener('pointercancel', finish)
+    document.addEventListener('visibilitychange', rearm)
+    window.addEventListener('pageshow', rearm)
     return () => {
       el.removeEventListener('pointerdown', onDown)
       el.removeEventListener('pointermove', onMove)
       el.removeEventListener('pointerup', finish)
       el.removeEventListener('pointercancel', finish)
+      document.removeEventListener('visibilitychange', rearm)
+      window.removeEventListener('pageshow', rearm)
     }
   }, [disabled, onCommit, paint, settle])
 

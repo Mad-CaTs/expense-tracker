@@ -3,6 +3,8 @@
 import { CATEGORY_ICON_MAP } from '@/lib/utils/categoryIcons'
 import { categorySwatch } from '@/lib/utils/cardVisuals'
 import type { DailyTotal } from '@/types'
+import { useWalletCurrency } from '@/lib/hooks/useWallets'
+import { symbolOf } from '@/lib/utils/currency'
 
 /** Mismas iniciales y orden que `RangeCalendar`: la semana empieza en lunes. */
 const WEEKDAYS = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
@@ -32,6 +34,7 @@ interface SpendingCalendarProps {
  * su ritmo y los días con gasto resaltan por contraste, no por hueco.
  */
 export function SpendingCalendar({ daily, from, to, isIncome, onSelectDay }: SpendingCalendarProps) {
+  const sym = symbolOf(useWalletCurrency())
   const start = new Date(from + 'T00:00:00')
   const end = new Date(to + 'T00:00:00')
   const totalDays = Math.round((end.getTime() - start.getTime()) / 86400000) + 1
@@ -94,7 +97,7 @@ export function SpendingCalendar({ daily, from, to, isIncome, onSelectDay }: Spe
               key={c.iso}
               type={Cell === 'button' ? 'button' : undefined}
               onClick={spent && onSelectDay ? () => onSelectDay(c.iso) : undefined}
-              title={spent ? `${c.day}: S/ ${money(amount)} · ${c.entry?.categoryName ?? ''}` : String(c.day)}
+              title={spent ? `${c.day}: ${sym} ${money(amount)} · ${c.entry?.categoryName ?? ''}` : String(c.day)}
               className={`day-cell flex flex-col items-center justify-center gap-[4px] rounded-[15px]${
                 spent && onSelectDay ? ' day-cell-tap cursor-pointer' : ''
               }`}
@@ -149,7 +152,7 @@ export function SpendingCalendar({ daily, from, to, isIncome, onSelectDay }: Spe
           <span>
             El mayor:{' '}
             <b className="mono-amount tabular-nums" style={{ color: 'var(--text-primary)' }}>
-              S/ {money(top.total ?? 0)}
+              {sym} {money(top.total ?? 0)}
             </b>
           </span>
         )}

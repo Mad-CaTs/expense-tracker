@@ -3,6 +3,8 @@
 import { motion } from 'framer-motion'
 
 import { AnimatedAmount } from '@/components/features/shared/AnimatedAmount'
+import { useWalletCurrency } from '@/lib/hooks/useWallets'
+import { symbolOf } from '@/lib/utils/currency'
 import { EASE, MOTION_S } from '@/lib/utils/motion'
 
 export interface CategoriesHeroProps {
@@ -40,13 +42,14 @@ function Metric({ label, value, count }: { label: string; value?: string; count?
  * 8.5px eran ilegibles y competían entre sí sin jerarquía.
  */
 export function CategoriesHero({ total, isExpense, topCategory, categoryCount, movementCount }: CategoriesHeroProps) {
+  const sym = symbolOf(useWalletCurrency())
   return (
     <div className="liquid-glass mx-4 mb-3.5 rounded-[22px] p-[18px]">
       <p className="text-[10px] font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--text-placeholder)' }}>
         {isExpense ? 'Gastado este mes' : 'Recibido este mes'}
       </p>
       <p className="mono-amount mt-[7px] text-[33px] font-extrabold leading-[1.05] tracking-[-0.03em] tabular-nums" style={{ color: 'var(--text-primary)' }}>
-        <small className="mr-[5px] text-[19px] font-bold" style={{ color: 'var(--text-tertiary)' }}>S/</small>
+        <small className="mono-amount mr-[5px] text-[19px] font-bold" style={{ color: 'var(--text-tertiary)' }}>{sym}</small>
         <AnimatedAmount value={total} animateOnMount />
       </p>
       <div className="mt-3.5 flex gap-4 border-t pt-3.5" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>

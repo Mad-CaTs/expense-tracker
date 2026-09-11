@@ -37,6 +37,14 @@ class TransferWalletHooks implements WalletBalanceContribution {
         return toMap(transferRepository.sumOutgoingByUserIdGroupedByWallet(userId));
     }
 
+    @Override
+    public boolean hasMovements(Long userId, Long walletId) {
+        // Cuenta en los dos sentidos: una transferencia que SALIÓ de esta
+        // billetera la toca igual que una que entró.
+        return transferRepository.existsByUserIdAndFromWalletIdOrUserIdAndToWalletId(
+                userId, walletId, userId, walletId);
+    }
+
     @EventListener
     public void on(WalletDeletedEvent event) {
         transferRepository.softDeleteByWalletId(event.userId(), event.walletId(), event.deletedAt());

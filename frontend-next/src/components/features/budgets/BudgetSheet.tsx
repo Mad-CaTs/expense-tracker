@@ -12,6 +12,8 @@ import { categoryAura, categorySwatch } from '@/lib/utils/cardVisuals'
 import { MOTION } from '@/lib/utils/motion'
 import { useFilterStore } from '@/stores/filterStore'
 import type { Category } from '@/types'
+import { useWalletCurrency } from '@/lib/hooks/useWallets'
+import { symbolOf } from '@/lib/utils/currency'
 
 interface BudgetSheetProps {
   /** Categoría sugerida desde el estado vacío: llega por nombre porque es lo
@@ -29,6 +31,7 @@ interface BudgetSheetProps {
  * que se ve acá es la identidad —color e icono de la categoría— y el límite.
  */
 function Preview({ category, limit }: { category?: Category; limit: number }) {
+  const sym = symbolOf(useWalletCurrency())
   const color = category?.color ?? '#d4af37'
   const aura = categoryAura(color)
 
@@ -65,7 +68,7 @@ function Preview({ category, limit }: { category?: Category; limit: number }) {
           {category?.name ?? 'Elige una categoría'}
         </span>
         <span className="mono-amount block text-[19px] font-extrabold leading-none tracking-[-0.02em] tabular-nums">
-          S/0{' '}
+          {sym}0{' '}
           <span className="text-[11px] font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>
             / {limit > 0 ? limit.toFixed(0) : '—'}
           </span>
@@ -74,7 +77,7 @@ function Preview({ category, limit }: { category?: Category; limit: number }) {
           <span className="block h-full w-0 rounded-full" style={{ background: '#fff' }} />
         </span>
         <span className="mt-[7px] block text-[11px] font-semibold" style={{ color: 'rgba(255,255,255,0.85)' }}>
-          {limit > 0 ? `S/${limit.toFixed(0)} disponibles` : 'Define un límite'}
+          {limit > 0 ? `${sym}${limit.toFixed(0)} disponibles` : 'Define un límite'}
         </span>
       </span>
     </div>
@@ -82,6 +85,7 @@ function Preview({ category, limit }: { category?: Category; limit: number }) {
 }
 
 export function BudgetSheet({ presetCategoryName, onClose, onCreated }: BudgetSheetProps) {
+  const sym = symbolOf(useWalletCurrency())
   const { data: categories } = useCategories('EXPENSE')
   const { data: wallets = [] } = useWallets()
   const { data: existing = [] } = useBudgets()
@@ -223,7 +227,7 @@ export function BudgetSheet({ presetCategoryName, onClose, onCreated }: BudgetSh
             className="liquid-glass-ic flex h-[58px] w-full items-center gap-2 rounded-[16px] px-[15px]"
             style={errors.amount ? { borderColor: 'var(--danger)' } : undefined}
           >
-            <span className="text-[19px] font-bold" style={{ color: 'var(--text-tertiary)' }}>S/</span>
+            <span className="mono-amount text-[19px] font-bold" style={{ color: 'var(--text-tertiary)' }}>{sym}</span>
             <input
               type="text"
               inputMode="decimal"

@@ -22,6 +22,11 @@ export interface Wallet {
   color?: string
   icon?: string
   leather?: string
+  /** PEN | USD | EUR. Solo cambia el símbolo: no hay conversión. */
+  currency?: string
+  /** true si la billetera ya tiene movimientos: la moneda queda fijada.
+   *  Cambiarla reinterpretaría importes ya registrados. */
+  currencyLocked?: boolean
   backgroundId?: number | null
   backgroundUrl?: string | null
 }

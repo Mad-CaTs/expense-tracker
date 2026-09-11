@@ -4,6 +4,8 @@ import { HOLD_MS, useLongPress } from '@/components/features/shared/useLongPress
 import { categorySwatch } from '@/lib/utils/cardVisuals'
 import { CATEGORY_ICON_MAP } from '@/lib/utils/categoryIcons'
 import type { RecurringExpense, RecurringFrequency } from '@/types'
+import { useWalletCurrency } from '@/lib/hooks/useWallets'
+import { symbolOf } from '@/lib/utils/currency'
 
 const FREQUENCY_LABELS: Record<RecurringFrequency, string> = {
   WEEKLY: 'Semanal',
@@ -23,6 +25,7 @@ export interface RecurringRowProps {
 
 
 export function RecurringRow({ item, onToggle, onDelete }: RecurringRowProps) {
+  const sym = symbolOf(useWalletCurrency())
   const color = item.categoryColor ?? '#d4af37'
   const tint = categorySwatch(color)
   const Icon = CATEGORY_ICON_MAP[item.categoryIcon ?? 'ellipsis'] ?? CATEGORY_ICON_MAP.ellipsis
@@ -83,7 +86,7 @@ export function RecurringRow({ item, onToggle, onDelete }: RecurringRowProps) {
           hace actuar volvía a cortarse. */}
       <span className="w-[104px] flex-none text-right">
         <span className="mono-amount block text-[13px] font-extrabold tabular-nums" style={{ color: 'var(--text-primary)' }}>
-          S/ {(item.amount ?? 0).toFixed(2)}
+          {sym} {(item.amount ?? 0).toFixed(2)}
         </span>
         {/* --text-tertiary y no --text-placeholder: frecuencia y próxima fecha
             son datos, y el tono de relleno no se leía sobre el cristal. */}

@@ -2,6 +2,8 @@
 
 import { categorySwatch } from '@/lib/utils/cardVisuals'
 import type { Budget, CategoryBreakdown } from '@/types'
+import { useWalletCurrency } from '@/lib/hooks/useWallets'
+import { symbolOf } from '@/lib/utils/currency'
 
 const money = (n: number) =>
   n.toLocaleString('es-PE', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
@@ -47,6 +49,7 @@ export function buildBudgetUsage(
 }
 
 export function BudgetRisk({ usage }: { usage: BudgetUsage[] }) {
+  const sym = symbolOf(useWalletCurrency())
   if (usage.length === 0) return null
 
   return (
@@ -66,7 +69,7 @@ export function BudgetRisk({ usage }: { usage: BudgetUsage[] }) {
                 {u.categoryName}
               </span>
               <span className="mono-amount flex-none text-[11.5px] tabular-nums" style={{ color: 'var(--text-secondary)' }}>
-                S/ {money(u.spent)} <span style={{ color: 'var(--text-muted)' }}>/ {money(u.limit)}</span>
+                {sym} {money(u.spent)} <span style={{ color: 'var(--text-muted)' }}>/ {money(u.limit)}</span>
               </span>
             </div>
 
@@ -79,12 +82,12 @@ export function BudgetRisk({ usage }: { usage: BudgetUsage[] }) {
 
             {over && (
               <p className="mt-[5px] text-[10.5px] font-semibold" style={{ color: 'var(--danger)' }}>
-                Excedido en S/ {money(u.spent - u.limit)}
+                Excedido en {sym} {money(u.spent - u.limit)}
               </p>
             )}
             {warn && (
               <p className="mt-[5px] text-[10.5px]" style={{ color: 'var(--warning)' }}>
-                Te queda S/ {money(u.limit - u.spent)}
+                Te queda {sym} {money(u.limit - u.spent)}
               </p>
             )}
           </li>

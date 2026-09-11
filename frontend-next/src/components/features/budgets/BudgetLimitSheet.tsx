@@ -11,6 +11,8 @@ import { useUpdateBudget } from '@/lib/hooks/useBudgets'
 import { categoryAura } from '@/lib/utils/cardVisuals'
 import { MOTION } from '@/lib/utils/motion'
 import type { Budget } from '@/types'
+import { useWalletCurrency } from '@/lib/hooks/useWallets'
+import { symbolOf } from '@/lib/utils/currency'
 
 export interface BudgetLimitSheetProps {
   budget: Budget
@@ -25,6 +27,7 @@ export interface BudgetLimitSheetProps {
  * de guardar, si lo ya gastado cabe en el nuevo límite o lo excede.
  */
 function Preview({ budget, limit }: { budget: Budget; limit: number }) {
+  const sym = symbolOf(useWalletCurrency())
   const spent = budget.spent ?? 0
   const color = budget.categoryColor ?? '#d4af37'
   const aura = categoryAura(color)
@@ -67,7 +70,7 @@ function Preview({ budget, limit }: { budget: Budget; limit: number }) {
           {budget.categoryName ?? 'Sin categoría'}
         </span>
         <span className="mono-amount block text-[19px] font-extrabold leading-none tracking-[-0.02em] tabular-nums">
-          S/{spent.toFixed(0)}{' '}
+          {sym}{spent.toFixed(0)}{' '}
           <span className="text-[11px] font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>
             / {limit > 0 ? limit.toFixed(0) : '—'}
           </span>
@@ -86,8 +89,8 @@ function Preview({ budget, limit }: { budget: Budget; limit: number }) {
           {limit <= 0
             ? 'Define un límite'
             : isOver
-              ? `+S/${Math.abs(remaining).toFixed(0)} excedido`
-              : `S/${remaining.toFixed(0)} rest.`}
+              ? `+${sym}${Math.abs(remaining).toFixed(0)} excedido`
+              : `${sym}${remaining.toFixed(0)} rest.`}
         </span>
       </span>
     </div>
@@ -102,6 +105,7 @@ function Preview({ budget, limit }: { budget: Budget; limit: number }) {
  * que se decide acá es el monto.
  */
 export function BudgetLimitSheet({ budget, onClose, onSaved, onDelete }: BudgetLimitSheetProps) {
+  const sym = symbolOf(useWalletCurrency())
   const update = useUpdateBudget()
 
   const [amount, setAmount] = useState(String(budget.amount ?? ''))
@@ -178,7 +182,7 @@ export function BudgetLimitSheet({ budget, onClose, onSaved, onDelete }: BudgetL
             className="liquid-glass-ic flex h-[58px] w-full items-center gap-2 rounded-[16px] px-[15px]"
             style={error ? { borderColor: 'var(--danger)' } : undefined}
           >
-            <span className="text-[19px] font-bold" style={{ color: 'var(--text-tertiary)' }}>S/</span>
+            <span className="mono-amount text-[19px] font-bold" style={{ color: 'var(--text-tertiary)' }}>{sym}</span>
             <input
               type="text"
               inputMode="decimal"

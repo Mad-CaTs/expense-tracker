@@ -68,6 +68,7 @@ export function TransferSheet({ wallets, presetFromId, onDone, onSaved }: Transf
             <AmountField
               label="Monto a transferir"
               inputId="transfer-amount-input"
+              walletId={fromId ? Number(fromId) : undefined}
               value={amount}
               error={error && error.includes('Monto') ? error : undefined}
               onChange={(v) => { setAmount(v); setError('') }}

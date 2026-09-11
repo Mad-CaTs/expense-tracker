@@ -21,6 +21,8 @@ import type { Category, CategoryType } from '@/types'
 import { COLOR_PRESETS } from '@/components/features/shared/colorPresets'
 
 import { ICON_LABELS, ICON_OPTIONS } from './categoryConstants'
+import { useWalletCurrency } from '@/lib/hooks/useWallets'
+import { symbolOf } from '@/lib/utils/currency'
 
 export interface CategorySheetProps {
   type: CategoryType
@@ -46,6 +48,7 @@ function Preview({ name, icon, color, total, percentage }: {
   total: number
   percentage: number
 }) {
+  const sym = symbolOf(useWalletCurrency())
   const Icon = CATEGORY_ICON_MAP[icon] ?? CATEGORY_ICON_MAP.ellipsis
   const aura = categoryAura(color)
   return (
@@ -85,7 +88,7 @@ function Preview({ name, icon, color, total, percentage }: {
           className="mono-amount block text-[20px] font-extrabold leading-none tracking-[-0.02em] tabular-nums"
           style={{ textShadow: '0 1px 10px rgba(0,0,0,0.25)' }}
         >
-          S/{total.toLocaleString('es-PE', { maximumFractionDigits: 0 })}
+          {sym}{total.toLocaleString('es-PE', { maximumFractionDigits: 0 })}
         </span>
         <span className="mt-[11px] block h-[6px] overflow-hidden rounded-full" style={{ background: 'rgba(255,255,255,0.25)' }}>
           <span
@@ -118,12 +121,19 @@ export function CategorySheet({ type, category, usage, onClose, onCreated, onSav
   const activeWallet = wallets.find((w) => w.id === activeWalletId)
   const { data: hiddenIn = [] } = useHiddenIn(category?.id)
   const visibility = useSetCategoryVisibility()
-  const isHidden = activeWalletId != null && hiddenIn.includes(activeWalletId)
+  const savedHidden = activeWalletId != null && hiddenIn.includes(activeWalletId)
 
-  function toggleHidden() {
-    if (category == null || activeWalletId == null) return
-    visibility.mutate({ categoryId: category.id, walletId: activeWalletId, hidden: !isHidden })
-  }
+  /* El interruptor solo se persiste al GUARDAR, como el nombre, el icono y el
+     color. Antes mutaba en el acto: era lo único del editor que se aplicaba
+     sin confirmar, y Cancelar no lo deshacía.
+
+     Se modela como override y no como copia en `useState`: `hiddenIn` llega
+     por red DESPUÉS del primer render, así que una copia arrancaría en
+     "mostrar" y habría que sincronizarla con un efecto — justo el patrón que
+     dispara renders en cascada. Mientras nadie toca el interruptor manda el
+     servidor; en cuanto se toca, manda la elección. */
+  const [touched, setTouched] = useState<boolean | null>(null)
+  const hidden = touched ?? savedHidden
 
   const [name, setName] = useState(category?.name ?? '')
   const [icon, setIcon] = useState(category?.icon ?? 'wallet')
@@ -166,7 +176,7 @@ export function CategorySheet({ type, category, usage, onClose, onCreated, onSav
     return () => window.removeEventListener('keydown', onKey)
   }, [close])
 
-  const pending = create.isPending || update.isPending
+  const pending = create.isPending || update.isPending || visibility.isPending
 
   async function handleSubmit() {
     const trimmed = name.trim()
@@ -174,6 +184,11 @@ export function CategorySheet({ type, category, usage, onClose, onCreated, onSav
     const payload = { name: trimmed, icon, color, type }
     if (editing) {
       await update.mutateAsync({ id: category.id, data: payload })
+      // Solo si cambió: guardar sin tocar el interruptor no debe escribir la
+      // excepción de visibilidad.
+      if (activeWalletId != null && hidden !== savedHidden) {
+        await visibility.mutateAsync({ categoryId: category.id, walletId: activeWalletId, hidden })
+      }
       close()
       window.setTimeout(() => onSaved?.(trimmed), MOTION.sheet)
     } else {
@@ -297,9 +312,9 @@ export function CategorySheet({ type, category, usage, onClose, onCreated, onSav
           {editing && activeWallet && (
             <button
               type="button"
-              onClick={() => toggleHidden()}
-              disabled={visibility.isPending}
-              className="mt-[18px] flex w-full cursor-pointer items-center gap-3 rounded-[16px] px-3.5 py-3 text-left disabled:opacity-60"
+              onClick={() => setTouched(!hidden)}
+              aria-pressed={!hidden}
+              className="mt-[18px] flex w-full cursor-pointer items-center gap-3 rounded-[16px] px-3.5 py-3 text-left"
               style={{ background: 'var(--bg-hover)' }}
             >
               <span className="min-w-0 flex-1">
@@ -307,20 +322,20 @@ export function CategorySheet({ type, category, usage, onClose, onCreated, onSav
                   Mostrar en {activeWallet.name}
                 </span>
                 <span className="mt-0.5 block text-[11px]" style={{ color: 'var(--text-muted)' }}>
-                  {isHidden
+                  {hidden
                     ? 'No aparece al registrar desde esta billetera'
                     : 'Aparece al registrar desde esta billetera'}
                 </span>
               </span>
               <span
                 className="relative h-[26px] w-[44px] flex-none rounded-full transition-colors"
-                style={{ background: isHidden ? 'var(--border-strong)' : 'var(--success)' }}
+                style={{ background: hidden ? 'var(--border-strong)' : 'var(--success)' }}
                 role="switch"
-                aria-checked={!isHidden}
+                aria-checked={!hidden}
               >
                 <span
                   className="absolute top-[3px] h-5 w-5 rounded-full bg-white transition-transform"
-                  style={{ left: 3, transform: isHidden ? 'none' : 'translateX(18px)' }}
+                  style={{ left: 3, transform: hidden ? 'none' : 'translateX(18px)' }}
                 />
               </span>
             </button>

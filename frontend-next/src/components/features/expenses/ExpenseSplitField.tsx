@@ -6,6 +6,8 @@ import { Plus, X } from 'lucide-react'
 import { FIELD_LIMITS } from '@/lib/utils/fieldLimits'
 import { EASE, MOTION_S } from '@/lib/utils/motion'
 import type { DebtItem } from '@/types'
+import { useWalletCurrency } from '@/lib/hooks/useWallets'
+import { symbolOf } from '@/lib/utils/currency'
 
 const money = (n: number) =>
   n.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -17,8 +19,12 @@ const money = (n: number) =>
  * necesita la animación: con `key={índice}`, quitar a la persona del medio
  * animaba la salida de la fila equivocada.
  */
-export interface SplitRow extends DebtItem {
+export interface SplitRow extends Omit<DebtItem, 'amount'> {
   key: string
+  /* Texto, no número: guardando `Number(...)` el punto se borraba en cuanto se
+     tecleaba —`Number('23.')` es `23`, que vuelve al input como "23"— y no
+     había forma de escribir decimales. Se convierte al enviar. */
+  amount: string
 }
 
 interface ExpenseSplitFieldProps {
@@ -44,6 +50,7 @@ let rowSeq = 0
 const nextKey = () => `r${rowSeq++}`
 
 export function ExpenseSplitField({ items, total, error, onChange }: ExpenseSplitFieldProps) {
+  const sym = symbolOf(useWalletCurrency())
   const shared = items.reduce((acc, i) => acc + (Number(i.amount) || 0), 0)
   const mine = total - shared
 
@@ -60,7 +67,7 @@ export function ExpenseSplitField({ items, total, error, onChange }: ExpenseSpli
       {items.length === 0 ? (
         <button
           type="button"
-          onClick={() => onChange([{ key: nextKey(), personName: '', amount: 0 }])}
+          onClick={() => onChange([{ key: nextKey(), personName: '', amount: '' }])}
           className="flex h-[52px] w-full cursor-pointer items-center justify-center gap-2 rounded-[16px] text-[13px] font-bold transition-transform active:scale-[0.99]"
           style={{ border: '1px dashed var(--border-default)', color: 'var(--text-tertiary)' }}
         >
@@ -89,12 +96,14 @@ export function ExpenseSplitField({ items, total, error, onChange }: ExpenseSpli
                 style={{ color: 'var(--text-primary)' }}
               />
               <input
-                value={item.amount || ''}
+                value={item.amount}
                 onChange={(e) => {
-                  // Solo dígitos y un punto: el teclado numérico de móvil deja
-                  // colar comas y letras.
+                  /* Solo dígitos y UN punto, con dos decimales como mucho: el
+                     teclado numérico de móvil deja colar comas y letras. Se
+                     guarda el texto para no perder el punto al escribirlo. */
                   const raw = e.target.value.replace(/[^0-9.]/g, '')
-                  update(i, { amount: Number(raw) || 0 })
+                  if (!/^\d*\.?\d{0,2}$/.test(raw)) return
+                  update(i, { amount: raw })
                 }}
                 inputMode="decimal"
                 placeholder="0.00"
@@ -116,7 +125,7 @@ export function ExpenseSplitField({ items, total, error, onChange }: ExpenseSpli
 
           <button
             type="button"
-            onClick={() => onChange([...items, { key: nextKey(), personName: '', amount: 0 }])}
+            onClick={() => onChange([...items, { key: nextKey(), personName: '', amount: '' }])}
             className="flex h-[42px] w-full cursor-pointer items-center justify-center gap-[7px] rounded-[14px] text-[12.5px] font-bold transition-transform active:scale-[0.99]"
             style={{ border: '1px dashed var(--border-default)', color: 'var(--text-tertiary)' }}
           >
@@ -139,7 +148,7 @@ export function ExpenseSplitField({ items, total, error, onChange }: ExpenseSpli
               className="mono-amount text-[19px] font-extrabold tabular-nums tracking-[-0.02em]"
               style={{ color: mine < 0 ? 'var(--danger)' : 'var(--text-primary)' }}
             >
-              S/ {money(Math.max(mine, 0))}
+              {sym} {money(Math.max(mine, 0))}
             </b>
           </motion.div>
         </>

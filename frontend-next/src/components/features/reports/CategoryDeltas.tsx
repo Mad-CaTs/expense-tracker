@@ -2,6 +2,8 @@
 
 import { categorySwatch } from '@/lib/utils/cardVisuals'
 import type { CategoryBreakdown } from '@/types'
+import { useWalletCurrency } from '@/lib/hooks/useWallets'
+import { symbolOf } from '@/lib/utils/currency'
 
 export interface CategoryDelta {
   name: string
@@ -78,6 +80,7 @@ const TOTAL_COL = 'w-[72px] flex-none text-right'
 const DELTA_COL = 'w-[86px] flex-none text-right'
 
 export function CategoryDeltas({ deltas, previousLabel }: CategoryDeltasProps) {
+  const sym = symbolOf(useWalletCurrency())
   if (deltas.length === 0) {
     return (
       <p className="py-6 text-center text-[12.5px]" style={{ color: 'var(--text-muted)' }}>
@@ -120,7 +123,7 @@ export function CategoryDeltas({ deltas, previousLabel }: CategoryDeltasProps) {
                 {d.name}
               </span>
               <span className={`mono-amount ${TOTAL_COL} text-[12px] font-bold tabular-nums`} style={{ color: 'var(--text-secondary)' }}>
-                S/ {money(d.current)}
+                {sym} {money(d.current)}
               </span>
               <span
                 className={`mono-amount ${DELTA_COL} text-[11px] font-extrabold tabular-nums`}
@@ -134,7 +137,7 @@ export function CategoryDeltas({ deltas, previousLabel }: CategoryDeltasProps) {
                   ? 'nueva'
                   : d.kind === 'desaparecida'
                     ? ''
-                    : `${worse ? '+' : '−'}S/ ${money(Math.abs(d.delta))}`}
+                    : `${worse ? '+' : '−'}${sym} ${money(Math.abs(d.delta))}`}
               </span>
             </li>
           )

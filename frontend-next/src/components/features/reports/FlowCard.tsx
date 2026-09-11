@@ -3,6 +3,8 @@
 import { ArrowDown, ArrowUp, ChevronRight } from 'lucide-react'
 
 import { AnimatedAmount } from '@/components/features/shared/AnimatedAmount'
+import { useWalletCurrency } from '@/lib/hooks/useWallets'
+import { symbolOf } from '@/lib/utils/currency'
 
 interface FlowCardProps {
   kind: 'expense' | 'income'
@@ -18,6 +20,7 @@ interface FlowCardProps {
  * sabe acotar por billetera.
  */
 export function FlowCard({ kind, total, onClick }: FlowCardProps) {
+  const sym = symbolOf(useWalletCurrency())
   const isExpense = kind === 'expense'
   const Icon = isExpense ? ArrowDown : ArrowUp
   const tint = isExpense ? 'var(--danger)' : 'var(--success)'
@@ -39,7 +42,7 @@ export function FlowCard({ kind, total, onClick }: FlowCardProps) {
       </span>
 
       <span className="mono-amount mt-[11px] block text-[21px] font-extrabold tracking-[-0.03em] tabular-nums" style={{ color: 'var(--text-primary)' }}>
-        <small className="mr-1 text-[13px] font-bold" style={{ color: 'var(--text-tertiary)' }}>S/</small>
+        <small className="mono-amount mr-1 text-[13px] font-bold" style={{ color: 'var(--text-tertiary)' }}>{sym}</small>
         <AnimatedAmount value={total} fractionDigits={0} animateOnMount />
       </span>
 
