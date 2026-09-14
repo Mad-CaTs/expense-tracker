@@ -52,7 +52,23 @@ apiClient.interceptors.response.use(
     if (status === 401 && config && !config._retried && !isAuthEndpoint && typeof window !== 'undefined') {
       config._retried = true
       try {
-        refreshing = refreshing ?? renew().finally(() => { refreshing = null })
+        /* UNA sola renovación compartida por todas las peticiones que fallen a
+           la vez. El backend rota el refresh token y revoca la familia entera
+           si detecta reuso, así que dos renovaciones en paralelo con el mismo
+           token cierran la sesión — que es justo lo que pasaba al abrir la app,
+           cuando /wallets y /categories salen juntas con el JWT ya vencido.
+
+           El `.finally(() => refreshing = null)` de antes era el fallo: se
+           ejecuta ANTES de que los `await` encadenados reciban el valor, así
+           que la siguiente petición encontraba `refreshing` ya en null y
+           lanzaba una segunda renovación. Ahora se limpia en el siguiente tick,
+           cuando todos los que esperaban ya han resuelto. */
+        if (!refreshing) {
+          refreshing = renew()
+          void refreshing
+            .catch(() => {})
+            .then(() => { setTimeout(() => { refreshing = null }, 0) })
+        }
         const token = await refreshing
         config.headers.Authorization = `Bearer ${token}`
         return apiClient(config)
@@ -62,7 +78,12 @@ apiClient.interceptors.response.use(
       }
     }
 
-    if ((status === 401 || status === 403) && !isAuthEndpoint) {
+    /* Solo 401 (no autenticado) cierra sesión. Un 403 es "estás identificado
+       pero esto no te corresponde": echar al usuario por eso lo saca de una
+       sesión perfectamente válida. Además el 401 aquí ya viene de una petición
+       reintentada —o del propio refresh fallido—, porque el bloque de arriba
+       se queda con el primer intento. */
+    if (status === 401 && !isAuthEndpoint) {
       logout()
     }
     return Promise.reject(error)
