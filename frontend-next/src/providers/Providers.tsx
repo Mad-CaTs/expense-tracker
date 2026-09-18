@@ -12,7 +12,16 @@ export function Providers({ children }: { children: React.ReactNode }) {
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: 30_000,
+            /* 3 minutos, no 30 segundos. Con 30s casi cualquier vuelta a la
+               pestaña —cambiar de app en el móvil, desbloquear— relanzaba TODAS
+               las consultas activas a la vez: es lo que llenaba la pestaña de
+               red con peticiones repetidas de `by-category` y `daily`.
+
+               No retrasa lo que el usuario acaba de hacer: los hooks de
+               mutación invalidan su caché en `onSuccess`, así que registrar,
+               editar o borrar refresca al instante. Esto solo gobierna los
+               refrescos AUTOMÁTICOS. */
+            staleTime: 180_000,
             retry: 1,
             refetchOnWindowFocus: true,
           },
