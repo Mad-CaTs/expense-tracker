@@ -156,7 +156,7 @@ export function RecurringForm({ open, onClose, onCreated }: RecurringFormProps) 
           {selected?.name ?? 'Sin categoría'} · {FREQUENCIES.find((f) => f.value === frequency)?.label} · desde {shortDate(startDate)}
         </span>
       </span>
-      <span className="mono-amount flex-none text-[15px] font-extrabold tabular-nums" style={{ color: 'var(--text-primary)' }}>
+      <span className="amount-figure flex-none text-[15px] font-extrabold tabular-nums" style={{ color: 'var(--text-primary)' }}>
         {sym} {isNaN(parsedAmount) ? '0.00' : parsedAmount.toFixed(2)}
       </span>
     </div>

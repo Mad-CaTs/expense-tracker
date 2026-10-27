@@ -7,6 +7,9 @@ import { useRouter } from 'next/navigation'
 import { useReducedMotion } from 'framer-motion'
 import { Eye, EyeOff, History, TrendingDown, TrendingUp } from 'lucide-react'
 
+import { SavingsChip } from '@/components/features/savings/SavingsChip'
+import { savedTotal } from '@/components/features/savings/savedTotal'
+import { usePiggyBanks } from '@/lib/hooks/usePiggyBanks'
 import { WalletBalanceAmount } from '@/components/features/wallets/WalletBalanceAmount'
 import { CARD_LANDING_KEY, useCardTransition } from '@/components/features/wallets/useCardTransition'
 import { useSwipeDownCard } from '@/components/features/wallets/useSwipeDownCard'
@@ -47,7 +50,10 @@ export function WalletHeaderCard({ wallet }: WalletHeaderCardProps) {
 
   const balance = Number(wallet.balance)
   const initial = Number(wallet.initialBalance)
-  const diff = balance - initial
+  /* La variación cuenta también lo apartado: pasar plata a una alcancía no es
+     perderla, y sin esto guardar 300 se leía como una caída. */
+  const { data: piggies = [] } = usePiggyBanks(wallet.id)
+  const diff = balance + savedTotal(piggies) - initial
   const pct = initial !== 0 ? ((diff / Math.abs(initial)) * 100).toFixed(1) : null
   const positive = diff >= 0
   const aura = categoryAura(wallet.color ?? '#d4af37')
@@ -155,6 +161,10 @@ export function WalletHeaderCard({ wallet }: WalletHeaderCardProps) {
                 >
                   {hidden ? <Eye size={17} strokeWidth={2} /> : <EyeOff size={17} strokeWidth={2} />}
                 </button>
+              </div>
+
+              <div className="mb-2.5 flex">
+                <SavingsChip wallet={wallet} hidden={hidden} />
               </div>
 
               <div className="flex items-end justify-between gap-3">

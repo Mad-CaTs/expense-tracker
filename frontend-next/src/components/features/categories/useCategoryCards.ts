@@ -9,16 +9,6 @@ import type { CategoryType } from '@/types'
 
 import type { CategoryCardData } from './CategoryCard'
 
-/** Rango del mes en curso, en formato ISO corto. */
-function monthRange(): { from: string; to: string } {
-  const now = new Date()
-  const pad = (n: number) => String(n).padStart(2, '0')
-  const y = now.getFullYear()
-  const m = now.getMonth()
-  const last = new Date(y, m + 1, 0).getDate()
-  return { from: `${y}-${pad(m + 1)}-01`, to: `${y}-${pad(m + 1)}-${pad(last)}` }
-}
-
 export interface CategoryCardsResult {
   cards: CategoryCardData[]
   isLoading: boolean
@@ -27,16 +17,21 @@ export interface CategoryCardsResult {
   movementCount: number
 }
 
-export function useCategoryCards(type: CategoryType): CategoryCardsResult {
+/** Período del que son las cifras; lo decide la pantalla con su filtro. */
+export interface CategoryCardsRange {
+  from: string
+  to: string
+}
+
+export function useCategoryCards(type: CategoryType, range: CategoryCardsRange): CategoryCardsResult {
   /* TODAS las categorías: esta pantalla las administra, así que también debe
      mostrar las ocultas (marcadas). El segundo listado, filtrado por la
      billetera activa, dice cuáles se ofrecen ahí; la diferencia es lo oculto. */
   const { data: categories = [], isLoading: loadingCategories } = useCategories()
   const activeWalletId = useActiveWallet()
   const { data: visibles } = useCategories(undefined, activeWalletId)
-  const { from, to } = useMemo(() => monthRange(), [])
   const { data: breakdown, isLoading: loadingBreakdown } = useCategoryBreakdown(
-    { period: 'CUSTOM', from, to, txType: type, walletId: activeWalletId },
+    { period: 'CUSTOM', from: range.from, to: range.to, txType: type, walletId: activeWalletId },
     { requireWallet: true },
   )
 

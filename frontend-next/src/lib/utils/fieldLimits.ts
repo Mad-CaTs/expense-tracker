@@ -16,6 +16,8 @@ export const FIELD_LIMITS = {
   notes: 200,
   /** Nombre de un deudor. Texto libre: no hay entidad Persona. */
   personName: 100,
+  /** Nombre de una alcancía: un rótulo corto ("Viaje", "Emergencias"). */
+  piggyName: 30,
 } as const
 
 /**

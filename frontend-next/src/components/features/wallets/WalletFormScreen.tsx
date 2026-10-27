@@ -201,7 +201,7 @@ export function WalletFormScreen({ wallet }: WalletFormScreenProps) {
                 autoComplete="off"
                 aria-label={editing ? 'Saldo actual' : 'Saldo inicial'}
                 size={Math.max(4, balance.length || 4)}
-                className="search-input mono-amount bg-transparent text-center text-[30px] font-extrabold tracking-[-0.03em] tabular-nums outline-none"
+                className="search-input amount-figure bg-transparent text-center text-[30px] font-extrabold tracking-[-0.03em] tabular-nums outline-none"
                 style={{ color: parseFloat(balance) > 0 ? 'var(--text-primary)' : 'var(--text-placeholder)' }}
               />
             </div>

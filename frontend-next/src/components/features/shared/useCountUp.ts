@@ -27,7 +27,15 @@ export function useCountUp(value: number, animateOnMount = false, from = 0): num
       onUpdate: setShown,
     })
     previous.current = value
-    return () => controls.stop()
+
+    /* Al cortar el conteo —desmontaje, o el doble efecto de Strict Mode— hay que
+       dejar la cifra PUESTA en su destino. `stop()` la congela donde iba, y si
+       se corta en el primer frame se queda en el origen: por eso el saldo se
+       veía en 0 aunque el dato ya había llegado. */
+    return () => {
+      controls.stop()
+      setShown(value)
+    }
   }, [value])
 
   return shown

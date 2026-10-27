@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -71,6 +72,18 @@ class DebtWalletHooks implements WalletBalanceContribution {
      * salieron de ella. Las deudas ligadas a un gasto NO cuelgan de la billetera
      * (su wallet es nula): las arrastra el borrado del gasto.
      */
+    @Override
+    public BigDecimal netUpTo(Long userId, Long walletId, LocalDate cutoff) {
+        /* Mismas cuatro piezas que inflow/outflow, acotadas por fecha: lo que
+           pediste prestado y los cobros entran; lo que prestaste y los pagos
+           que hiciste salen. */
+        BigDecimal in = debtRepository.sumLooseUpTo(userId, walletId, DebtDirection.I_OWE, cutoff)
+                .add(paymentRepository.sumByWalletAndDirectionUpTo(userId, walletId, DebtDirection.THEY_OWE, cutoff));
+        BigDecimal out = debtRepository.sumLooseUpTo(userId, walletId, DebtDirection.THEY_OWE, cutoff)
+                .add(paymentRepository.sumByWalletAndDirectionUpTo(userId, walletId, DebtDirection.I_OWE, cutoff));
+        return in.subtract(out);
+    }
+
     @Override
     public boolean hasMovements(Long userId, Long walletId) {
         // Préstamos sueltos y abonos: ambos mueven dinero en la billetera.

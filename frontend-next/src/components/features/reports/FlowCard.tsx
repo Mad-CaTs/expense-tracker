@@ -41,8 +41,8 @@ export function FlowCard({ kind, total, onClick }: FlowCardProps) {
         <ChevronRight size={13} className="ml-auto flex-none" style={{ color: 'var(--text-muted)' }} />
       </span>
 
-      <span className="mono-amount mt-[11px] block text-[21px] font-extrabold tracking-[-0.03em] tabular-nums" style={{ color: 'var(--text-primary)' }}>
-        <small className="mono-amount mr-1 text-[13px] font-bold" style={{ color: 'var(--text-tertiary)' }}>{sym}</small>
+      <span className="amount-figure mt-[11px] block text-[21px] font-extrabold tracking-[-0.03em] tabular-nums" style={{ color: 'var(--text-primary)' }}>
+        <small className="amount-figure mr-1 text-[13px] font-bold" style={{ color: 'var(--text-tertiary)' }}>{sym}</small>
         <AnimatedAmount value={total} animateOnMount />
       </span>
 

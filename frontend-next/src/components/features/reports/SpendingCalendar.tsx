@@ -151,7 +151,7 @@ export function SpendingCalendar({ daily, from, to, isIncome, onSelectDay }: Spe
         {top && (top.total ?? 0) > 0 && (
           <span>
             El mayor:{' '}
-            <b className="mono-amount tabular-nums" style={{ color: 'var(--text-primary)' }}>
+            <b className="amount-figure tabular-nums" style={{ color: 'var(--text-primary)' }}>
               {sym} {money(top.total ?? 0)}
             </b>
           </span>

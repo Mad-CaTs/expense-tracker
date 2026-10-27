@@ -1,4 +1,4 @@
-import type { Debt, DebtDirection, DebtPayment, DebtPersonGroup, DebtSummary } from '@/types'
+import type { Debt, DebtDirection, DebtKind, DebtPayment, DebtPersonGroup, DebtSummary } from '@/types'
 
 import { apiClient } from './client'
 
@@ -27,9 +27,11 @@ export async function getDebtsByExpense(expenseId: number): Promise<Debt[]> {
 /** Préstamo suelto: sin gasto de por medio, así que mueve el saldo al crearse. */
 export async function createDebt(data: {
   direction: DebtDirection
+  /** Por defecto, préstamo. "Pagó por mí" va sin billetera. */
+  kind?: DebtKind
   personName: string
   amount: number
-  walletId: number
+  walletId?: number
   description?: string
   incurredOn: string
 }): Promise<Debt> {

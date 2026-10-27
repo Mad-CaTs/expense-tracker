@@ -82,11 +82,11 @@ export function ExpenseRow({ expense, onEdit, onDelete, index, expanded, onToggl
             </span>
           </div>
 
-          <time className="flex-shrink-0 font-mono text-[11px]" style={{ color: 'var(--text-muted)' }}>
+          <time className="flex-shrink-0 tabular-nums text-[11px]" style={{ color: 'var(--text-muted)' }}>
             {shortDate}
           </time>
 
-          <span className="mono-amount flex-shrink-0 text-[13px] font-bold tracking-tight" style={{ color: 'var(--danger)' }}>
+          <span className="amount-figure flex-shrink-0 text-[13px] font-bold tracking-tight" style={{ color: 'var(--danger)' }}>
             - {sym} {(expense.amount ?? 0).toFixed(2)}
           </span>
         </div>
@@ -128,7 +128,7 @@ export function ExpenseRow({ expense, onEdit, onDelete, index, expanded, onToggl
                   <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.15em]" style={{ color: 'var(--text-placeholder)' }}>
                     Nota
                   </p>
-                  <p className="rounded-lg px-3 py-2 font-mono text-[12px]" style={{ background: 'var(--bg-card-inner)', color: 'var(--text-secondary)' }}>
+                  <p className="rounded-lg px-3 py-2 text-[12px]" style={{ background: 'var(--bg-card-inner)', color: 'var(--text-secondary)' }}>
                     {expense.notes}
                   </p>
                 </div>
@@ -139,7 +139,7 @@ export function ExpenseRow({ expense, onEdit, onDelete, index, expanded, onToggl
                   <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.15em]" style={{ color: 'var(--text-placeholder)' }}>
                     Fecha
                   </p>
-                  <p className="font-mono" style={{ color: 'var(--text-secondary)' }}>{formattedDate}</p>
+                  <p className="tabular-nums" style={{ color: 'var(--text-secondary)' }}>{formattedDate}</p>
                 </div>
                 <div>
                   <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.15em]" style={{ color: 'var(--text-placeholder)' }}>

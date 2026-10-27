@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -32,6 +33,14 @@ public interface DebtRepository extends JpaRepository<Debt, Long> {
     /* ── Saldo: SOLO los préstamos sueltos (expenseId nulo) ──
        Cuando la deuda cuelga de un gasto, ese gasto ya descontó el total; volver
        a descontarla aquí contaría el dinero dos veces. */
+
+    @Query("SELECT COALESCE(SUM(d.amount), 0) FROM Debt d WHERE d.user.id = :userId "
+         + "AND d.wallet.id = :walletId AND d.expenseId IS NULL AND d.direction = :direction "
+         + "AND d.incurredOn <= :cutoff")
+    BigDecimal sumLooseUpTo(@Param("userId") Long userId,
+                            @Param("walletId") Long walletId,
+                            @Param("direction") DebtDirection direction,
+                            @Param("cutoff") LocalDate cutoff);
 
     @Query("SELECT COALESCE(SUM(d.amount), 0) FROM Debt d WHERE d.user.id = :userId " +
            "AND d.wallet.id = :walletId AND d.expenseId IS NULL AND d.direction = :direction")

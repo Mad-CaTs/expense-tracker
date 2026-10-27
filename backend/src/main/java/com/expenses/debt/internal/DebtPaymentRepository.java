@@ -9,12 +9,21 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
 public interface DebtPaymentRepository extends JpaRepository<DebtPayment, Long> {
 
     List<DebtPayment> findByUserIdAndDebtIdOrderByPaidOnDescIdDesc(Long userId, Long debtId);
+
+    @Query("SELECT COALESCE(SUM(p.amount), 0) FROM DebtPayment p, Debt d "
+         + "WHERE p.debtId = d.id AND p.user.id = :userId AND p.wallet.id = :walletId "
+         + "AND d.direction = :direction AND p.paidOn <= :cutoff")
+    BigDecimal sumByWalletAndDirectionUpTo(@Param("userId") Long userId,
+                                           @Param("walletId") Long walletId,
+                                           @Param("direction") DebtDirection direction,
+                                           @Param("cutoff") LocalDate cutoff);
 
     @Query("SELECT COALESCE(SUM(p.amount), 0) FROM DebtPayment p, Debt d " +
            "WHERE p.debtId = d.id AND p.user.id = :userId AND p.wallet.id = :walletId " +

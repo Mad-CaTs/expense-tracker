@@ -40,7 +40,7 @@ export function CategoryTiles({ breakdown, activeIndex, onSelect }: CategoryTile
             <span className="min-w-0 flex-1 truncate text-[11.5px] font-bold" style={{ color: 'var(--text-secondary)' }}>
               {item.categoryName}
             </span>
-            <span className="mono-amount flex-none text-[11.5px] font-extrabold tabular-nums" style={{ color: 'var(--text-primary)' }}>
+            <span className="amount-figure flex-none text-[11.5px] font-extrabold tabular-nums" style={{ color: 'var(--text-primary)' }}>
               {formatMoney(item.total ?? 0, currency)}
             </span>
           </motion.button>

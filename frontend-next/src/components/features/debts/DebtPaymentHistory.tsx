@@ -14,6 +14,9 @@ interface DebtPaymentHistoryProps {
   /** Lo que falta; cierra la lista con el saldo restante. */
   pending: number
   iOwe: boolean
+  /** Sin caja propia, para cuando ya va dentro de otra: caja en caja se leía
+   *  como un nivel más de lo que es. */
+  bare?: boolean
 }
 
 /**
@@ -22,7 +25,7 @@ interface DebtPaymentHistoryProps {
  * <p>"pagó S/50 de 80" dice cuánto, no CUÁNDO ni dónde entró. Con varios
  * abonos esa única línea deja de servir para reclamar.
  */
-export function DebtPaymentHistory({ debtId, pending, iOwe }: DebtPaymentHistoryProps) {
+export function DebtPaymentHistory({ debtId, pending, iOwe, bare = false }: DebtPaymentHistoryProps) {
   const { data: payments = [], isLoading } = useDebtPayments(debtId)
   const sym = symbolOf(useWalletCurrency())
   // Un lookup, no un hook por fila: la cantidad de abonos varía y llamar a
@@ -39,7 +42,10 @@ export function DebtPaymentHistory({ debtId, pending, iOwe }: DebtPaymentHistory
   if (payments.length === 0) return null
 
   return (
-    <div className="mt-2 rounded-[12px] px-3 py-2" style={{ background: 'var(--bg-hover)' }}>
+    <div
+      className={bare ? 'mt-1.5 pl-3' : 'mt-2 rounded-[12px] px-3 py-2'}
+      style={bare ? { borderLeft: '2px solid var(--border-default)' } : { background: 'var(--bg-hover)' }}
+    >
       {payments.map((p, i) => (
         <div
           key={p.id}
@@ -56,7 +62,7 @@ export function DebtPaymentHistory({ debtId, pending, iOwe }: DebtPaymentHistory
               </span>
             )}
           </span>
-          <span className="mono-amount flex-none text-[12.5px] font-bold tabular-nums" style={{ color: 'var(--text-primary)' }}>
+          <span className="amount-figure flex-none text-[12.5px] font-bold tabular-nums" style={{ color: 'var(--text-primary)' }}>
             {iOwe ? '−' : '+'}{symOfWallet(p.walletId)} {money(p.amount)}
           </span>
         </div>
@@ -70,7 +76,7 @@ export function DebtPaymentHistory({ debtId, pending, iOwe }: DebtPaymentHistory
           <span className="text-[11px] font-semibold" style={{ color: 'var(--text-tertiary)' }}>
             Falta
           </span>
-          <span className="mono-amount text-[12.5px] font-extrabold tabular-nums" style={{ color: 'var(--text-primary)' }}>
+          <span className="amount-figure text-[12.5px] font-extrabold tabular-nums" style={{ color: 'var(--text-primary)' }}>
             {sym} {money(pending)}
           </span>
         </div>

@@ -68,7 +68,7 @@ export function BudgetRisk({ usage }: { usage: BudgetUsage[] }) {
               <span className="min-w-0 truncate text-[12.5px] font-bold" style={{ color: 'var(--text-primary)' }}>
                 {u.categoryName}
               </span>
-              <span className="mono-amount flex-none text-[11.5px] tabular-nums" style={{ color: 'var(--text-secondary)' }}>
+              <span className="amount-figure flex-none text-[11.5px] tabular-nums" style={{ color: 'var(--text-secondary)' }}>
                 {sym} {money(u.spent)} <span style={{ color: 'var(--text-muted)' }}>/ {money(u.limit)}</span>
               </span>
             </div>

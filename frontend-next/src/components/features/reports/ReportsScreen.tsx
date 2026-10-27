@@ -3,10 +3,12 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 
+import { ClosingBalanceCard } from '@/components/features/reports/ClosingBalanceCard'
 import { FlowCard } from '@/components/features/reports/FlowCard'
 import { PeriodMovementList } from '@/components/features/reports/PeriodMovementList'
 import { ReportFilters, type ReportTxType } from '@/components/features/reports/ReportFilters'
 import { WalletScopeCard } from '@/components/features/reports/WalletScopeCard'
+import { useMonthlyBalances } from '@/lib/hooks/useMonthlyBalances'
 import { fromReportQuery, toReportQuery } from '@/components/features/reports/reportQuery'
 import { usePeriodMovements } from '@/components/features/reports/usePeriodMovements'
 import { usePeriodRange } from '@/components/features/reports/usePeriodRange'
@@ -57,7 +59,23 @@ export function ReportsScreen() {
      efecto que reescribe la URL volvía a estampar ese id, perpetuándolo. */
   const walletId = activeWalletId ?? picked ?? null
 
-  const { days, totals, isLoading: loadingMovements } = usePeriodMovements(range.from, range.to, { categoryIds, walletId: walletId ?? undefined, txType })
+  /* El último punto del rango es el cierre del período que se está mirando.
+     La consulta no se lanza en el mes en curso: no habría nada que mostrar. */
+  const { data: balancePoints = [] } = useMonthlyBalances(
+    isCurrent ? undefined : walletId ?? undefined,
+    range.from,
+    range.to,
+  )
+  const closing = balancePoints.length > 0 ? balancePoints[balancePoints.length - 1].balance : null
+
+  const { days, totals, isLoading: loadingMovements } = usePeriodMovements(range.from, range.to, {
+    categoryIds,
+    walletId: walletId ?? undefined,
+    txType,
+    // Guardar y sacar bajan o suben el disponible del encabezado: la lista
+    // tiene que explicarlo. No suman en Gastos ni en Ingresos.
+    includeSavings: true,
+  })
 
   const expenseTotal = totals.expense
   const incomeTotal = totals.income
@@ -130,7 +148,18 @@ export function ReportsScreen() {
         </div>
       )}
 
-      <div className="enter-pop -mx-4" style={{ ['--enter-i' as string]: 3 }}>
+      {/* Fila propia, no una tercera card arriba: el cierre es un saldo de
+          cinco cifras y en un tercio del ancho se recortaba. Además cierra la
+          lectura de la pantalla —cuánto salió, cuánto entró, con cuánto
+          quedaste—, y solo aparece en períodos cerrados: el "cierre" del mes
+          en curso sería el saldo de hoy con otro nombre. */}
+      {!loadingMovements && !isCurrent && closing != null && (
+        <div className="enter-pop mb-[18px]" style={{ ['--enter-i' as string]: 3 }}>
+          <ClosingBalanceCard balance={closing} period={longLabel} />
+        </div>
+      )}
+
+      <div className="enter-pop -mx-4" style={{ ['--enter-i' as string]: 4 }}>
         <PeriodMovementList
           days={days}
           isLoading={loadingMovements}

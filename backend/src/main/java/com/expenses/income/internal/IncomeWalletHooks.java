@@ -8,6 +8,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -35,6 +36,11 @@ class IncomeWalletHooks implements WalletBalanceContribution {
     @Override
     public Map<Long, BigDecimal> outflowsByWallet(Long userId) {
         return Map.of();
+    }
+
+    @Override
+    public BigDecimal netUpTo(Long userId, Long walletId, LocalDate cutoff) {
+        return incomeRepository.sumAmountUpTo(userId, walletId, cutoff);
     }
 
     @Override

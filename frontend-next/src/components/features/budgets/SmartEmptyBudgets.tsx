@@ -58,7 +58,7 @@ export function SmartEmptyBudgets({ breakdown, onPick }: SmartEmptyBudgetsProps)
               </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-[13px] font-semibold" style={{ color: 'var(--text-primary)' }}>{b.categoryName}</p>
-                <p className="mono-amount text-[11px]" style={{ color: 'var(--text-muted)' }}>
+                <p className="amount-figure text-[11px]" style={{ color: 'var(--text-muted)' }}>
                   {sym} {(b.total ?? 0).toFixed(2)} gastado este mes
                 </p>
               </div>

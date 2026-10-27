@@ -28,7 +28,8 @@ export function DebtsNotice() {
   return (
     <button
       type="button"
-      onClick={() => router.push('/debts')}
+      // Abre en lo que se anuncia primero: lo que te deben, si hay.
+      onClick={() => router.push(`/debts?dir=${theyOwe > 0 ? 'THEY_OWE' : 'I_OWE'}`)}
       className="liquid-glass mx-4 mt-3 flex w-[calc(100%-2rem)] cursor-pointer items-center gap-2.5 rounded-[18px] px-4 py-3 text-left transition-transform active:scale-[0.985]"
     >
       {/* Mismo chrome (`liquid-glass-ic`) y mismo glifo Solar que la entrada

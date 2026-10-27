@@ -6,6 +6,8 @@ import java.time.LocalDate;
 /** Gasto de un día en una categoría; sirve para deducir la dominante. */
 public interface DailyCategoryRow {
     LocalDate getDate();
+    /** Para filtrar por categoría en el calendario sin otra consulta. */
+    Long getCategoryId();
     BigDecimal getTotal();
     String getCategoryName();
     String getCategoryColor();

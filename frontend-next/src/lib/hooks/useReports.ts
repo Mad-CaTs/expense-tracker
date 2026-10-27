@@ -9,6 +9,9 @@ interface ReportFilters {
   to?: string
   txType?: 'EXPENSE' | 'INCOME'
   walletId?: number
+  /** Solo lo usa el calendario (`/reports/daily`). Va en la queryKey, así que
+   *  cambiar el filtro vuelve a pedir los días. */
+  categoryIds?: number[]
 }
 
 export function useReportSummary(filters: ReportFilters) {

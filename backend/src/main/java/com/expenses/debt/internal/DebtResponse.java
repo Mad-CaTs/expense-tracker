@@ -9,6 +9,7 @@ import java.time.LocalDate;
 public record DebtResponse(
         Long id,
         DebtDirection direction,
+        DebtKind kind,
         String personName,
         BigDecimal amount,
         BigDecimal paidAmount,

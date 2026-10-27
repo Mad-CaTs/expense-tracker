@@ -49,6 +49,11 @@ public class Debt extends Auditable {
     @Column(nullable = false, length = 20)
     private DebtDirection direction;
 
+    /** Préstamo con efectivo o "pagó por mí" (sin billetera). Ver {@link DebtKind}. */
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private DebtKind kind = DebtKind.LOAN;
+
     @Column(name = "person_name", nullable = false, length = 100)
     private String personName;
 

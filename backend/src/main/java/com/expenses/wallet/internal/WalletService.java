@@ -3,6 +3,7 @@ package com.expenses.wallet.internal;
 import com.expenses.shared.exception.ResourceNotFoundException;
 import com.expenses.shared.user.User;
 import com.expenses.wallet.Wallet;
+import com.expenses.wallet.MonthlyBalanceDTO;
 import com.expenses.shared.exception.BusinessRuleException;
 import com.expenses.wallet.WalletBalanceContribution;
 import com.expenses.wallet.WalletDeletedEvent;
@@ -12,8 +13,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -156,6 +160,40 @@ public class WalletService {
         Wallet wallet = requireWallet(id, userId);
         eventPublisher.publishEvent(new WalletDeletedEvent(id, userId, LocalDateTime.now()));
         walletRepository.delete(wallet);
+    }
+
+    /**
+     * Saldo de cierre de cada mes comprendido en el rango.
+     *
+     * <p>Cada punto se calcula de cero —saldo inicial más el neto de cada módulo
+     * hasta el último día de ese mes— en vez de acumular diferencias mes a mes:
+     * así un mes sin movimientos repite el saldo anterior por construcción, y un
+     * movimiento añadido con fecha pasada corrige todo el histórico sin que haya
+     * nada que recalcular. No se guarda ningún cierre porque no hace falta: el
+     * dato se deriva de los movimientos, igual que el saldo actual.
+     *
+     * <p>El último punto se corta en {@code to} y no al fin de su mes: con el
+     * mes en curso, cerrarlo a futuro daría el mismo saldo que hoy pero
+     * rotulado como cierre, y con un rango libre ("3 – 17 ago.") contaría
+     * movimientos posteriores al que el usuario pidió ver.
+     */
+    @Transactional(readOnly = true)
+    public List<MonthlyBalanceDTO> getMonthlyBalances(Long walletId, Long userId, LocalDate from, LocalDate to) {
+        Wallet wallet = requireWallet(walletId, userId);
+        YearMonth first = YearMonth.from(from);
+        YearMonth last = YearMonth.from(to);
+        List<MonthlyBalanceDTO> out = new ArrayList<>();
+
+        for (YearMonth ym = first; !ym.isAfter(last); ym = ym.plusMonths(1)) {
+            LocalDate monthEnd = ym.atEndOfMonth();
+            LocalDate cutoff = monthEnd.isAfter(to) ? to : monthEnd;
+            BigDecimal balance = wallet.getInitialBalance();
+            for (WalletBalanceContribution contribution : balanceContributions) {
+                balance = balance.add(contribution.netUpTo(userId, walletId, cutoff));
+            }
+            out.add(new MonthlyBalanceDTO(ym.toString(), balance));
+        }
+        return out;
     }
 
     private BigDecimal calculateBalance(Wallet wallet) {

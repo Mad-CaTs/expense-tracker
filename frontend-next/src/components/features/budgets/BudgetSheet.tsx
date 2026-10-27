@@ -67,7 +67,7 @@ function Preview({ category, limit }: { category?: Category; limit: number }) {
         <span className="mb-1.5 block truncate text-[13.5px] font-extrabold tracking-[-0.01em]">
           {category?.name ?? 'Elige una categoría'}
         </span>
-        <span className="mono-amount block text-[19px] font-extrabold leading-none tracking-[-0.02em] tabular-nums">
+        <span className="amount-figure block text-[19px] font-extrabold leading-none tracking-[-0.02em] tabular-nums">
           {sym}0{' '}
           <span className="text-[11px] font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>
             / {limit > 0 ? limit.toFixed(0) : '—'}
@@ -227,7 +227,7 @@ export function BudgetSheet({ presetCategoryName, onClose, onCreated }: BudgetSh
             className="liquid-glass-ic flex h-[58px] w-full items-center gap-2 rounded-[16px] px-[15px]"
             style={errors.amount ? { borderColor: 'var(--danger)' } : undefined}
           >
-            <span className="mono-amount text-[19px] font-bold" style={{ color: 'var(--text-tertiary)' }}>{sym}</span>
+            <span className="amount-figure text-[19px] font-bold" style={{ color: 'var(--text-tertiary)' }}>{sym}</span>
             <input
               type="text"
               inputMode="decimal"
@@ -239,7 +239,7 @@ export function BudgetSheet({ presetCategoryName, onClose, onCreated }: BudgetSh
               }}
               placeholder="0.00"
               autoComplete="off"
-              className="mono-amount w-full bg-transparent text-[26px] font-extrabold tracking-[-0.02em] tabular-nums outline-none"
+              className="amount-figure w-full bg-transparent text-[26px] font-extrabold tracking-[-0.02em] tabular-nums outline-none"
               style={{ color: Number(amount) > 0 ? 'var(--text-primary)' : 'var(--text-placeholder)' }}
             />
           </div>

@@ -126,6 +126,114 @@ class DebtServiceTest {
     }
 
     @Test
+    @DisplayName("no se puede abonar con fecha anterior a la deuda")
+    void pay_beforeDebtDate_throws() {
+        Debt debt = debt(new BigDecimal("100.00"), BigDecimal.ZERO);
+        debt.setIncurredOn(LocalDate.of(2026, 10, 13));
+        when(debtRepository.findByIdAndUserId(5L, USER_ID)).thenReturn(Optional.of(debt));
+
+        DebtPaymentRequest early = payment("40.00");
+        early.setPaidOn(LocalDate.of(2026, 9, 10));
+
+        assertThatThrownBy(() -> debtService.pay(5L, early, USER_ID, user))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessageContaining("anterior a la deuda");
+    }
+
+    @Test
+    @DisplayName("se puede abonar el mismo día de la deuda")
+    void pay_onDebtDate_isAccepted() {
+        Debt debt = debt(new BigDecimal("100.00"), BigDecimal.ZERO);
+        when(debtRepository.findByIdAndUserId(5L, USER_ID)).thenReturn(Optional.of(debt));
+
+        DebtResponse res = debtService.pay(5L, payment("40.00"), USER_ID, user);
+
+        assertThat(res.pending()).isEqualByComparingTo("60.00");
+    }
+
+    @Test
+    @DisplayName("la fecha de saldo es la del abono más reciente, aunque se registre antes")
+    void pay_settledOnIsLatestPaymentDay_notLastRegistered() {
+        Debt debt = debt(new BigDecimal("1000.00"), new BigDecimal("300.00"));
+        debt.setIncurredOn(LocalDate.of(2026, 9, 1));
+        when(debtRepository.findByIdAndUserId(5L, USER_ID)).thenReturn(Optional.of(debt));
+        when(paymentRepository.findByUserIdAndDebtIdOrderByPaidOnDescIdDesc(USER_ID, 5L))
+                .thenReturn(List.of(paidOn(LocalDate.of(2026, 10, 12)), paidOn(LocalDate.of(2026, 10, 11))));
+
+        // El que completa la deuda se registra al final, pero con fecha anterior.
+        DebtPaymentRequest late = payment("700.00");
+        late.setPaidOn(LocalDate.of(2026, 9, 10));
+        DebtResponse res = debtService.pay(5L, late, USER_ID, user);
+
+        assertThat(res.status()).isEqualTo(DebtStatus.SETTLED);
+        assertThat(res.settledOn()).isEqualTo(LocalDate.of(2026, 10, 12));
+    }
+
+    @Test
+    @DisplayName("'pagó por mí' se crea sin billetera: no toca el saldo hasta pagarla")
+    void createLoose_paidForMe_hasNoWallet() {
+        DebtRequest req = looseRequest(DebtDirection.I_OWE, DebtKind.PAID_FOR_ME, 7L);
+
+        DebtResponse res = debtService.createLoose(req, USER_ID, user);
+
+        assertThat(res.kind()).isEqualTo(DebtKind.PAID_FOR_ME);
+        assertThat(res.walletId()).isNull();
+        org.mockito.Mockito.verify(walletFinder, org.mockito.Mockito.never()).findOwned(any(), any());
+    }
+
+    @Test
+    @DisplayName("un préstamo sigue exigiendo billetera")
+    void createLoose_loanWithoutWallet_throws() {
+        DebtRequest req = looseRequest(DebtDirection.I_OWE, DebtKind.LOAN, null);
+
+        assertThatThrownBy(() -> debtService.createLoose(req, USER_ID, user))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessageContaining("billetera es obligatoria");
+    }
+
+    @Test
+    @DisplayName("'pagó por mí' solo existe del lado de lo que debo")
+    void createLoose_paidForMeTheyOwe_throws() {
+        DebtRequest req = looseRequest(DebtDirection.THEY_OWE, DebtKind.PAID_FOR_ME, null);
+
+        assertThatThrownBy(() -> debtService.createLoose(req, USER_ID, user))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessageContaining("solo aplica a lo que debes");
+    }
+
+    @Test
+    @DisplayName("'pagué por alguien' lleva billetera: el dinero salió al pagar")
+    void createLoose_paidForThem_keepsWallet() {
+        DebtRequest req = looseRequest(DebtDirection.THEY_OWE, DebtKind.PAID_FOR_THEM, 7L);
+
+        DebtResponse res = debtService.createLoose(req, USER_ID, user);
+
+        assertThat(res.kind()).isEqualTo(DebtKind.PAID_FOR_THEM);
+        assertThat(res.walletId()).isEqualTo(7L);
+    }
+
+    @Test
+    @DisplayName("'pagué por alguien' solo existe del lado de lo que te deben")
+    void createLoose_paidForThemIOwe_throws() {
+        DebtRequest req = looseRequest(DebtDirection.I_OWE, DebtKind.PAID_FOR_THEM, 7L);
+
+        assertThatThrownBy(() -> debtService.createLoose(req, USER_ID, user))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessageContaining("solo aplica a lo que te deben");
+    }
+
+    @Test
+    @DisplayName("sin tipo, la deuda suelta es un préstamo como antes")
+    void createLoose_withoutKind_isLoan() {
+        DebtRequest req = looseRequest(DebtDirection.I_OWE, null, 7L);
+
+        DebtResponse res = debtService.createLoose(req, USER_ID, user);
+
+        assertThat(res.kind()).isEqualTo(DebtKind.LOAN);
+        assertThat(res.walletId()).isEqualTo(7L);
+    }
+
+    @Test
     @DisplayName("'Omar' y 'omar' caen bajo la misma persona")
     void personKey_isCaseInsensitive() {
         when(debtRepository.findByUserIdAndExpenseId(USER_ID, 10L)).thenReturn(List.of());
@@ -153,6 +261,23 @@ class DebtServiceTest {
         r.setWalletId(7L);
         r.setPaidOn(LocalDate.now());
         return r;
+    }
+
+    private DebtRequest looseRequest(DebtDirection direction, DebtKind kind, Long walletId) {
+        DebtRequest r = new DebtRequest();
+        r.setDirection(direction);
+        r.setKind(kind);
+        r.setPersonName("Omar");
+        r.setAmount(new BigDecimal("50.00"));
+        r.setWalletId(walletId);
+        r.setIncurredOn(LocalDate.now());
+        return r;
+    }
+
+    private DebtPayment paidOn(LocalDate day) {
+        DebtPayment p = new DebtPayment();
+        p.setPaidOn(day);
+        return p;
     }
 
     private Debt debt(BigDecimal amount, BigDecimal paid) {

@@ -146,7 +146,7 @@ export function BudgetGridCard({ budget, index, onOpen, onEdit }: BudgetGridCard
           {budget.categoryName ?? 'Sin categoría'}
         </span>
 
-        <span className="mono-amount block text-[20px] font-extrabold leading-none tracking-[-0.02em] tabular-nums" style={{ textShadow: '0 1px 10px rgba(0,0,0,0.25)' }}>
+        <span className="amount-figure block text-[20px] font-extrabold leading-none tracking-[-0.02em] tabular-nums" style={{ textShadow: '0 1px 10px rgba(0,0,0,0.25)' }}>
           {sym}{spent.toFixed(2)}{' '}
           <span className="text-[11.5px] font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>
             / {amount.toFixed(0)}

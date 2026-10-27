@@ -66,7 +66,7 @@ export function AmountField({ label, inputId, value, error, max, walletId, onCha
           initial={{ scale: 0.95, opacity: 0.6 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.08 }}
-          className="mono-amount text-[40px] font-extrabold leading-none tracking-[-0.03em]"
+          className="amount-figure text-[40px] font-extrabold leading-none tracking-[-0.03em]"
           style={{ color: amountNum > 0 ? 'var(--accent-light)' : 'var(--text-placeholder)' }}
         >
           {sym} {formatDisplay(value)}

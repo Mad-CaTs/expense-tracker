@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -26,6 +27,7 @@ import java.util.Map;
 public class DebtService implements DebtsForExpense {
 
     private static final String DEBT_NOT_FOUND = "Deuda no encontrada: ";
+    private static final DateTimeFormatter DAY_FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     private final DebtRepository debtRepository;
     private final DebtPaymentRepository paymentRepository;
@@ -99,10 +101,12 @@ public class DebtService implements DebtsForExpense {
 
     @Transactional
     public DebtResponse createLoose(DebtRequest request, Long userId, User user) {
-        Wallet wallet = requireWallet(request.getWalletId(), userId);
+        DebtKind kind = request.getKind() == null ? DebtKind.LOAN : request.getKind();
+        Wallet wallet = walletFor(kind, request, userId);
 
         Debt debt = new Debt();
         debt.setDirection(request.getDirection());
+        debt.setKind(kind);
         applyPerson(debt, request.getPersonName());
         debt.setAmount(request.getAmount());
         debt.setPaidAmount(BigDecimal.ZERO);
@@ -139,6 +143,13 @@ public class DebtService implements DebtsForExpense {
                     "No puedes cobrar más de lo pendiente (S/ " + pending + ")");
         }
 
+        // Un abono anterior a la deuda no existió: además movería el saldo de la
+        // billetera a un mes en que esa plata todavía no se había prestado.
+        if (request.getPaidOn().isBefore(debt.getIncurredOn())) {
+            throw new BusinessRuleException(
+                    "La fecha no puede ser anterior a la deuda (" + debt.getIncurredOn().format(DAY_FMT) + ")");
+        }
+
         Wallet wallet = requireWallet(request.getWalletId(), userId);
 
         DebtPayment payment = new DebtPayment();
@@ -152,9 +163,20 @@ public class DebtService implements DebtsForExpense {
         debt.setPaidAmount(debt.getPaidAmount().add(request.getAmount()));
         // settledOn marca el día en que quedó a cero, no el de cada abono.
         if (debt.getPending().compareTo(BigDecimal.ZERO) <= 0) {
-            debt.setSettledOn(request.getPaidOn());
+            debt.setSettledOn(latestPaymentDay(debt.getId(), userId, request.getPaidOn()));
         }
         return toResponse(debtRepository.save(debt));
+    }
+
+    /**
+     * El día del abono MÁS RECIENTE, no el del último registrado: un abono
+     * olvidado puede cargarse al final con su fecha real, que es anterior. Se
+     * compara también con el recién hecho por si aún no se ve en la consulta.
+     */
+    private LocalDate latestPaymentDay(Long debtId, Long userId, LocalDate justPaid) {
+        return paymentRepository.findByUserIdAndDebtIdOrderByPaidOnDescIdDesc(userId, debtId).stream()
+                .map(DebtPayment::getPaidOn)
+                .reduce(justPaid, (a, b) -> a.isAfter(b) ? a : b);
     }
 
     /* ── Puerta hacia el módulo expense ── */
@@ -227,6 +249,28 @@ public class DebtService implements DebtsForExpense {
      * El nombre se guarda tal cual se escribió, y la clave normalizada agrupa:
      * sin entidad Persona, es lo que hace que "Omar" y "omar" sean uno solo.
      */
+    /**
+     * Un préstamo mueve dinero, así que necesita su billetera. "Pagó por mí" no
+     * movió nada: va SIN billetera, y sin ella la deuda no aporta al saldo —solo
+     * lo descuentan los pagos, que sí llevan la suya—. Solo tiene sentido como
+     * deuda propia: si yo pagué por otro, eso es un gasto repartido.
+     */
+    private Wallet walletFor(DebtKind kind, DebtRequest request, Long userId) {
+        if (kind == DebtKind.PAID_FOR_ME) {
+            if (request.getDirection() != DebtDirection.I_OWE) {
+                throw new BusinessRuleException("\"Pagó por mí\" solo aplica a lo que debes");
+            }
+            return null;
+        }
+        if (kind == DebtKind.PAID_FOR_THEM && request.getDirection() != DebtDirection.THEY_OWE) {
+            throw new BusinessRuleException("\"Pagué por alguien\" solo aplica a lo que te deben");
+        }
+        if (request.getWalletId() == null) {
+            throw new BusinessRuleException("La billetera es obligatoria: el dinero salió o entró de una");
+        }
+        return requireWallet(request.getWalletId(), userId);
+    }
+
     private Wallet requireWallet(Long walletId, Long userId) {
         return walletFinder.findOwned(walletId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Wallet no encontrada: " + walletId));
@@ -240,7 +284,7 @@ public class DebtService implements DebtsForExpense {
 
     private DebtResponse toResponse(Debt d) {
         return new DebtResponse(
-                d.getId(), d.getDirection(), d.getPersonName(),
+                d.getId(), d.getDirection(), d.getKind(), d.getPersonName(),
                 d.getAmount(), d.getPaidAmount(), d.getPending(), d.getStatus(),
                 d.getExpenseId(), d.getWallet() == null ? null : d.getWallet().getId(),
                 d.getDescription(), d.getIncurredOn(), d.getSettledOn());

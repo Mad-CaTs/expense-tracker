@@ -8,8 +8,12 @@ import { symbolOf } from '@/lib/utils/currency'
 import { EASE, MOTION_S } from '@/lib/utils/motion'
 
 export interface CategoriesHeroProps {
-  /** Gastado o recibido en el mes, según el tipo activo. */
+  /** Gastado o recibido en el período activo, según el tipo. */
   total: number
+  /** Período del filtro ("octubre 2026", "3 – 17 ago."); nombra la cifra. */
+  periodLabel: string
+  /** El selector de período, alineado con la cifra que gobierna. */
+  periodFilter?: React.ReactNode
   isExpense: boolean
   topCategory: string | null
   categoryCount: number
@@ -41,17 +45,28 @@ function Metric({ label, value, count }: { label: string; value?: string; count?
  * metadato. Reemplaza a los tres SummaryStat en grid-cols-3, cuyas etiquetas de
  * 8.5px eran ilegibles y competían entre sí sin jerarquía.
  */
-export function CategoriesHero({ total, isExpense, topCategory, categoryCount, movementCount }: CategoriesHeroProps) {
+export function CategoriesHero({ total, isExpense, periodLabel, periodFilter, topCategory, categoryCount, movementCount }: CategoriesHeroProps) {
   const sym = symbolOf(useWalletCurrency())
   return (
     <div className="liquid-glass mx-4 mb-3.5 rounded-[22px] p-[18px]">
-      <p className="text-[10px] font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--text-placeholder)' }}>
-        {isExpense ? 'Gastado este mes' : 'Recibido este mes'}
-      </p>
-      <p className="mono-amount mt-[7px] text-[33px] font-extrabold leading-[1.05] tracking-[-0.03em] tabular-nums" style={{ color: 'var(--text-primary)' }}>
-        <small className="mono-amount mr-[5px] text-[19px] font-bold" style={{ color: 'var(--text-tertiary)' }}>{sym}</small>
-        <AnimatedAmount value={total} animateOnMount />
-      </p>
+      {/* El selector va JUNTO a la cifra que gobierna, no en una fila suelta
+          bajo el hero: ahí competía con Activas/Ocultas, que filtra otra cosa
+          —qué categorías se listan, no de cuándo son los montos—. */}
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          {/* Solo "Gastado" cuando el chip está al lado: repetir ahí el
+              período lo partía en dos líneas y empujaba la cifra contra él.
+              Sin chip —si algún día se usa el hero suelto— sí lo nombra. */}
+          <p className="truncate text-[10px] font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--text-placeholder)' }}>
+            {isExpense ? 'Gastado' : 'Recibido'}{periodFilter == null && ` en ${periodLabel}`}
+          </p>
+          <p className="amount-figure mt-[7px] text-[33px] font-extrabold leading-[1.05] tracking-[-0.03em] tabular-nums" style={{ color: 'var(--text-primary)' }}>
+            <small className="amount-figure mr-[5px] text-[19px] font-bold" style={{ color: 'var(--text-tertiary)' }}>{sym}</small>
+            <AnimatedAmount value={total} animateOnMount />
+          </p>
+        </div>
+        {periodFilter != null && <div className="flex-none pt-0.5">{periodFilter}</div>}
+      </div>
       <div className="mt-3.5 flex gap-4 border-t pt-3.5" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
         <Metric label="Top" value={topCategory ?? '—'} />
         <Metric label="Categorías" count={categoryCount} />

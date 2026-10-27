@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Inter, Geist_Mono } from 'next/font/google'
+import { Inter } from 'next/font/google'
 
 import { Providers } from '@/providers/Providers'
 
@@ -7,12 +7,6 @@ import './globals.css'
 
 const interSans = Inter({
   variable: '--font-inter',
-  subsets: ['latin'],
-  display: 'swap',
-})
-
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
   subsets: ['latin'],
   display: 'swap',
 })
@@ -26,7 +20,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="es"
-      className={`${interSans.variable} ${geistMono.variable} h-full`}
+      className={`${interSans.variable} h-full`}
       data-scroll-behavior="smooth"
       suppressHydrationWarning
     >

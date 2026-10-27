@@ -60,6 +60,9 @@ const PERIOD_PRESETS: { key: Granularity; text: string }[] = [
 
 type Panel = 'category' | 'period' | 'type'
 
+/** `max-w-3xl` de Tailwind: la columna de contenido de las pantallas. */
+const CONTENT_MAX_WIDTH = 768
+
 export function ReportFilters({
   state, categories, periodLabel, range, isCurrent, isCustom, periodDate,
   onChange, onNavigate, onRange, onPeriod, onReset, hideTxType = false,
@@ -82,6 +85,24 @@ export function ReportFilters({
     }, MOTION.tint)
   }, [])
 
+  /**
+   * Dónde y de qué ancho sale el panel.
+   *
+   * Ocupa el ANCHO DEL CONTENIDO, no el del disparador. En /reports coincidían
+   * —la fila de chips abarca toda la columna—, pero dentro del hero de
+   * /categories el disparador es una celda estrecha y el panel heredaba esa
+   * estrechez: las opciones se apilaban y la rejilla de meses salía encajonada.
+   * Tomando la columna (la misma `max-w-3xl` con margen de 16px que usan las
+   * pantallas) el panel se ve igual venga de donde venga.
+   */
+  function place(box: DOMRect): { top: number; left: number; width: number } {
+    const margin = 16
+    const width = Math.min(window.innerWidth - margin * 2, CONTENT_MAX_WIDTH)
+    // Centrado cuando la pantalla supera la columna, como el propio contenido.
+    const left = Math.max(margin, (window.innerWidth - width) / 2)
+    return { top: box.bottom + 8, left, width }
+  }
+
   function open(next: Panel) {
     if (exitTimer.current !== null) {
       window.clearTimeout(exitTimer.current)
@@ -89,7 +110,7 @@ export function ReportFilters({
       setClosing(false)
     }
     const box = root.current?.getBoundingClientRect()
-    if (box) setAnchor({ top: box.bottom + 8, left: box.left, width: box.width })
+    if (box) setAnchor(place(box))
     setDraft({
       categoryIds: state.categoryIds,
       txType: state.txType,
@@ -128,7 +149,7 @@ export function ReportFilters({
     if (!panel) return
     function reposition() {
       const box = root.current?.getBoundingClientRect()
-      if (box) setAnchor({ top: box.bottom + 8, left: box.left, width: box.width })
+      if (box) setAnchor(place(box))
     }
     window.addEventListener('scroll', reposition, true)
     window.addEventListener('resize', reposition)

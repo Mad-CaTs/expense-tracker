@@ -176,7 +176,6 @@
   /* SF Pro Display/Text real si está instalada o en Apple (-apple-system);
      Inter como fallback web casi idéntico; luego sistema genérico. */
   --font-sans: 'SF Pro Display', 'SF Pro Text', -apple-system, BlinkMacSystemFont, var(--font-inter), 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  --font-mono: var(--font-geist-mono);
 
   --color-bg-base: var(--bg-base);
   --color-bg-elevated: var(--bg-elevated);
@@ -444,8 +443,13 @@ body.card-covering.card-shrinking #main-content { visibility: hidden; }
 .step-fwd  { animation: step-fwd  var(--dur-step) var(--ease-sys) both; }
 .step-back { animation: step-back var(--dur-step) var(--ease-sys) both; }
 
+/* El alto acompaña al paso con la MISMA duración y curva (ver AutoHeight):
+   si el panel salta y luego entra el contenido, el cambio se lee en dos tiempos. */
+.auto-height { transition: height var(--dur-step) var(--ease-sys); }
+
 @media (prefers-reduced-motion: reduce) {
   .step-fwd, .step-back { animation: none; }
+  .auto-height { transition: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -544,9 +548,12 @@ body.card-covering.card-shrinking #main-content { visibility: hidden; }
   font-variant-numeric: tabular-nums;
 }
 
-/* Mono financial amounts — Geist Mono + tabular-nums (La Regla del Mono Financiero) */
-.mono-amount {
-  font-family: var(--font-mono), ui-monospace, monospace;
+/* Cifras de dinero: la MISMA letra que el saldo de la tarjeta de /expenses
+   (la sans de la app) con cifras tabulares, para que las columnas alineen.
+   Antes eran Geist Mono; se unificó a pedido del usuario para que todos los
+   montos se lean como el de la billetera. */
+.amount-figure {
+  font-family: var(--font-sans);
   font-variant-numeric: tabular-nums;
 }
 
@@ -729,6 +736,15 @@ select:focus-visible,
 .aura-soft .wallet-blob {
   filter: blur(52px) saturate(1.05);
   opacity: 0.85;
+}
+
+/* Aurora en una superficie CHICA (el halo de una alcancía, ~84px). Con el blur
+   de la tarjeta (38-52px) cada blob se disolvía en un color plano y el
+   movimiento no se veía. Mismo criterio de rendimiento: el blur va por blob. */
+.aura-mini .wallet-blob {
+  width: 74%;
+  height: 74%;
+  filter: blur(14px) saturate(1.2);
 }
 
 /* Aurora CONGELADA mientras un contenedor se desplaza.
@@ -1103,7 +1119,7 @@ select:focus-visible,
    se lee solo, así que ocupa el espacio que ella dejó. */
 .wd-cf-amount {
   display: block;
-  font-family: var(--font-mono), ui-monospace, monospace;
+  font-family: var(--font-sans);
   font-size: 1.28em; font-weight: 700; letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
   /* Casi pegado al label: un respiro mínimo para que no se toquen, medido en em

@@ -62,8 +62,8 @@ export function RecurringHero({ items }: { items: RecurringExpense[] }) {
       </p>
       {/* El total recorre hasta su nuevo valor: al pausar un frecuente o crear
           otro, un salto de cifra se lee como parpadeo y no se ve si subió. */}
-      <p className="mono-amount mt-[7px] text-[31px] font-extrabold leading-[1.05] tracking-[-0.03em] tabular-nums" style={{ color: 'var(--text-primary)' }}>
-        <small className="mono-amount mr-[5px] text-[18px] font-bold" style={{ color: 'var(--text-tertiary)' }}>{sym}</small>
+      <p className="amount-figure mt-[7px] text-[31px] font-extrabold leading-[1.05] tracking-[-0.03em] tabular-nums" style={{ color: 'var(--text-primary)' }}>
+        <small className="amount-figure mr-[5px] text-[18px] font-bold" style={{ color: 'var(--text-tertiary)' }}>{sym}</small>
         <AnimatedAmount value={monthly} animateOnMount />
       </p>
       <div className="mt-3.5 flex gap-4 border-t pt-3.5" style={{ borderColor: 'var(--border-subtle)' }}>

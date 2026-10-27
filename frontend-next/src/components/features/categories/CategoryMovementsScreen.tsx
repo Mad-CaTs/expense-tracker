@@ -1,5 +1,7 @@
 'use client'
 
+import { useSearchParams } from 'next/navigation'
+
 import { useMemo, useState } from 'react'
 
 import { Search } from 'lucide-react'
@@ -49,13 +51,13 @@ function MovementRow({ movement, color, icon, categoryName }: { movement: Catego
         </span>
       </span>
       <span className="flex-none text-right">
-        <span className="mono-amount block text-[13px] font-bold tracking-[-0.01em] tabular-nums" style={{ color: 'var(--text-primary)' }}>
+        <span className="amount-figure block text-[13px] font-bold tracking-[-0.01em] tabular-nums" style={{ color: 'var(--text-primary)' }}>
           {formatAmount(movement.amount, sym)}
         </span>
         {/* Arriba lo que se pagó; debajo la parte propia, que es la que suma en
             el total de arriba. Sin ella la resta no cuadra a ojo. */}
         {(movement.reimbursable ?? 0) > 0 && (
-          <span className="mono-amount block text-[10.5px] font-bold tabular-nums" style={{ color: 'var(--danger)' }}>
+          <span className="amount-figure block text-[10.5px] font-bold tabular-nums" style={{ color: 'var(--danger)' }}>
             tú {(Math.abs(movement.amount) - (movement.reimbursable ?? 0)).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </span>
         )}
@@ -75,6 +77,7 @@ function MovementRow({ movement, color, icon, categoryName }: { movement: Catego
  * transacciones individuales, así que no servía como destino.
  */
 export function CategoryMovementsScreen({ categoryId }: { categoryId: number }) {
+  const params = useSearchParams()
   const sym = symbolOf(useWalletCurrency())
   const { data: categories = [] } = useCategories()
   const category = useMemo(() => categories.find((c) => c.id === categoryId), [categories, categoryId])
@@ -84,7 +87,14 @@ export function CategoryMovementsScreen({ categoryId }: { categoryId: number }) 
   const icon = category?.icon ?? 'ellipsis'
   const type = category?.type === 'INCOME' ? 'INCOME' : 'EXPENSE'
 
-  const { movements, isLoading } = useCategoryMovements(categoryId, name, type)
+  /* El período llega de /categories por la URL: el filtro de allí debe valer
+     también acá, o la lista contradice al hero que se acaba de ver. Sin esos
+     parámetros —entrada directa a la ruta— se muestra el historial completo. */
+  const from = params.get('from')
+  const to = params.get('to')
+  const range = from && to ? { from, to } : undefined
+
+  const { movements, isLoading } = useCategoryMovements(categoryId, name, type, range)
   // La parte repartida es dinero de otros que solo pasó por la cuenta: el
   // total de la categoría cuenta lo que gastaste TÚ.
   const total = movements.reduce((s, m) => s + Math.abs(m.amount) - (m.reimbursable ?? 0), 0)
@@ -123,8 +133,8 @@ export function CategoryMovementsScreen({ categoryId }: { categoryId: number }) 
             <p className="text-[10px] font-bold uppercase tracking-[0.12em]" style={{ color: 'rgba(255,255,255,0.7)' }}>
               {type === 'INCOME' ? 'Recibido' : 'Gastado'}
             </p>
-            <p className="mono-amount mt-[7px] text-[31px] font-extrabold leading-none tracking-[-0.03em] tabular-nums" style={{ color: '#fff', textShadow: '0 1px 18px rgba(0,0,0,0.25)' }}>
-              <small className="mono-amount mr-[5px] text-[18px] font-bold" style={{ color: 'rgba(255,255,255,0.7)' }}>{sym}</small>
+            <p className="amount-figure mt-[7px] text-[31px] font-extrabold leading-none tracking-[-0.03em] tabular-nums" style={{ color: '#fff', textShadow: '0 1px 18px rgba(0,0,0,0.25)' }}>
+              <small className="amount-figure mr-[5px] text-[18px] font-bold" style={{ color: 'rgba(255,255,255,0.7)' }}>{sym}</small>
               <AnimatedAmount value={total} animateOnMount />
             </p>
           </div>

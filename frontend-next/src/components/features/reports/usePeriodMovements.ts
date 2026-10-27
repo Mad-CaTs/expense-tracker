@@ -5,6 +5,7 @@ import { useMemo } from 'react'
 import { byRecent } from '@/components/features/shared/movementOrder'
 import { useExpenses } from '@/lib/hooks/useExpenses'
 import { useIncomes } from '@/lib/hooks/useIncomes'
+import { useWalletPiggyMovements } from '@/lib/hooks/usePiggyBanks'
 
 const PAGE_SIZE = 100
 
@@ -12,7 +13,9 @@ export interface PeriodMovement {
   key: string
   id: number
   createdAt?: string
-  kind: 'expense' | 'income'
+  /** `savings`: guardar o sacar de una alcancía. Mueve el disponible pero no
+   *  es gasto ni ingreso: no suma en los totales del periodo. */
+  kind: 'expense' | 'income' | 'savings'
   description: string
   categoryName: string
   categoryColor?: string
@@ -31,7 +34,7 @@ export interface MovementDay {
   movements: PeriodMovement[]
 }
 
-function dayLabel(iso: string): string {
+export function dayLabel(iso: string): string {
   const date = new Date(`${iso.split('T')[0]}T12:00:00`)
   const today = new Date()
   today.setHours(12, 0, 0, 0)
@@ -46,13 +49,18 @@ export interface MovementFilters {
   categoryIds?: number[]
   walletId?: number
   txType?: 'EXPENSE' | 'INCOME' | 'ALL'
+  /** Incluir los movimientos de alcancía de `walletId`. Solo entran sin filtro
+   *  de tipo ni de categoría: no son ni gasto ni ingreso ni tienen categoría. */
+  includeSavings?: boolean
 }
 
 export function usePeriodMovements(from: string, to: string, filters: MovementFilters = {}) {
-  const { categoryIds = [], walletId, txType = 'ALL' } = filters
+  const { categoryIds = [], walletId, txType = 'ALL', includeSavings = false } = filters
+  const wantSavings = includeSavings && txType === 'ALL' && categoryIds.length === 0
 
   const expenses = useExpenses({ period: 'CUSTOM', startDate: from, endDate: to, page: 0, size: PAGE_SIZE })
   const incomes = useIncomes({ from, to, page: 0, size: PAGE_SIZE })
+  const savings = useWalletPiggyMovements(walletId, from, to, wantSavings)
 
   const key = `${categoryIds.join(',')}|${walletId ?? ''}`
 
@@ -91,6 +99,20 @@ export function usePeriodMovements(from: string, to: string, filters: MovementFi
         amount: Math.abs(i.amount),
         date: i.date,
       })),
+      ...(wantSavings ? savings.data ?? [] : []).map((m) => {
+        const deposit = m.type === 'DEPOSIT'
+        return {
+          key: `s-${m.id}`,
+          id: m.id,
+          createdAt: m.createdAt,
+          kind: 'savings' as const,
+          description: `${deposit ? 'Guardado en' : 'Sacado de'} ${m.piggyName}`,
+          categoryName: 'Alcancía',
+          // Desde el disponible: guardar resta, sacar suma.
+          amount: deposit ? -Math.abs(m.amount) : Math.abs(m.amount),
+          date: m.date,
+        }
+      }),
     ].sort(byRecent)
 
     const groups: MovementDay[] = []
@@ -101,7 +123,7 @@ export function usePeriodMovements(from: string, to: string, filters: MovementFi
       else groups.push({ date: day, label: dayLabel(day), movements: [m] })
     }
     return groups
-  }, [expenses.data, incomes.data, txType, key])
+  }, [expenses.data, incomes.data, savings.data, wantSavings, txType, key])
 
   const totals = useMemo(() => {
     let expense = 0
@@ -112,7 +134,7 @@ export function usePeriodMovements(from: string, to: string, filters: MovementFi
         // periodo es lo que gastaste TÚ: la parte repartida es dinero de otros
         // que solo pasó por tu cuenta.
         if (m.kind === 'expense') expense += Math.abs(m.amount) - (m.reimbursable ?? 0)
-        else income += m.amount
+        else if (m.kind === 'income') income += m.amount
       }
     }
     return { expense, income }
@@ -122,6 +144,6 @@ export function usePeriodMovements(from: string, to: string, filters: MovementFi
     days,
     totals,
     total: days.reduce((sum, d) => sum + d.movements.length, 0),
-    isLoading: expenses.isLoading || incomes.isLoading,
+    isLoading: expenses.isLoading || incomes.isLoading || savings.isLoading,
   }
 }

@@ -1,4 +1,4 @@
-import type { Wallet } from '@/types'
+import type { Wallet, MonthlyBalance } from '@/types'
 
 import { apiClient } from './client'
 
@@ -54,4 +54,16 @@ export async function updateWallet(
 
 export async function deleteWallet(id: number): Promise<void> {
   await apiClient.delete(`/wallets/${id}`)
+}
+
+/** Saldo de cierre de cada mes comprendido en el rango. */
+export async function getMonthlyBalances(
+  walletId: number,
+  from: string,
+  to: string,
+): Promise<MonthlyBalance[]> {
+  const res = await apiClient.get<MonthlyBalance[]>(`/wallets/${walletId}/monthly-balances`, {
+    params: { from, to },
+  })
+  return res.data
 }

@@ -15,6 +15,16 @@ interface DateFieldProps {
   value: string
   onChange: (date: string) => void
   label?: string
+  /** Límites `YYYY-MM-DD`, inclusive. La rueda no puede deshabilitar días
+   *  sueltos, así que una fecha fuera de rango vuelve al límite y se avisa. */
+  min?: string
+  max?: string
+}
+
+function toIso(d: Date) {
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${d.getFullYear()}-${m}-${day}`
 }
 
 function formatDateLabel(d: string) {
@@ -25,9 +35,13 @@ function formatDateLabel(d: string) {
   })
 }
 
-export function DateField({ value, onChange, label = 'Fecha' }: DateFieldProps) {
+export function DateField({ value, onChange, label = 'Fecha', min, max }: DateFieldProps) {
   const [showPicker, setShowPicker] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [limitNote, setLimitNote] = useState('')
+  /* Remontar la rueda es la forma de llevarla al límite: solo lee `value` al
+     montarse, y después es ella la que manda. */
+  const [wheelKey, setWheelKey] = useState(0)
   const unmountTimer = useRef<number | null>(null)
   const dateObj = new Date(value + 'T12:00:00')
 
@@ -53,10 +67,18 @@ export function DateField({ value, onChange, label = 'Fecha' }: DateFieldProps) 
     requestAnimationFrame(() => setShowPicker(true))
   }
 
+  function snapTo(bound: string, note: string) {
+    setLimitNote(note)
+    setWheelKey((k) => k + 1)
+    onChange(bound)
+  }
+
   function handlePick(d: Date) {
-    const m = String(d.getMonth() + 1).padStart(2, '0')
-    const day = String(d.getDate()).padStart(2, '0')
-    onChange(`${d.getFullYear()}-${m}-${day}`)
+    const picked = toIso(d)
+    if (min && picked < min) return snapTo(min, `No puede ser anterior al ${formatDateLabel(min)}`)
+    if (max && picked > max) return snapTo(max, `No puede ser posterior al ${formatDateLabel(max)}`)
+    setLimitNote('')
+    onChange(picked)
   }
 
   return (
@@ -86,6 +108,12 @@ export function DateField({ value, onChange, label = 'Fecha' }: DateFieldProps) 
         />
       </button>
 
+      {limitNote && (
+        <p className="mt-1.5 px-1 text-[11px]" role="status" style={{ color: 'var(--text-tertiary)' }}>
+          {limitNote}
+        </p>
+      )}
+
       {/* La rueda tiene alto FIJO y conocido, así que el contenedor anima hacia
           un número concreto en vez de hacia `auto` o `1fr`. `grid-template-rows`
           y `height:auto` son animaciones de layout: cada frame recalcula altura
@@ -114,7 +142,16 @@ export function DateField({ value, onChange, label = 'Fecha' }: DateFieldProps) 
             transition: 'transform var(--dur-layer) var(--ease-sys), opacity var(--dur-tint) var(--ease-sys)',
           }}
         >
-          {mounted && <DateWheelPicker size="sm" value={dateObj} onChange={handlePick} />}
+          {mounted && (
+            <DateWheelPicker
+              key={wheelKey}
+              size="sm"
+              value={dateObj}
+              onChange={handlePick}
+              minYear={min ? Number(min.slice(0, 4)) : undefined}
+              maxYear={max ? Number(max.slice(0, 4)) : undefined}
+            />
+          )}
         </div>
       </div>
 

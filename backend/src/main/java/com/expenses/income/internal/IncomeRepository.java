@@ -21,6 +21,12 @@ public interface IncomeRepository extends JpaRepository<Income, Long>, JpaSpecif
 
     Optional<Income> findByIdAndUserId(Long id, Long userId);
 
+    @Query("SELECT COALESCE(SUM(i.amount), 0) FROM Income i WHERE i.user.id = :userId "
+         + "AND i.wallet.id = :walletId AND i.date <= :cutoff")
+    BigDecimal sumAmountUpTo(@Param("userId") Long userId,
+                             @Param("walletId") Long walletId,
+                             @Param("cutoff") LocalDate cutoff);
+
     @Query("SELECT COALESCE(SUM(i.amount), 0) FROM Income i WHERE i.user.id = :userId AND i.wallet.id = :walletId")
     BigDecimal sumAmountByUserIdAndWalletId(@Param("userId") Long userId, @Param("walletId") Long walletId);
 
@@ -66,12 +72,12 @@ public interface IncomeRepository extends JpaRepository<Income, Long>, JpaSpecif
     /** Total por día Y categoría: el cliente pinta la dominante de cada día. */
     @Query("""
         SELECT i.date AS date, SUM(i.amount) AS total,
-               i.category.name AS categoryName, i.category.color AS categoryColor,
+               i.category.id AS categoryId, i.category.name AS categoryName, i.category.color AS categoryColor,
                i.category.icon AS categoryIcon
         FROM Income i
         WHERE i.user.id = :userId AND i.date BETWEEN :from AND :to
           AND (:walletId IS NULL OR i.wallet.id = :walletId)
-        GROUP BY i.date, i.category.name, i.category.color, i.category.icon
+        GROUP BY i.date, i.category.id, i.category.name, i.category.color, i.category.icon
         ORDER BY i.date
         """)
     List<DailyCategoryRow> findDailyByCategory(@Param("userId") Long userId, @Param("from") LocalDate from, @Param("to") LocalDate to, @Param("walletId") Long walletId);

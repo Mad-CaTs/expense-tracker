@@ -31,9 +31,23 @@ export interface CategoryMovement {
   createdAt?: string
 }
 
-export function useCategoryMovements(categoryId: number, categoryName: string, type: CategoryType) {
+/** Período de los movimientos; sin él, todo el historial. */
+export interface CategoryMovementsRange {
+  from: string
+  to: string
+}
+
+export function useCategoryMovements(
+  categoryId: number,
+  categoryName: string,
+  type: CategoryType,
+  range?: CategoryMovementsRange,
+) {
   const isIncome = type === 'INCOME'
-  const { from, to } = fullRange()
+  /* El rango del filtro manda; `fullRange` es el respaldo para una entrada
+     directa a la ruta. Sin esto la lista traía TODO el historial mientras el
+     hero mostraba solo el período elegido: dos cifras que no cuadraban. */
+  const { from, to } = range ?? fullRange()
 
   const walletId = useActiveWallet()
 

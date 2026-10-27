@@ -32,7 +32,7 @@ export function MoneyText({ amount, kind = 'neutral', className = '', style, hid
   const abs = Math.abs(amount)
 
   return (
-    <span className={`mono-amount ${className}`} style={{ color, ...style }}>
+    <span className={`amount-figure ${className}`} style={{ color, ...style }}>
       {hidden ? `${sym} ••••••` : `${sign}${sym} ${formatAmount(abs)}`}
     </span>
   )

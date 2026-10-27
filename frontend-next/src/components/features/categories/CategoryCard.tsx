@@ -177,7 +177,7 @@ export function CategoryCard({ category, index, onOpen, onEdit }: CategoryCardPr
           {name}
         </span>
         <span
-          className="mono-amount block text-[20px] font-extrabold leading-none tracking-[-0.02em] tabular-nums"
+          className="amount-figure block text-[20px] font-extrabold leading-none tracking-[-0.02em] tabular-nums"
           style={{
             color: unused ? 'var(--text-primary)' : '#fff',
             ...(unused ? {} : { textShadow: '0 1px 10px rgba(0,0,0,0.25)' }),

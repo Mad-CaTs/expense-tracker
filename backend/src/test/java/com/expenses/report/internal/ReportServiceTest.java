@@ -107,9 +107,13 @@ class ReportServiceTest {
 
     // ── Totales por día (calendario del periodo) ───────────────────────────
 
+    /** Ids estables por nombre: el filtro del calendario trabaja con ids. */
+    private static final java.util.Map<String, Long> CATEGORY_IDS = java.util.Map.of("Comida", 1L, "Transporte", 2L);
+
     private DailyCategoryRow dayRow(LocalDate date, String total, String cat, String icon) {
         return new DailyCategoryRow() {
             public LocalDate getDate() { return date; }
+            public Long getCategoryId() { return CATEGORY_IDS.get(cat); }
             public BigDecimal getTotal() { return new BigDecimal(total); }
             public String getCategoryName() { return cat; }
             public String getCategoryColor() { return "#EF4444"; }
@@ -126,7 +130,7 @@ class ReportServiceTest {
                 dayRow(day, "100.00", "Comida", "utensils"),
                 dayRow(day, "50.00", "Transporte", "car")));
 
-        var result = reportService.getDailyTotals(from, to, 1L, "EXPENSE", 7L);
+        var result = reportService.getDailyTotals(from, to, 1L, "EXPENSE", 7L, null);
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).total()).isEqualByComparingTo("150.00");
@@ -141,11 +145,31 @@ class ReportServiceTest {
                 dayRow(day, "30.00", "Transporte", "car"),
                 dayRow(day, "220.00", "Comida", "utensils")));
 
-        var result = reportService.getDailyTotals(from, to, 1L, "EXPENSE", null);
+        var result = reportService.getDailyTotals(from, to, 1L, "EXPENSE", null, null);
 
         // La dominante es la de MAYOR importe, no la primera que llega.
         assertThat(result.get(0).categoryName()).isEqualTo("Comida");
         assertThat(result.get(0).categoryIcon()).isEqualTo("utensils");
+    }
+
+    @Test
+    void getDailyTotals_withCategoryFilter_sumsAndPicksOnlyAmongTheFiltered() {
+        var from = LocalDate.of(2026, 8, 1);
+        var to = LocalDate.of(2026, 8, 31);
+        var day = LocalDate.of(2026, 8, 3);
+        var other = LocalDate.of(2026, 8, 9);
+        when(expenseQueries.dailyByCategory(1L, from, to, null)).thenReturn(List.of(
+                dayRow(day, "100.00", "Comida", "utensils"),
+                dayRow(day, "500.00", "Transporte", "car"),
+                dayRow(other, "40.00", "Transporte", "car")));
+
+        var result = reportService.getDailyTotals(from, to, 1L, "EXPENSE", null, List.of(1L));
+
+        // Solo queda el día con comida, con SU importe y SU categoría: el
+        // transporte (aunque mayor) no suma ni gana la dominante.
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).total()).isEqualByComparingTo("100.00");
+        assertThat(result.get(0).categoryName()).isEqualTo("Comida");
     }
 
     @Test
@@ -154,7 +178,7 @@ class ReportServiceTest {
         var to = LocalDate.of(2026, 8, 31);
         when(incomeQueries.dailyByCategory(1L, from, to, null)).thenReturn(List.of());
 
-        reportService.getDailyTotals(from, to, 1L, "INCOME", null);
+        reportService.getDailyTotals(from, to, 1L, "INCOME", null, null);
 
         verify(expenseQueries, never()).dailyByCategory(anyLong(), any(), any(), any());
     }
@@ -165,6 +189,6 @@ class ReportServiceTest {
         var to = LocalDate.of(2026, 8, 31);
         when(expenseQueries.dailyByCategory(1L, from, to, null)).thenReturn(List.of());
 
-        assertThat(reportService.getDailyTotals(from, to, 1L, "EXPENSE", null)).isEmpty();
+        assertThat(reportService.getDailyTotals(from, to, 1L, "EXPENSE", null, List.of())).isEmpty();
     }
 }

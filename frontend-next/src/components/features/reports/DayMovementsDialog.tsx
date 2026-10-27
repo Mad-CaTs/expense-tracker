@@ -115,14 +115,14 @@ export function DayMovementsDialog({ date, movements, onClose }: DayMovementsDia
                           cuadra a ojo y parece un error. */}
                       <span className="flex flex-none flex-col items-end">
                         <span
-                          className="mono-amount text-[13px] font-bold tabular-nums"
+                          className="amount-figure text-[13px] font-bold tabular-nums"
                           style={{ color: income ? 'var(--success)' : 'var(--text-primary)' }}
                         >
                           {income ? '+' : '−'}{sym} {money(Math.abs(m.amount))}
                         </span>
                         {(m.reimbursable ?? 0) > 0 && (
                           <span
-                            className="mono-amount text-[10px] font-bold tabular-nums"
+                            className="amount-figure text-[10px] font-bold tabular-nums"
                             style={{ color: 'var(--danger)' }}
                           >
                             tú {money(Math.abs(m.amount) - (m.reimbursable ?? 0))}
@@ -136,7 +136,7 @@ export function DayMovementsDialog({ date, movements, onClose }: DayMovementsDia
 
               <p className="mt-3 text-center text-[11.5px]" style={{ color: 'var(--text-muted)' }}>
                 Total del día:{' '}
-                <b className="mono-amount tabular-nums" style={{ color: 'var(--text-secondary)' }}>
+                <b className="amount-figure tabular-nums" style={{ color: 'var(--text-secondary)' }}>
                   {total < 0 ? '−' : '+'}{sym} {money(Math.abs(total))}
                 </b>
               </p>

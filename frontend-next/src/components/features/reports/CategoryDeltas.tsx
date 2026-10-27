@@ -122,11 +122,11 @@ export function CategoryDeltas({ deltas, previousLabel }: CategoryDeltasProps) {
               <span className="min-w-0 flex-1 truncate text-[12.5px] font-semibold" style={{ color: 'var(--text-primary)' }}>
                 {d.name}
               </span>
-              <span className={`mono-amount ${TOTAL_COL} text-[12px] font-bold tabular-nums`} style={{ color: 'var(--text-secondary)' }}>
+              <span className={`amount-figure ${TOTAL_COL} text-[12px] font-bold tabular-nums`} style={{ color: 'var(--text-secondary)' }}>
                 {sym} {money(d.current)}
               </span>
               <span
-                className={`mono-amount ${DELTA_COL} text-[11px] font-extrabold tabular-nums`}
+                className={`amount-figure ${DELTA_COL} text-[11px] font-extrabold tabular-nums`}
                 style={{
                   color: d.kind === 'nueva'
                     ? 'var(--text-muted)'

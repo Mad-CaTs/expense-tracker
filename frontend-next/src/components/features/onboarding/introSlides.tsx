@@ -38,7 +38,7 @@ function SampleList() {
             </span>
           </span>
           <span
-            className="mono-amount text-[12.5px] font-extrabold tabular-nums"
+            className="amount-figure text-[12.5px] font-extrabold tabular-nums"
             style={{ color: row.income ? 'var(--success)' : 'var(--text-primary)' }}
           >
             {row.amount}
@@ -91,7 +91,7 @@ function SampleDonut() {
       <text x={C} y={C - 4} textAnchor="middle" className="text-[8px] font-bold uppercase tracking-[0.1em]" fill="var(--text-tertiary)">
         Gastos
       </text>
-      <text x={C} y={C + 16} textAnchor="middle" className="mono-amount text-[19px] font-extrabold tabular-nums" fill="var(--text-primary)">
+      <text x={C} y={C + 16} textAnchor="middle" className="amount-figure text-[19px] font-extrabold tabular-nums" fill="var(--text-primary)">
         S/ 1,733
       </text>
     </svg>

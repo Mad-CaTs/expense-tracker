@@ -21,6 +21,14 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long>, JpaSpec
 
     Optional<Expense> findByIdAndUserId(Long id, Long userId);
 
+    /* Importe COMPLETO, igual que la suma del saldo: la parte reembolsable
+       salió de la billetera aunque otro la deba. */
+    @Query("SELECT COALESCE(SUM(e.amount), 0) FROM Expense e WHERE e.user.id = :userId "
+         + "AND e.wallet.id = :walletId AND e.date <= :cutoff")
+    BigDecimal sumAmountUpTo(@Param("userId") Long userId,
+                             @Param("walletId") Long walletId,
+                             @Param("cutoff") LocalDate cutoff);
+
     @Query("SELECT COALESCE(SUM(e.amount), 0) FROM Expense e WHERE e.user.id = :userId AND e.wallet.id = :walletId")
     BigDecimal sumAmountByUserIdAndWalletId(@Param("userId") Long userId, @Param("walletId") Long walletId);
 
@@ -92,12 +100,12 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long>, JpaSpec
     /** Total por día Y categoría: el cliente pinta la dominante de cada día. */
     @Query("""
         SELECT e.date AS date, SUM(e.amount - e.reimbursableAmount) AS total,
-               e.category.name AS categoryName, e.category.color AS categoryColor,
+               e.category.id AS categoryId, e.category.name AS categoryName, e.category.color AS categoryColor,
                e.category.icon AS categoryIcon
         FROM Expense e
         WHERE e.user.id = :userId AND e.date BETWEEN :from AND :to
           AND (:walletId IS NULL OR e.wallet.id = :walletId)
-        GROUP BY e.date, e.category.name, e.category.color, e.category.icon
+        GROUP BY e.date, e.category.id, e.category.name, e.category.color, e.category.icon
         ORDER BY e.date
         """)
     List<DailyCategoryRow> findDailyByCategory(@Param("userId") Long userId, @Param("from") LocalDate from, @Param("to") LocalDate to, @Param("walletId") Long walletId);

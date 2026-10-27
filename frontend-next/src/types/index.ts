@@ -104,10 +104,15 @@ export interface DebtItem {
 
 export type DebtDirection = 'THEY_OWE' | 'I_OWE'
 export type DebtStatus = 'PENDING' | 'PARTIAL' | 'SETTLED'
+/** Deuda suelta: préstamo con efectivo; alguien que pagó por mí (sin billetera:
+ *  no toca el saldo hasta que se paga); o yo que pagué por alguien (con billetera:
+ *  el dinero salió al pagar y vuelve cuando me paga). */
+export type DebtKind = 'LOAN' | 'PAID_FOR_ME' | 'PAID_FOR_THEM'
 
 export interface Debt {
   id: number
   direction: DebtDirection
+  kind?: DebtKind
   personName: string
   amount: number
   paidAmount: number
@@ -277,4 +282,37 @@ export interface Attachment {
 export interface ApiError {
   message: string
   status: number
+}
+
+/** Saldo al cierre de un mes, de una billetera. */
+export interface MonthlyBalance {
+  /** `yyyy-MM`. */
+  month: string
+  balance: number
+}
+
+/** Guardar resta del saldo disponible de la billetera; sacar lo devuelve. */
+export type PiggyMovementType = 'DEPOSIT' | 'WITHDRAWAL'
+
+/** Alcancía: dinero apartado dentro de una billetera. */
+export interface PiggyBank {
+  id: number
+  walletId: number
+  name: string
+  /** Lo guardado ahora. Se deriva de sus movimientos. */
+  balance: number
+}
+
+export interface PiggyMovement {
+  id: number
+  type: PiggyMovementType
+  amount: number
+  date: string
+}
+
+/** Movimiento de alcancía visto desde la billetera (lista de Reportes). */
+export interface WalletPiggyMovement extends PiggyMovement {
+  piggyBankId: number
+  piggyName: string
+  createdAt?: string
 }

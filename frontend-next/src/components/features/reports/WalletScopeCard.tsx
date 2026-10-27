@@ -45,7 +45,7 @@ export function WalletScopeCard({ wallets, walletId }: WalletScopeCardProps) {
           el saldo sube o baja respecto al que se estaba mirando, y es lo que ya
           hacen las cifras del resto de la app. */}
       <p
-        className="mono-amount mt-1 text-[32px] font-extrabold leading-[1.05] tracking-[-0.035em] tabular-nums"
+        className="amount-figure mt-1 text-[32px] font-extrabold leading-[1.05] tracking-[-0.035em] tabular-nums"
         style={{ color: 'var(--text-primary)' }}
       >
         {symbolOf(active.currency)} <AnimatedAmount value={Number(active.balance)} />

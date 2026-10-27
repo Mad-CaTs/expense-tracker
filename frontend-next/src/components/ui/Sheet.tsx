@@ -144,8 +144,11 @@ export function Sheet({ onClose, title, children }: SheetProps) {
             layout del panel en ese mismo frame, y eso es lo que se veía como un
             segundo tiempo al abrir. `content-visibility` tampoco va, por lo
             mismo — difería el pintado y lo cobraba todo junto al final. */}
+        {/* `overflow-x-hidden` explícito: con solo `overflow-y: auto` el eje X
+            también pasa a `auto`, y el desplazamiento lateral de los pasos
+            (`step-fwd`, 26px) asomaba como una barra de scroll horizontal. */}
         <div
-          className="min-h-0 flex-1 overflow-y-auto pb-[env(safe-area-inset-bottom)]"
+          className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden pb-[env(safe-area-inset-bottom)]"
           style={{ contain: 'layout paint style' }}
         >
           {children}

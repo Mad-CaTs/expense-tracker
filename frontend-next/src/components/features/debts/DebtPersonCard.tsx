@@ -14,6 +14,7 @@ import type { Debt, DebtPersonGroup } from '@/types'
 import { DebtPaymentHistory } from './DebtPaymentHistory'
 import { DebtPaymentsPrefetch } from './DebtPaymentsPrefetch'
 import { debtHue } from './debtHue'
+import { debtLabel } from './debtViews'
 
 const money = (n: number) =>
   n.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -22,6 +23,8 @@ const SHORT_DATE = new Intl.DateTimeFormat('es-PE', { day: 'numeric', month: 'sh
 
 interface DebtPersonCardProps {
   group: DebtPersonGroup
+  /** Contador de la persona: "2 gastos" en compartidos, "1 préstamo" en préstamos. */
+  noun: [singular: string, plural: string]
   /** Posición en la lista: alimenta el stagger de `enter-pop`. */
   index: number
   iOwe: boolean
@@ -30,7 +33,7 @@ interface DebtPersonCardProps {
   onCollect: (debt: Debt) => void
 }
 
-export function DebtPersonCard({ group, index, iOwe, open, onToggle, onCollect }: DebtPersonCardProps) {
+export function DebtPersonCard({ group, noun, index, iOwe, open, onToggle, onCollect }: DebtPersonCardProps) {
   const tint = debtHue(group.personName)
   const count = group.debts.length
   /* Los abonos se piden solo al abrir su historial: la mayoría de deudas se
@@ -67,11 +70,11 @@ export function DebtPersonCard({ group, index, iOwe, open, onToggle, onCollect }
             {group.personName}
           </span>
           <span className="mt-px block text-[10.5px]" style={{ color: 'var(--text-muted)' }}>
-            {count} {count === 1 ? 'gasto' : 'gastos'}
+            {count} {count === 1 ? noun[0] : noun[1]}
           </span>
         </span>
 
-        <span className="mono-amount flex-none text-[15px] font-extrabold tabular-nums" style={{ color: 'var(--text-primary)' }}>
+        <span className="amount-figure flex-none text-[15px] font-extrabold tabular-nums" style={{ color: 'var(--text-primary)' }}>
           {groupSym && `${groupSym} `}{money(group.pending)}
         </span>
 
@@ -109,15 +112,14 @@ export function DebtPersonCard({ group, index, iOwe, open, onToggle, onCollect }
                   <div className="flex items-center gap-3">
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-[13px] font-semibold" style={{ color: 'var(--text-primary)' }}>
-                        {d.description || 'Préstamo'}
+                        {debtLabel(d)}
                       </span>
                       <span className="mt-0.5 block truncate text-[11px]" style={{ color: 'var(--text-muted)' }}>
                         {SHORT_DATE.format(new Date(`${d.incurredOn}T12:00:00`))}
-                        {!d.expenseId && ' · préstamo suelto'}
                       </span>
                     </span>
 
-                    <span className="mono-amount flex-none text-[13.5px] font-bold tabular-nums" style={{ color: 'var(--text-primary)' }}>
+                    <span className="amount-figure flex-none text-[13.5px] font-bold tabular-nums" style={{ color: 'var(--text-primary)' }}>
                       {symOf(d.walletId)} {money(d.pending)}
                     </span>
 

@@ -170,7 +170,7 @@ export function OnboardingScreen() {
                       autoComplete="off"
                       aria-label="Saldo inicial"
                       size={Math.max(4, initialBalance.length || 4)}
-                      className="search-input mono-amount bg-transparent text-center text-[30px] font-extrabold tracking-[-0.03em] tabular-nums outline-none"
+                      className="search-input amount-figure bg-transparent text-center text-[30px] font-extrabold tracking-[-0.03em] tabular-nums outline-none"
                       style={{ color: parseFloat(initialBalance) > 0 ? 'var(--text-primary)' : 'var(--text-placeholder)' }}
                     />
                   </div>

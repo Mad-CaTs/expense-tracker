@@ -144,10 +144,17 @@ public class ReportService {
      * cliente para no mandarle todas las categorías de todos los días.
      */
     @Transactional(readOnly = true)
-    public List<DailyTotalDTO> getDailyTotals(LocalDate from, LocalDate to, Long userId, String txType, Long walletId) {
-        var rows = "INCOME".equals(txType)
+    public List<DailyTotalDTO> getDailyTotals(LocalDate from, LocalDate to, Long userId, String txType,
+                                              Long walletId, List<Long> categoryIds) {
+        var all = "INCOME".equals(txType)
                 ? incomeQueries.dailyByCategory(userId, from, to, walletId)
                 : expenseQueries.dailyByCategory(userId, from, to, walletId);
+        // El filtro va ANTES de sumar y de elegir la dominante: con "Comida"
+        // filtrado, un día de 100 en comida y 50 en transporte vale 100 y
+        // muestra comida, igual que el resto de la pantalla.
+        var rows = categoryIds == null || categoryIds.isEmpty()
+                ? all
+                : all.stream().filter(r -> categoryIds.contains(r.getCategoryId())).toList();
 
         // Por día: suma de todas sus categorías + la de mayor importe.
         Map<LocalDate, BigDecimal> totals = new LinkedHashMap<>();

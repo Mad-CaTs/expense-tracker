@@ -11,15 +11,12 @@ import { useActiveWallet } from '@/lib/hooks/useActiveWallet'
 import { usePayDebt } from '@/lib/hooks/useDebts'
 import { useWalletCurrency, useWallets } from '@/lib/hooks/useWallets'
 import { symbolOf } from '@/lib/utils/currency'
+import { todayIso } from '@/lib/utils/dates'
 import type { Debt } from '@/types'
+import { debtLabel } from './debtViews'
 
 const money = (n: number) =>
   n.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-
-const todayIso = () => {
-  const d = new Date()
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
 
 interface DebtPaySheetProps {
   debt: Debt
@@ -67,12 +64,12 @@ export function DebtPaySheet({ debt, personName, onClose, onDone }: DebtPaySheet
     <Sheet onClose={onClose} title={`${iOwe ? 'Pagar a' : 'Cobrar a'} ${personName}`}>
       <div className="px-4 pb-4">
         <p className="mb-3 text-center text-[11.5px]" style={{ color: 'var(--text-tertiary)' }}>
-          {debt.description || 'Préstamo'} · te {iOwe ? 'faltan' : 'deben'}{' '}
+          {debtLabel(debt)} · te {iOwe ? 'faltan' : 'deben'}{' '}
           <b style={{ color: 'var(--text-secondary)' }}>{sym} {money(debt.pending)}</b>
         </p>
 
         <AmountField
-          label={iOwe ? 'Cuánto pagas' : 'Cuánto te pagó'}
+          label="Monto"
           inputId="debt-pay-amount"
           walletId={walletId ? Number(walletId) : undefined}
           value={rawAmount}
@@ -83,12 +80,19 @@ export function DebtPaySheet({ debt, personName, onClose, onDone }: DebtPaySheet
           onChange={(v) => { setRawAmount(v); setError('') }}
         />
 
-        <DateField value={date} onChange={setDate} label={iOwe ? '¿Cuándo pagaste?' : '¿Cuándo te pagó?'} />
+        {/* Ni antes de la deuda —ese abono no existió— ni en el futuro. */}
+        <DateField
+          value={date}
+          onChange={setDate}
+          label="Fecha"
+          min={debt.incurredOn}
+          max={todayIso()}
+        />
 
         <WalletSelector
           wallets={wallets}
           selectedId={walletId}
-          label={iOwe ? '¿De qué billetera sale?' : '¿A qué billetera entró?'}
+          label="Billetera"
           onSelect={(id) => { setWalletId(id); setError('') }}
         />
 

@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -23,6 +24,18 @@ public interface TransferRepository extends JpaRepository<Transfer, Long> {
     Page<Transfer> findByUserIdAndWalletId(@Param("userId") Long userId, @Param("walletId") Long walletId, Pageable pageable);
 
     Optional<Transfer> findByIdAndUserId(Long id, Long userId);
+
+    @Query("SELECT COALESCE(SUM(t.amount), 0) FROM Transfer t WHERE t.user.id = :userId "
+         + "AND t.toWallet.id = :walletId AND t.date <= :cutoff")
+    BigDecimal sumIncomingUpTo(@Param("userId") Long userId,
+                               @Param("walletId") Long walletId,
+                               @Param("cutoff") LocalDate cutoff);
+
+    @Query("SELECT COALESCE(SUM(t.amount), 0) FROM Transfer t WHERE t.user.id = :userId "
+         + "AND t.fromWallet.id = :walletId AND t.date <= :cutoff")
+    BigDecimal sumOutgoingUpTo(@Param("userId") Long userId,
+                               @Param("walletId") Long walletId,
+                               @Param("cutoff") LocalDate cutoff);
 
     @Query("SELECT COALESCE(SUM(t.amount), 0) FROM Transfer t WHERE t.user.id = :userId AND t.toWallet.id = :walletId")
     BigDecimal sumIncomingByUserIdAndWalletId(@Param("userId") Long userId, @Param("walletId") Long walletId);

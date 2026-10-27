@@ -56,7 +56,7 @@ export function PhysicalWalletCard({
           )}
         </div>
         <p className="mt-3 text-[10px] font-medium uppercase tracking-[0.14em]" style={{ color: 'rgba(255,255,255,0.6)' }}>Saldo</p>
-        <p className="mono-amount text-[28px] font-extrabold leading-none" style={{ color: '#fff' }}>
+        <p className="amount-figure text-[28px] font-extrabold leading-none" style={{ color: '#fff' }}>
           {symbolOf(wallet.currency)} {formatBalance(balance)}
         </p>
       </button>
@@ -76,7 +76,7 @@ export function PhysicalWalletCard({
                 <span className="h-5 w-5 -ml-2 rounded-full" style={{ background: 'rgba(255,255,255,0.30)' }} />
               </div>
             </div>
-            <p className="mono-amount mt-3 text-[15px] tracking-[0.18em]" style={{ color: 'rgba(255,255,255,0.92)' }}>
+            <p className="amount-figure mt-3 text-[15px] tracking-[0.18em]" style={{ color: 'rgba(255,255,255,0.92)' }}>
               •••• •••• •••• ••••
             </p>
           </div>

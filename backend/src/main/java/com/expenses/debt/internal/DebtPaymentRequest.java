@@ -2,6 +2,7 @@ package com.expenses.debt.internal;
 
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PastOrPresent;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -19,5 +20,6 @@ public class DebtPaymentRequest {
     private Long walletId;
 
     @NotNull(message = "La fecha es obligatoria")
+    @PastOrPresent(message = "La fecha no puede ser futura")
     private LocalDate paidOn;
 }

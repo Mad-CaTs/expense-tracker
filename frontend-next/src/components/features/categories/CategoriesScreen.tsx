@@ -4,6 +4,8 @@ import { useState } from 'react'
 
 import { Plus } from 'lucide-react'
 
+import { ReportFilters } from '@/components/features/reports/ReportFilters'
+import { usePeriodRange } from '@/components/features/reports/usePeriodRange'
 import { useSubPageExit } from '@/components/features/shared/useSubPageExit'
 import { SubPageHeader } from '@/components/layout/SubPageHeader'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
@@ -66,7 +68,14 @@ export function CategoriesScreen() {
   const { exitClass, open, goBack } = useSubPageExit()
   const [activeType, setActiveType] = useState<CategoryType>('EXPENSE')
   const [scope, setScope] = useState<Scope>('VISIBLE')
-  const { cards, isLoading, total, topCategory, movementCount } = useCategoryCards(activeType)
+
+  /* Mismo filtro de período que /reports: antes las cifras eran siempre del mes
+     en curso y no había forma de mirar otro. El chip de tipo se omite —ya está
+     el segmented Gasto/Ingreso— y el de categoría no aplica acá, donde las
+     categorías SON el contenido; con `txType: 'ALL'` ese chip no se pinta. */
+  const { granularity, periodDate, setPeriodDate, setRange, setPeriod, reset, range, label, longLabel, isCurrent, isCustom } =
+    usePeriodRange()
+  const { cards, isLoading, total, topCategory, movementCount } = useCategoryCards(activeType, range)
 
   /* El hero sigue contando TODAS: es el gasto del mes en esta billetera y no
      depende de qué pestaña se esté mirando. */
@@ -92,6 +101,26 @@ export function CategoriesScreen() {
     setEditing({ id: c.id, name: c.name, icon: c.icon, color: c.color, type: activeType })
   }
 
+  /* Declarado aquí y no inline: el hero solo se monta con los datos listos, y
+     así el filtro se arma una vez aunque la pantalla esté cargando. */
+  const periodFilter = (
+    <ReportFilters
+      state={{ categoryIds: [], granularity, txType: 'ALL' }}
+      categories={[]}
+      periodLabel={label}
+      range={range}
+      isCurrent={isCurrent}
+      isCustom={isCustom}
+      periodDate={periodDate}
+      onNavigate={setPeriodDate}
+      onRange={setRange}
+      onPeriod={setPeriod}
+      onReset={reset}
+      onChange={() => {}}
+      hideTxType
+    />
+  )
+
   return (
     <div className={exitClass}>
       <SubPageHeader title="Categorías" onBack={goBack} />
@@ -112,6 +141,8 @@ export function CategoriesScreen() {
           <CategoriesHero
             total={total}
             isExpense={isExpense}
+            periodLabel={longLabel}
+            periodFilter={periodFilter}
             topCategory={topCategory}
             categoryCount={cards.length}
             movementCount={movementCount}
@@ -159,7 +190,7 @@ export function CategoriesScreen() {
               key={c.id}
               category={c}
               index={i + 2}
-              onOpen={() => open(`/categories/${c.id}`)}
+              onOpen={() => open(`/categories/${c.id}?from=${range.from}&to=${range.to}`)}
               onEdit={() => openEditor(c.id)}
             />
           ))}

@@ -49,7 +49,7 @@ export function WalletSelector({ wallets, selectedId, error, onSelect, label = '
               <span className="mb-[3px] max-w-full truncate text-[12px] font-extrabold" style={{ color: 'var(--text-primary)' }}>
                 {w.name}
               </span>
-              <span className="mono-amount text-[11px] tabular-nums" style={{ color: tint }}>
+              <span className="amount-figure text-[11px] tabular-nums" style={{ color: tint }}>
                 {symbolOf(w.currency)} {Number(w.balance).toFixed(2)}
               </span>
             </motion.button>

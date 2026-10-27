@@ -133,7 +133,7 @@ export function SheetHost() {
                     closeSheet()
                   }}
                   className="h-11 flex-1 rounded-full text-[13px] font-bold cursor-pointer"
-                  style={{ background: 'var(--danger)', color: '#fff' }}
+                  style={{ background: 'var(--accent-light)', color: 'var(--bg-base)' }}
                 >
                   Eliminar
                 </button>

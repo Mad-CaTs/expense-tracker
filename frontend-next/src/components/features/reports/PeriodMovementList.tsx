@@ -7,6 +7,7 @@ import { Paperclip, Search, Wallet } from 'lucide-react'
 
 import { AttachmentsModal } from '@/components/features/expenses/AttachmentsModal'
 import type { MovementDay, PeriodMovement } from '@/components/features/reports/usePeriodMovements'
+import { PiggyIcon } from '@/components/features/savings/PiggyIcon'
 import { categorySwatch } from '@/lib/utils/cardVisuals'
 import { CATEGORY_ICON_MAP } from '@/lib/utils/categoryIcons'
 import { useSheetStore } from '@/stores/sheetStore'
@@ -21,6 +22,36 @@ interface PeriodMovementListProps {
   isLoading: boolean
   title: string
   period: string
+}
+
+/**
+ * Guardar o sacar de una alcancía: en gris y sin categoría, para que no se
+ * confunda con un gasto. No es un botón: no hay formulario que abrir —se
+ * corrige desde la alcancía, con el movimiento contrario—.
+ */
+function SavingsRow({ movement }: { movement: PeriodMovement }) {
+  const sym = symbolOf(useWalletCurrency())
+  return (
+    <div className="flex w-full items-center gap-[11px] px-1 py-[9px]">
+      <span
+        className="flex h-9 w-9 flex-none items-center justify-center rounded-[12px]"
+        style={{ background: 'var(--bg-hover)', color: 'var(--text-tertiary)' }}
+      >
+        <PiggyIcon size={17} />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-[13.5px] font-bold" style={{ color: 'var(--text-secondary)' }}>
+          {movement.description}
+        </span>
+        <span className="mt-px block truncate text-[11px]" style={{ color: 'var(--text-muted)' }}>
+          {movement.categoryName}
+        </span>
+      </span>
+      <span className="amount-figure flex-none text-[13px] font-extrabold tabular-nums" style={{ color: 'var(--text-tertiary)' }}>
+        {movement.amount < 0 ? '−' : '+'}{sym} {Math.abs(movement.amount).toFixed(2)}
+      </span>
+    </div>
+  )
 }
 
 function Row({ movement }: { movement: PeriodMovement }) {
@@ -84,11 +115,11 @@ function Row({ movement }: { movement: PeriodMovement }) {
           lo que suma en los totales. Sin la segunda cifra la resta del periodo
           no cuadra a ojo y parece un error. */}
       <span className="flex flex-none flex-col items-end">
-        <span className="mono-amount text-[13px] font-extrabold tabular-nums" style={{ color: 'var(--text-primary)' }}>
+        <span className="amount-figure text-[13px] font-extrabold tabular-nums" style={{ color: 'var(--text-primary)' }}>
           {isExpense ? '−' : '+'}{sym} {Math.abs(movement.amount).toFixed(2)}
         </span>
         {(movement.reimbursable ?? 0) > 0 && (
-          <span className="mono-amount text-[10.5px] font-bold tabular-nums" style={{ color: 'var(--danger)' }}>
+          <span className="amount-figure text-[10.5px] font-bold tabular-nums" style={{ color: 'var(--danger)' }}>
             tú {(Math.abs(movement.amount) - (movement.reimbursable ?? 0)).toFixed(2)}
           </span>
         )}
@@ -174,7 +205,9 @@ export function PeriodMovementList({ days, isLoading, title, period }: PeriodMov
               >
                 {day.label}
               </p>
-              {day.movements.map((m) => <Row key={m.key} movement={m} />)}
+              {day.movements.map((m) => (m.kind === 'savings'
+                ? <SavingsRow key={m.key} movement={m} />
+                : <Row key={m.key} movement={m} />))}
             </div>
           ))
         )}

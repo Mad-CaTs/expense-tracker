@@ -72,7 +72,9 @@ export function AnalyticsScreen() {
   /* El ritmo solo tiene sentido en un rango continuo con varios días. En
      personalizados se oculta, como acordamos. */
   const { data: daily = [] } = useDailyTotals(
-    { period: 'CUSTOM', ...range, txType, walletId: walletId ?? undefined },
+    // Con el filtro de categorías, igual que el donut: el calendario muestra
+    // solo los días y montos de las categorías elegidas.
+    { period: 'CUSTOM', ...range, txType, walletId: walletId ?? undefined, categoryIds },
     { enabled: !isCustom },
   )
 
@@ -92,6 +94,8 @@ export function AnalyticsScreen() {
   const { days: movementDays } = usePeriodMovements(range.from, range.to, {
     walletId: walletId ?? undefined,
     txType,
+    // El detalle de un día lista lo mismo que el calendario contó.
+    categoryIds,
   })
 
   const deltas = buildDeltas(items, prevBreakdown)
@@ -220,6 +224,7 @@ export function AnalyticsScreen() {
           <div className="enter-pop liquid-glass mx-4 mb-3 rounded-[22px] px-4 py-[14px]" style={{ ['--enter-i' as string]: 3 }}>
             <CategoryDeltas deltas={deltas} previousLabel={previousLabel} />
           </div>
+
 
 </>
       )}

@@ -8,6 +8,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -35,6 +36,12 @@ class TransferWalletHooks implements WalletBalanceContribution {
     @Override
     public Map<Long, BigDecimal> outflowsByWallet(Long userId) {
         return toMap(transferRepository.sumOutgoingByUserIdGroupedByWallet(userId));
+    }
+
+    @Override
+    public BigDecimal netUpTo(Long userId, Long walletId, LocalDate cutoff) {
+        return transferRepository.sumIncomingUpTo(userId, walletId, cutoff)
+                .subtract(transferRepository.sumOutgoingUpTo(userId, walletId, cutoff));
     }
 
     @Override

@@ -49,8 +49,8 @@ typography:
     fontWeight: 600
     lineHeight: 1.2
     letterSpacing: "0.18em"
-  mono:
-    fontFamily: "Geist Mono, ui-monospace, monospace"
+  figure:
+    fontFamily: "var(--font-sans)"
     fontFeature: "\"tnum\""
 rounded:
   xs: "6px"
@@ -115,7 +115,7 @@ Este sistema rechaza explícitamente: el neon de fintech cripto, el navy corpora
 - Datos primero: los números tienen la mayor jerarquía tipográfica
 - Elevación tonal: profundidad sin sombras en superficies estáticas
 - Gold como señal, no como decoración
-- Tipografía Geist con monospace para cifras
+- Cifras en la misma letra que el texto, con cifras tabulares (como el saldo de la tarjeta)
 - Bezel doble en inputs y cards premium: outer shell + inner core
 
 ## 2. Colors
@@ -151,7 +151,7 @@ Una paleta void-to-charcoal con un solo acento metálico. El constraint es la es
 ## 3. Typography
 
 **Display / Body Font:** Geist (Vercel) — sans-serif geométrico de precisión con excelente legibilidad en tamaños pequeños  
-**Mono Font:** Geist Mono — para cifras financieras, tabular-nums activado
+**Cifras:** la misma sans de la app con `tabular-nums` — la del saldo de la tarjeta en /expenses. Clase `.amount-figure`.
 
 **Character:** La combinación prioriza claridad a densidades medias. Sin serif para el contexto de app dashboard; Geist tiene suficiente personalidad para no sentirse genérico.
 
@@ -161,9 +161,9 @@ Una paleta void-to-charcoal con un solo acento metálico. El constraint es la es
 - **Title** (600, 13px, lh 1.4): Nombres de gastos, nombres de presupuestos. Sin decoración.
 - **Body** (400–500, 13px, lh 1.5): Texto de soporte. Máximo 65ch de ancho en bloques narrativos.
 - **Label** (600, 9–10px, ls 0.18em, UPPERCASE): Labels de inputs, eyebrow tags de KPIs. Espaciado amplio para escala pequeña.
-- **Mono** (500, Geist Mono, tabular-nums): Todos los montos monetarios. Sin excepción.
+- **Figure** (sans de la app, tabular-nums, clase `.amount-figure`): Todos los montos monetarios. Sin excepción.
 
-**La Regla del Mono Financiero.** Cualquier cifra con símbolo de moneda usa Geist Mono con `font-variant-numeric: tabular-nums`. Las columnas de números deben alinearse visualmente al centésimo.
+**La Regla de la Cifra.** Cualquier cifra con símbolo de moneda usa la MISMA letra que el saldo de la tarjeta de /expenses (la sans de la app) con `font-variant-numeric: tabular-nums`, vía `.amount-figure`. Las columnas de números deben alinearse visualmente al centésimo. (Hasta 2026-10 era Geist Mono; se unificó a pedido del usuario.)
 
 ## 4. Elevation
 
@@ -218,13 +218,13 @@ El bezel doble es el patrón de elevación para cards y inputs premium: outer sh
 ### Expense Row
 - `border-bottom: 1px solid #111`. Hover: `bg: #0e0e0e`.
 - Category icon: 36×36px, `border-radius: 12px`, `bg: {category.color}14`, `box-shadow: inset 0 1px 1px rgba(255,255,255,0.04), 0 0 0 1px {category.color}18`.
-- Amount: Geist Mono, 13px bold, tabular-nums. Hover: texto `#e8e6db`.
+- Amount: `.amount-figure`, 13px bold, tabular-nums. Hover: texto `#e8e6db`.
 - Acciones edit/delete: hidden, reveal en `group-hover`, `opacity: 0 → 1`.
 
 ## 6. Do's and Don'ts
 
 ### Do:
-- **Do** usar Geist Mono con `tabular-nums` para todos los montos monetarios sin excepción.
+- **Do** usar `.amount-figure` (sans de la app + `tabular-nums`) para todos los montos monetarios sin excepción. Nunca monoespaciada.
 - **Do** comunicar elevación con diferencial de color de fondo: `#080808 → #0e0e0e → #111`.
 - **Do** aplicar el bezel doble (outer shell + inner core) en inputs y cards de primer nivel.
 - **Do** usar `border-radius: 9999px` en todos los botones. Nunca `rounded-xl` o `rounded-lg` en CTAs.
@@ -238,7 +238,7 @@ El bezel doble es el patrón de elevación para cards y inputs premium: outer sh
 - **Don't** usar `box-shadow` en cards estáticas. La elevación es tonal, no de sombra.
 - **Don't** aplicar `backdrop-blur` a contenedores que hacen scroll. Solo en elementos fixed/sticky.
 - **Don't** crear grids de tarjetas idénticas con icon+título+texto. Es el patrón SaaS genérico prohibido explícitamente.
-- **Don't** usar Inter, Roboto, Open Sans o cualquier fuente que no sea Geist / Geist Mono.
+- **Don't** usar Inter, Roboto, Open Sans o cualquier fuente que no sea la sans de la app (`--font-sans`).
 - **Don't** usar navy azul corporativo, violeta, ni neon. Esta app no es una exchange de cripto ni un banco.
 - **Don't** usar `border-left` colorido como accent en items de lista. Reescribir con tint de fondo.
 - **Don't** mostrar errores solo con color rojo sin texto acompañante.

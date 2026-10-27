@@ -44,9 +44,10 @@ public class ReportController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
             @RequestParam(defaultValue = "EXPENSE") String txType,
-            @RequestParam(required = false) Long walletId) {
+            @RequestParam(required = false) Long walletId,
+            @RequestParam(required = false) List<Long> categoryIds) {
         LocalDate[] range = resolveRange(period, from, to);
-        return reportService.getDailyTotals(range[0], range[1], userResolver.getCurrentUserId(), txType, walletId);
+        return reportService.getDailyTotals(range[0], range[1], userResolver.getCurrentUserId(), txType, walletId, categoryIds);
     }
 
     private LocalDate[] resolveRange(String period, LocalDate from, LocalDate to) {

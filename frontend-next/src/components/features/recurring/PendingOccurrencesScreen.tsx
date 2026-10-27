@@ -85,7 +85,7 @@ function OccurrenceCard({ item, onDone }: { item: RecurringOccurrence; onDone: (
             {dueLabel(item.dueDate)}
           </span>
         </span>
-        <span className="mono-amount flex-none text-[13.5px] font-extrabold tabular-nums" style={{ color: 'var(--text-primary)' }}>
+        <span className="amount-figure flex-none text-[13.5px] font-extrabold tabular-nums" style={{ color: 'var(--text-primary)' }}>
           {sym} {(item.amount ?? 0).toFixed(2)}
         </span>
       </div>

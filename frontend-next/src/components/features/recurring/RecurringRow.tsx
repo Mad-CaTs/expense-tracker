@@ -85,7 +85,7 @@ export function RecurringRow({ item, onToggle, onDelete }: RecurringRowProps) {
           porque "Mensual · 26 jul." ocupa 98px medidos: con menos, el dato que
           hace actuar volvía a cortarse. */}
       <span className="w-[104px] flex-none text-right">
-        <span className="mono-amount block text-[13px] font-extrabold tabular-nums" style={{ color: 'var(--text-primary)' }}>
+        <span className="amount-figure block text-[13px] font-extrabold tabular-nums" style={{ color: 'var(--text-primary)' }}>
           {sym} {(item.amount ?? 0).toFixed(2)}
         </span>
         {/* --text-tertiary y no --text-placeholder: frecuencia y próxima fecha

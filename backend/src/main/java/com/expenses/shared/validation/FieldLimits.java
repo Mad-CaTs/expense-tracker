@@ -21,6 +21,9 @@ public final class FieldLimits {
     /** Nombre de un deudor. Texto libre: no hay entidad Persona. */
     public static final int PERSON_NAME = 100;
 
+    /** Nombre de una alcancía: un rótulo corto ("Viaje", "Emergencias"). */
+    public static final int PIGGY_NAME = 30;
+
     private FieldLimits() {
     }
 }

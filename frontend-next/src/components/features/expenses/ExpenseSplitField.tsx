@@ -107,7 +107,7 @@ export function ExpenseSplitField({ items, total, error, onChange }: ExpenseSpli
                 }}
                 inputMode="decimal"
                 placeholder="0.00"
-                className="liquid-glass-ic mono-amount h-[46px] w-[96px] flex-none rounded-[16px] px-[13px] text-right text-[14px] font-bold tabular-nums outline-none"
+                className="liquid-glass-ic amount-figure h-[46px] w-[96px] flex-none rounded-[16px] px-[13px] text-right text-[14px] font-bold tabular-nums outline-none"
                 style={{ color: 'var(--text-primary)' }}
               />
               <button
@@ -145,7 +145,7 @@ export function ExpenseSplitField({ items, total, error, onChange }: ExpenseSpli
               Tu parte
             </span>
             <b
-              className="mono-amount text-[19px] font-extrabold tabular-nums tracking-[-0.02em]"
+              className="amount-figure text-[19px] font-extrabold tabular-nums tracking-[-0.02em]"
               style={{ color: mine < 0 ? 'var(--danger)' : 'var(--text-primary)' }}
             >
               {sym} {money(Math.max(mine, 0))}

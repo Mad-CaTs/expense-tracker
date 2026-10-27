@@ -298,7 +298,7 @@ export function ColorPickerSheet({ value, onChange, onClose, title = 'Color' }: 
               autoComplete="off"
               aria-label="Código hexadecimal del color"
               aria-invalid={!draftValid}
-              className="mono-amount h-10 min-w-0 flex-1 rounded-[12px] bg-transparent px-3 text-[13px] font-bold uppercase outline-none"
+              className="amount-figure h-10 min-w-0 flex-1 rounded-[12px] bg-transparent px-3 text-[13px] font-bold uppercase outline-none"
               style={{
                 color: draftValid ? 'var(--text-primary)' : 'var(--danger)',
                 boxShadow: `0 0 0 1px ${draftValid ? 'var(--lg-ic-border)' : 'var(--danger)'}`,
@@ -535,7 +535,7 @@ function SliderRow({ label, value, max, onChange, track }: SliderRowProps) {
         <span className="text-[10px] font-bold uppercase tracking-[0.1em]" style={{ color: 'var(--text-placeholder)' }}>
           {label}
         </span>
-        <span className="mono-amount text-[12px] font-bold tabular-nums" style={{ color: 'var(--text-tertiary)' }}>
+        <span className="amount-figure text-[12px] font-bold tabular-nums" style={{ color: 'var(--text-tertiary)' }}>
           {value}
         </span>
       </div>
